@@ -1,0 +1,5 @@
+TICKET_PREFIX=HB
+COMMIT_TYPES="feat fix refactor test docs chore style perf ci build migration revert"
+BRANCH_TYPES_WITH_TICKET="feature fix hotfix refactor test chore style migration"
+BRANCH_TYPES_WITHOUT_TICKET="docs chore"
+DESCRIPTION_MAX_LENGTH=72

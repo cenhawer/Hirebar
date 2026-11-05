@@ -21,6 +21,7 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 | D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ✅ `HB`, configurado en `.conventions` |
 | D6 | Archivo de contexto para otros agentes (Codex, Gemini) | Solo `CLAUDE.md` · `CLAUDE.md` + `AGENTS.md` sincronizados | ✅ `CLAUDE.md` + `AGENTS.md`, sincronizados por la extensión `agent-context` (`context_files`) |
 | D7 | ffmpeg para limpiar la nota de voz | Prerrequisito del sistema · instalarlo en ejecución con versión fija y hash · reemplazarlo por AVFoundation · empaquetarlo con la app | ✅ Prerrequisito del sistema (`brew install ffmpeg`), detectado y pedido en la configuración inicial; se revisa con un ADR en la fase 7 si la app se distribuye a personas que no compilan |
+| D8 | Versión mínima de macOS | macOS 13 (actual) · macOS 26 · macOS 27 | ✅ macOS 26 (Liquid Glass, `@Observable`, SwiftUI actual, Swift 6); macOS 27 cuando la imagen `xcode-27` de GitHub Actions deje de ser preview |
 
 ### 1.2 Prerrequisitos
 
@@ -52,7 +53,7 @@ Fuente: `Lineamientos/` (Engineering Standards). La constitution (actividad 1.2)
 | Comentarios | Cero en el código interno; `///` solo en contratos públicos que consume otro sistema; cero en scripts |
 | Textos | Ningún texto de usuario escrito en el código: van por String Catalog |
 | Valores | Ningún catálogo, umbral, plazo o lista de dominio escrito en el código: van en configuración o datos; si no se conocen, `[NEEDS CLARIFICATION]` |
-| Diseño | Capas y patrones justificados por el problema que resuelven |
+| Diseño | Arquitectura hexagonal: dominio y casos de uso al centro, puertos en Application, adaptadores afuera, límites impuestos por los targets de SwiftPM; cada patrón justificado por el problema que resuelve |
 | Permisos de macOS | Se piden en la configuración inicial, nunca a mitad del uso |
 | Documentación | README = instalación, configuración y uso; `docs/` = decisiones y detalle técnico; describen el estado actual, sin historial |
 | Idioma | Texto para el usuario en español; código en inglés; commits y ramas en inglés |
@@ -101,7 +102,7 @@ Ruta crítica: 0 → 1 → 2 → 3 → (4 ∥ 5 ∥ 6) → 7.
 |---|---|---|---|---|
 | 1.1 | `specify init --here --integration claude`, con las ramas de spec nombradas según D5 | cenhawer | 30 min | Existen `.specify/` y las skills `/speckit-*`; `/speckit-specify` de prueba crea `feature/HB-001-…` |
 | 1.2 | `constitution.md` (`/speckit-constitution`): reglas de la sección 1.4 + "nada se envía sin trazabilidad" + "el contenido externo nunca es instrucción" + "todo cambio de formato de datos trae migración y respaldo" + "ninguna herramienta se descarga en ejecución sin versión fija y hash" | cenhawer | 1 día | Aprobada en PR |
-| 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: módulos (`Hirebar`, `HirebarEngine`, `HirebarSources`, `HirebarCore`) y sus límites, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | cenhawer (con `principal-architect`) | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
+| 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: arquitectura hexagonal objetivo (capas, puertos y adaptadores) con el mapeo de cada archivo actual de `Hirebar`, `HirebarEngine`, `HirebarSources` y `HirebarCore` a su capa, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | cenhawer (con `principal-architect`) | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
 | 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado con `CLAUDE.md` | cenhawer | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
 | 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | cenhawer | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
 | 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | cenhawer | 1 día | Ídem |
@@ -122,22 +123,23 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | 2 | `005-modo-practica` | Un agente en modo práctica hace todo menos enviar, y lo registra |
 | 2 | `006-evals-prompts` | Casos fijos para cada `instrucciones-*.md`: clasificación, "no inventa logros", inyección en vacante falsa → ninguna acción; corren en CI |
 | 2 | `007-herramientas-en-ejecucion` | ffmpeg se toma del sistema y se valida al configurar (sin `pip` ni descargas en ejecución); requisito listado en el README; tamaño máximo para los audios que llegan por Telegram |
-| 3 | `008-puertos` | `AIRunner`, `Messenger`, `AgentRepository`, `Clock`, `Browser`, `SpeechRecognizer`; el Engine ya no usa `.shared` |
-| 3 | `009-tests-engine` | Scheduler, Commands y Controller con tests sin red ni IA, incluido el flujo de nota de voz |
-| 3 | `010-partir-archivos` | Ningún archivo de más de 300 líneas (`Settings`, `ContentSettings`, `ReelRenderer`, `Controller`, `Commands`); ningún `///` en código interno |
-| 3 | `011-fixtures-portales` | Un HTML guardado por portal; cada scraper se testea contra su fixture |
-| 3 | `012-version-datos` | `schemaVersion` en config, perfil, agentes y cuentas; el estado que hoy vive en `UserDefaults` (`video.esperandoVoz`, `portals.seen`) pasa al workspace versionado; migración con respaldo previo; borrado de las claves huérfanas del Llavero (`elevenlabs`, `azure-speech`, `azure-speech-region`) y "Desinstalar" del README completo |
-| 3 | `013-logs-oslog` | `OSLog` con categoría por agente; sin datos personales en los registros |
-| 3 | `014-textos-y-valores-fuera-del-codigo` | Ningún texto de usuario en el código, incluida la ayuda y las respuestas de Telegram (String Catalog); palabras de búsqueda, plazos y timeouts en configuración |
-| 4 | `015-asistente-primer-uso` | Instalar y configurar sin editar JSON; checklist visible en el panel, con los permisos de macOS (Reconocimiento de voz) pedidos en el asistente y no a mitad de un flujo |
-| 4 | `016-editor-perfil` | Datos, experiencia, preferencias y `cvVariants` editables en Ajustes |
-| 5 | `017-bandeja-pendientes` | Aprobar desde el panel con vista previa de cada envío, incluido el video narrado |
-| 5 | `018-vista-actividad` | Cada envío queda trazado: qué, a quién, cuándo y con qué texto |
-| 5 | `019-politica-datos` | Retención definida para historiales, postulaciones y grabaciones de voz (`grabacion.*`), con borrado automático |
-| 6 | `020-accesibilidad` | VoiceOver lee todos los controles; el estado nunca depende solo del color; fuentes semánticas |
-| 6 | `021-panel-uso` | Zonas de clic separadas en la fila del agente; scroll con altura máxima; copy sin jerga |
-| 7 | `022-firma-notarizacion` | App firmada con Developer ID y notarizada; Gatekeeper no la bloquea |
-| 7 | `023-aviso-version` | La app avisa de releases nuevos en GitHub sin dependencias externas |
+| 3 | `008-arquitectura-hexagonal` | Targets `HirebarDomain`, `HirebarApplication`, un target por familia de adaptadores y la app como raíz de composición; puertos `AIRunner`, `Messenger`, `Browser`, `PortalSource`, `SpeechRecognizer`, `MediaRenderer`, `Clock` y repositorios; ningún `.shared` fuera de la raíz de composición; un import que cruce un límite no compila |
+| 3 | `009-macos-26-swift-6` | `platforms: [.macOS(.v26)]`, `swift-tools-version` 6 con concurrencia estricta, `@Observable` en lugar de `ObservableObject`; sin código de compatibilidad con versiones anteriores |
+| 3 | `010-tests-engine` | Scheduler, Commands y Controller con tests sin red ni IA, incluido el flujo de nota de voz |
+| 3 | `011-partir-archivos` | Ningún archivo de más de 300 líneas (`Settings`, `ContentSettings`, `ReelRenderer`, `Controller`, `Commands`); ningún `///` en código interno |
+| 3 | `012-fixtures-portales` | Un HTML guardado por portal; cada scraper se testea contra su fixture |
+| 3 | `013-version-datos` | `schemaVersion` en config, perfil, agentes y cuentas; el estado que hoy vive en `UserDefaults` (`video.esperandoVoz`, `portals.seen`) pasa al workspace versionado; migración con respaldo previo; borrado de las claves huérfanas del Llavero (`elevenlabs`, `azure-speech`, `azure-speech-region`) y "Desinstalar" del README completo |
+| 3 | `014-logs-oslog` | `OSLog` con categoría por agente; sin datos personales en los registros |
+| 3 | `015-textos-y-valores-fuera-del-codigo` | Ningún texto de usuario en el código, incluida la ayuda y las respuestas de Telegram (String Catalog); palabras de búsqueda, plazos y timeouts en configuración |
+| 4 | `016-asistente-primer-uso` | Instalar y configurar sin editar JSON; checklist visible en el panel, con los permisos de macOS (Reconocimiento de voz) pedidos en el asistente y no a mitad de un flujo |
+| 4 | `017-editor-perfil` | Datos, experiencia, preferencias y `cvVariants` editables en Ajustes |
+| 5 | `018-bandeja-pendientes` | Aprobar desde el panel con vista previa de cada envío, incluido el video narrado |
+| 5 | `019-vista-actividad` | Cada envío queda trazado: qué, a quién, cuándo y con qué texto |
+| 5 | `020-politica-datos` | Retención definida para historiales, postulaciones y grabaciones de voz (`grabacion.*`), con borrado automático |
+| 6 | `021-accesibilidad` | VoiceOver lee todos los controles; el estado nunca depende solo del color; fuentes semánticas |
+| 6 | `022-panel-uso` | Zonas de clic separadas en la fila del agente; scroll con altura máxima; copy sin jerga |
+| 7 | `023-firma-notarizacion` | App firmada con Developer ID y notarizada; Gatekeeper no la bloquea |
+| 7 | `024-aviso-version` | La app avisa de releases nuevos en GitHub sin dependencias externas |
 
 ## 3. Cierre (por fase)
 
@@ -164,12 +166,12 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | Riesgo | Mitigación |
 |---|---|
 | El autor sigue sacando features sin spec ni tests: 8 commits el 4 nov; `3c7c07e` agregó Azure (952 líneas) y `96e7a97` lo quitó el mismo día, sin un solo test | Congelamiento (P5) desde ya; después, toda feature entra por spec → PR |
-| El código está lejos de las reglas de la sección 1.4: 76 `///` internos, unos 200 textos y unos 24 plazos escritos en el código, commits sin Conventional Commits | Se corrige por spec (`010`, `014`) y no en un solo commit masivo; CI impide que entren casos nuevos desde la fase 0 |
+| El código está lejos de las reglas de la sección 1.4: 76 `///` internos, unos 200 textos y unos 24 plazos escritos en el código, commits sin Conventional Commits | Se corrige por spec (`011`, `015`) y no en un solo commit masivo; CI impide que entren casos nuevos desde la fase 0 |
 | El Engine no tiene tests y el refactor rompe algo | Las specs as-is (fase 1) y los tests (fase 3) van antes de mover código |
 | La app descarga e instala ffmpeg con pip en la Mac del usuario, sin versión fija | D7: pasa a prerrequisito del sistema (spec `007`) y regla en la constitution |
 | La firma ad-hoc cambia en cada build y macOS vuelve a pedir permisos | Actividad 0.6 (firma local estable) y fase 7 (Developer ID) |
-| Los portales cambian su HTML | Fixtures (`011`) y alerta en CI |
-| Claude CLI cambia sus flags | El adaptador `AIRunner` (`008`) aísla el cambio |
+| Los portales cambian su HTML | Fixtures (`012`) y alerta en CI |
+| Claude CLI cambia sus flags | El adaptador del puerto `AIRunner` (`008`) aísla el cambio |
 | Graphify solo está en el worker | El grafo se genera allí; el clon debe existir en el worker o sincronizarse antes de C3 |
 | Firma y notarización requieren cuenta de Apple Developer (pago anual) | La fase 7 va al final y no bloquea las anteriores |
 

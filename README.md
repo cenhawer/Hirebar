@@ -67,11 +67,25 @@ scripts/bundle.sh --install
 ## Desarrollo
 
 ```sh
+brew install swiftlint gitleaks shellcheck
+git config core.hooksPath scripts/hooks
 swift build
-swift test
+scripts/coverage.sh
+scripts/lint.sh origin/develop
 ```
 
-`swift test` necesita Xcode completo, porque XCTest no viene en las herramientas de línea de comandos.
+Los tests necesitan Xcode completo, porque XCTest no viene en las herramientas de línea de comandos. El hook de `scripts/hooks` revisa con gitleaks que ningún commit lleve secretos.
+
+| Comando | Qué hace |
+|---|---|
+| `scripts/coverage.sh` | Corre los tests y mide la cobertura de `Sources`. Falla si baja del mínimo de `.coverage-minimum` y lista los archivos que no tienen ningún test. |
+| `scripts/lint.sh <rama base>` | Revisa formato (swift-format) y estilo (SwiftLint) solo en las líneas que cambiaste respecto a esa rama. Sin rama base, revisa todo el código. |
+| `scripts/check-conventions.sh <rama base>` | Valida el nombre de la rama y los mensajes de commit con las reglas de `.conventions`. |
+
+| Variable | Para qué |
+|---|---|
+| `HIREBAR_BUILD_PATH` | Carpeta de compilación de `bundle.sh` y `coverage.sh` (por defecto `.build`). Si el repositorio está en una carpeta sincronizada con iCloud, apúntala fuera, por ejemplo a `~/Library/Caches/hirebar-build`. |
+| `HIREBAR_SIGN_IDENTITY` | Identidad con la que `bundle.sh` firma la app (por defecto `-`, firma ad-hoc). Con una identidad fija, macOS conserva entre compilaciones el permiso de Reconocimiento de voz. |
 
 | Carpeta | Qué tiene |
 |---|---|
@@ -80,9 +94,9 @@ swift test
 | `Sources/HirebarSources` | Un archivo por portal y los filtros. |
 | `Sources/HirebarCore` | Configuración, perfil, datos y Telegram. |
 | `Resources/inicial` | Archivos con los que arranca una instalación nueva. |
-| `scripts/bundle.sh` | Compila y empaqueta la app. |
+| `scripts/` | Compilar y empaquetar, tests con cobertura, lint, convenciones y hooks de git. |
 
-Reglas: código en inglés y sin comentarios; documentación en español; sin dependencias externas; nada personal en el repositorio.
+Reglas: código en inglés y sin comentarios; documentación en español; sin dependencias externas; nada personal en el repositorio; commits en inglés con [Conventional Commits](https://www.conventionalcommits.org/); ramas `{tipo}/HB-{número}-{descripción}` hacia `develop`.
 
 ## Desinstalar
 

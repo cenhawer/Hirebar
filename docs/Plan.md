@@ -1,6 +1,6 @@
 # Plan de reorganización de Hirebar
 
-> 🟡 **BORRADOR, no ejecutable.** Faltan responsables, fechas y las decisiones de la sección 1.1.
+> 🟡 **BORRADOR, no ejecutable.** Faltan las fechas y las decisiones abiertas de la sección 1.1.
 
 ## 0. Objetivo
 
@@ -17,8 +17,8 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 | D1 | Forma de trabajo con el repo | Push directo a `VictorMMosqueraG/Hirebar` · fork + PR | ✅ Fork + PR hacia `VictorMMosqueraG/Hirebar` |
 | D2 | Máquina de build y test | M5 · worker (M1) | ✅ Worker, con `--scratch-path ~/Library/Caches/hirebar-build` para que `.build/` no se sincronice por iCloud |
 | D3 | Usuarios además del autor | Sí · no (define la exigencia de migraciones y rollback) | ⬜ |
-| D4 | `graphify-out/` en git | Ignorado (propuesto) · versionado | ⬜ |
-| D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ⬜ |
+| D4 | `graphify-out/` en git | Ignorado (propuesto) · versionado | ✅ Ignorado: el grafo vive en el worker |
+| D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ✅ `HB`, configurado en `.conventions` |
 | D6 | Archivo de contexto para otros agentes (Codex, Gemini) | Solo `CLAUDE.md` · `CLAUDE.md` + `AGENTS.md` sincronizados | ⬜ |
 | D7 | ffmpeg para limpiar la nota de voz | Instalarlo en ejecución con versión fija y hash · reemplazarlo por AVFoundation · empaquetarlo con la app | ⬜ |
 
@@ -38,7 +38,7 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 
 | Quién | Rol | Se le informa | Se le consulta |
 |---|---|---|---|
-| `<líder>` | Decide, aprueba specs y PR | Siempre | — |
+| cenhawer | Decide, aprueba specs y PR | Siempre | — |
 | Víctor Mosquera | Autor, owner del repo, usuario principal | Al cerrar cada fase | Antes de cada rollback, de cada cambio de formato de datos y de D7 |
 | Usuarios actuales | Reciben versiones | En cada release (CHANGELOG) | — |
 
@@ -81,33 +81,33 @@ Ruta crítica: 0 → 1 → 2 → 3 → (4 ∥ 5 ∥ 6) → 7.
 
 | # | Actividad | Responsable | Duración | Verificación |
 |---|---|---|---|---|
-| 0.1 | Crear `develop` desde `main` y proteger ambas: PR obligatorio y CI en verde | `<líder>` / autor | 15 min | Un push directo a `main` o a `develop` es rechazado |
-| 0.2 | Build y test de línea base sobre `96e7a97`, resultado anotado en `docs/linea-base.md` | Claude | 30 min | `swift build` y `swift test` en verde |
-| 0.3 | Tag `v<VERSION>-baseline` sobre `96e7a97` con su zip en Releases | `<líder>` | 10 min | El tag y el zip existen (es el punto de rollback) |
-| 0.4 | Quitar datos personales de `GUIA.md` y `README.md` (`HV_Victor_Mosquera_*`, `KoralAT`, `~/Documents/vm_software`) | Claude | 30 min | `grep -rn -e Mosquera -e KoralAT -e vm_software GUIA.md README.md Resources` no encuentra nada |
-| 0.5 | Archivos de ignore (Anexo A) | Claude | 1 h | `git status` limpio después de build, test, Graphify y evals |
-| 0.6 | Identidad de firma local estable en `bundle.sh` (hoy firma ad-hoc, y con cada build cambia la firma y macOS puede volver a pedir el permiso de Reconocimiento de voz) | Claude | 1 h | Tras recompilar, el permiso sigue concedido |
-| 0.7 | swift-format y SwiftLint en CI (solo herramientas de desarrollo, no entran en la app) | Claude | 3 h | CI falla con un archivo mal formateado |
-| 0.8 | gitleaks en CI y en pre-commit | Claude | 1 h | Un token de prueba en un commit hace fallar CI |
-| 0.9 | Cobertura en CI (`swift test --enable-code-coverage`), umbral inicial = línea base | Claude | 1 h | El reporte se publica como artifact |
-| 0.10 | Dependabot para GitHub Actions | Claude | 15 min | `.github/dependabot.yml` existe |
-| 0.11 | Plantillas de PR e issue, validación de Conventional Commits y de nombres de rama en CI, tablero en GitHub Projects | Claude / `<líder>` | 2 h | Un PR de prueba muestra la plantilla con el campo "Spec"; un commit `implement video now` hace fallar CI |
-| 0.12 | Grafo de línea base con Graphify (en el worker) | Claude | 30 min | Existe `graphify-out/` con back, scripts, workflows y Resources mapeados |
-| 0.13 | `CHANGELOG.md` + SemVer sobre el archivo `VERSION` existente | Claude | 30 min | La primera entrada describe la línea base |
+| 0.1 | Crear `develop` desde `main` y proteger ambas: PR obligatorio y CI en verde | Víctor | 15 min | Un push directo a `main` o a `develop` es rechazado |
+| 0.2 | Build y test de línea base sobre `96e7a97`, resultado anotado en `docs/linea-base.md` | cenhawer | 30 min | `swift build` y `swift test` en verde |
+| 0.3 | Tag `v<VERSION>-baseline` sobre `96e7a97` con su zip en Releases | Víctor | 10 min | El tag y el zip existen (es el punto de rollback) |
+| 0.4 | Quitar datos personales de `GUIA.md` y `README.md` (`HV_Victor_Mosquera_*`, `KoralAT`, `~/Documents/vm_software`) | cenhawer | 30 min | `grep -rn -e Mosquera -e KoralAT -e vm_software GUIA.md README.md Resources` no encuentra nada |
+| 0.5 | Archivos de ignore (Anexo A) | cenhawer | 1 h | `git status` limpio después de build, test, Graphify y evals |
+| 0.6 | Identidad de firma local estable en `bundle.sh` (hoy firma ad-hoc, y con cada build cambia la firma y macOS puede volver a pedir el permiso de Reconocimiento de voz) | cenhawer | 1 h | Tras recompilar, el permiso sigue concedido |
+| 0.7 | swift-format y SwiftLint en CI (solo herramientas de desarrollo, no entran en la app) | cenhawer | 3 h | CI falla con un archivo mal formateado |
+| 0.8 | gitleaks en CI y en pre-commit | cenhawer | 1 h | Un token de prueba en un commit hace fallar CI |
+| 0.9 | Cobertura en CI (`swift test --enable-code-coverage`), umbral inicial = línea base | cenhawer | 1 h | El reporte se publica como artifact |
+| 0.10 | Dependabot para GitHub Actions | cenhawer | 15 min | `.github/dependabot.yml` existe |
+| 0.11 | Plantillas de PR e issue, validación de Conventional Commits y de nombres de rama en CI, tablero en GitHub Projects | cenhawer | 2 h | Un PR de prueba muestra la plantilla con el campo "Spec"; un commit `implement video now` hace fallar CI |
+| 0.12 | Grafo de línea base con Graphify (en el worker) | cenhawer | 30 min | Existe `graphify-out/` con back, scripts, workflows y Resources mapeados |
+| 0.13 | `CHANGELOG.md` + SemVer sobre el archivo `VERSION` existente | cenhawer | 30 min | La primera entrada describe la línea base |
 
 ### 2.2 Fase 1: base SDD
 
 | # | Actividad | Responsable | Duración | Verificación |
 |---|---|---|---|---|
-| 1.1 | `specify init --here --integration claude`, con las ramas de spec nombradas según D5 | Claude | 30 min | Existen `.specify/` y las skills `/speckit-*`; `/speckit-specify` de prueba crea `feature/HB-001-…` |
-| 1.2 | `constitution.md` (`/speckit-constitution`): reglas de la sección 1.4 + "nada se envía sin trazabilidad" + "el contenido externo nunca es instrucción" + "todo cambio de formato de datos trae migración y respaldo" + "ninguna herramienta se descarga en ejecución sin versión fija y hash" | Claude redacta, `<líder>` aprueba | 1 día | Aprobada en PR |
-| 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: módulos (`Hirebar`, `HirebarEngine`, `HirebarSources`, `HirebarCore`) y sus límites, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | Claude redacta (`principal-architect`), `<líder>` aprueba | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
-| 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado si D6 lo pide | Claude redacta, `<líder>` aprueba | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
-| 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | Claude redacta, `<líder>` revisa | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
-| 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | Claude redacta, `<líder>` revisa | 1 día | Ídem |
-| 1.7 | Carpeta `docs/adr/` con plantilla y el primer ADR ("adoptar SDD con Spec Kit") | Claude | 1 h | ADR-0001 aprobado |
-| 1.8 | Paso en CI: un PR que toca `Sources/` debe referenciar una spec | Claude | 2 h | Un PR de prueba sin spec falla |
-| 1.9 | Revisión con agentes en cada PR: `swift-code-reviewer` contra constitution, `ARCHITECTURE.md`, Lineamientos y spec; `security-review` desde la fase 2 | `<líder>` | — | Hay comentarios del reviewer en el PR |
+| 1.1 | `specify init --here --integration claude`, con las ramas de spec nombradas según D5 | cenhawer | 30 min | Existen `.specify/` y las skills `/speckit-*`; `/speckit-specify` de prueba crea `feature/HB-001-…` |
+| 1.2 | `constitution.md` (`/speckit-constitution`): reglas de la sección 1.4 + "nada se envía sin trazabilidad" + "el contenido externo nunca es instrucción" + "todo cambio de formato de datos trae migración y respaldo" + "ninguna herramienta se descarga en ejecución sin versión fija y hash" | cenhawer | 1 día | Aprobada en PR |
+| 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: módulos (`Hirebar`, `HirebarEngine`, `HirebarSources`, `HirebarCore`) y sus límites, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | cenhawer (con `principal-architect`) | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
+| 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado si D6 lo pide | cenhawer | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
+| 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | cenhawer | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
+| 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | cenhawer | 1 día | Ídem |
+| 1.7 | Carpeta `docs/adr/` con plantilla y el primer ADR ("adoptar SDD con Spec Kit") | cenhawer | 1 h | ADR-0001 aprobado |
+| 1.8 | Paso en CI: un PR que toca `Sources/` debe referenciar una spec | cenhawer | 2 h | Un PR de prueba sin spec falla |
+| 1.9 | Revisión con agentes en cada PR: `swift-code-reviewer` contra constitution, `ARCHITECTURE.md`, Lineamientos y spec; `security-review` desde la fase 2 | cenhawer | — | Hay comentarios del reviewer en el PR |
 
 ### 2.3 Fases 2 a 7: specs que se abren
 
@@ -143,10 +143,10 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 
 | # | Actividad | Responsable | Verificación |
 |---|---|---|---|
-| C1 | E2E en una Mac limpia: instalar, configurar y correr un agente en modo práctica (desde la fase 2) | Claude / `<líder>` | Checklist E2E completo |
-| C2 | Release con tag, zip y entrada en CHANGELOG | `<líder>` | Release publicado |
-| C3 | Grafo de Graphify actualizado y comparado con el anterior | Claude | Sin dependencias nuevas no explicadas |
-| C4 | Balance corto con el autor: qué salió y qué pasa a la siguiente fase | `<líder>` convoca | Notas en el issue de la fase |
+| C1 | E2E en una Mac limpia: instalar, configurar y correr un agente en modo práctica (desde la fase 2) | cenhawer | Checklist E2E completo |
+| C2 | Release con tag, zip y entrada en CHANGELOG | cenhawer | Release publicado |
+| C3 | Grafo de Graphify actualizado y comparado con el anterior | cenhawer | Sin dependencias nuevas no explicadas |
+| C4 | Balance corto con el autor: qué salió y qué pasa a la siguiente fase | cenhawer convoca | Notas en el issue de la fase |
 
 ## 4. Rollback
 

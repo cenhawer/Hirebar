@@ -106,7 +106,7 @@ Ruta crítica: 0 → 1 → 2 → 3 → (4 ∥ 5 ∥ 6) → 7.
 | 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado con `CLAUDE.md` | cenhawer | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
 | 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | cenhawer | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
 | 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | cenhawer | 1 día | Ídem |
-| 1.7 | Carpeta `docs/adr/` con plantilla y el primer ADR ("adoptar SDD con Spec Kit") | cenhawer | 1 h | ADR-0001 aprobado |
+| 1.7 | Carpeta `docs/adr/` con plantilla y los ADR de las decisiones ya tomadas: 0001 SDD con Spec Kit, 0002 arquitectura hexagonal, 0003 ffmpeg como prerrequisito, 0004 macOS 26 y Swift 6 | cenhawer | 2 h | Los cuatro ADR aprobados y enlazados desde `ARCHITECTURE.md` §10 |
 | 1.8 | Paso en CI: un PR que toca `Sources/` debe referenciar una spec | cenhawer | 2 h | Un PR de prueba sin spec falla |
 | 1.9 | Revisión con agentes en cada PR: `swift-code-reviewer` contra constitution, `ARCHITECTURE.md`, Lineamientos y spec; `security-review` desde la fase 2 | cenhawer | — | Hay comentarios del reviewer en el PR |
 

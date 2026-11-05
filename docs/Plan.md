@@ -1,0 +1,186 @@
+# Plan de reorganización de Hirebar
+
+> 🟡 **BORRADOR, no ejecutable.** Faltan responsables, fechas y las decisiones de la sección 1.1.
+
+## 0. Objetivo
+
+Llevar Hirebar a desarrollo guiado por specs (SDD), cerrar los riesgos de seguridad y después mejorar UX, UI y accesibilidad sin romper lo que ya funciona.
+
+Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
+
+## 1. Planeación
+
+### 1.1 Decisiones pendientes
+
+| # | Decisión | Opciones | Estado |
+|---|---|---|---|
+| D1 | Forma de trabajo con el repo | Push directo a `VictorMMosqueraG/Hirebar` · fork + PR | ⬜ |
+| D2 | Máquina de build y test | M5 · worker (M1) | ⬜ |
+| D3 | Usuarios además del autor | Sí · no (define la exigencia de migraciones y rollback) | ⬜ |
+| D4 | `graphify-out/` en git | Ignorado (propuesto) · versionado | ⬜ |
+| D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ⬜ |
+| D6 | Archivo de contexto para otros agentes (Codex, Gemini) | Solo `CLAUDE.md` · `CLAUDE.md` + `AGENTS.md` sincronizados | ⬜ |
+| D7 | ffmpeg para limpiar la nota de voz | Instalarlo en ejecución con versión fija y hash · reemplazarlo por AVFoundation · empaquetarlo con la app | ⬜ |
+
+### 1.2 Prerrequisitos
+
+| # | Qué | Estado |
+|---|---|---|
+| P1 | Clon de trabajo en `~/Documents/workspace/projects/personal/hirebar`, rama `docs/reorganization-plan` | ✅ |
+| P2 | Xcode completo en la máquina de build (`swift test` necesita XCTest) | ⬜ |
+| P3 | Spec Kit (`specify`) con la extensión `agent-context` disponible | ✅ |
+| P4 | Graphify (solo en el worker) | ✅ |
+| P5 | Features nuevas congeladas durante las fases 0 a 2, acordado con el autor | ⬜ |
+| P6 | Permiso de Reconocimiento de voz de macOS concedido en la Mac de pruebas (lo pide el flujo de video narrado) | ⬜ |
+| P7 | Python 3 en la Mac de pruebas (el flujo de video instala ffmpeg con pip la primera vez) | ⬜ |
+
+### 1.3 Partes interesadas
+
+| Quién | Rol | Se le informa | Se le consulta |
+|---|---|---|---|
+| `<líder>` | Decide, aprueba specs y PR | Siempre | — |
+| Víctor Mosquera | Autor, owner del repo, usuario principal | Al cerrar cada fase | Antes de cada rollback, de cada cambio de formato de datos y de D7 |
+| Usuarios actuales | Reciben versiones | En cada release (CHANGELOG) | — |
+
+### 1.4 Reglas del proyecto
+
+Fuente: `Lineamientos/` (Engineering Standards). La constitution (actividad 1.2) las fija para Hirebar.
+
+| Área | Regla |
+|---|---|
+| Nombres | En inglés y autoexplicativos: clases, métodos, variables y archivos |
+| Comentarios | Cero en el código interno; `///` solo en contratos públicos que consume otro sistema; cero en scripts |
+| Textos | Ningún texto de usuario escrito en el código: van por String Catalog |
+| Valores | Ningún catálogo, umbral, plazo o lista de dominio escrito en el código: van en configuración o datos; si no se conocen, `[NEEDS CLARIFICATION]` |
+| Diseño | Capas y patrones justificados por el problema que resuelven |
+| Permisos de macOS | Se piden en la configuración inicial, nunca a mitad del uso |
+| Documentación | README = instalación, configuración y uso; `docs/` = decisiones y detalle técnico; describen el estado actual, sin historial |
+| Idioma | Texto para el usuario en español; código en inglés; commits y ramas en inglés |
+| Commits | Conventional Commits (`tipo(scope): descripción`, imperativo, minúsculas, ≤ 72 caracteres), atómicos, de una línea |
+| Ramas | `{tipo}/{TICKET}-{descripción-kebab}` (ticket opcional solo en `docs` y `chore`); GitFlow con `main` y `develop`; prohibido commitear directo a ambas |
+| SDD | Nada se implementa sin `spec.md`; trazabilidad `FR-###`/`SC-###` → test; `[NEEDS CLARIFICATION]` sin resolver bloquea el plan; un cambio de contrato se actualiza primero en `ARCHITECTURE.md`; una decisión nueva va antes como ADR |
+
+## 2. Ejecución
+
+### 2.0 Cronograma
+
+| Fase | Qué | Duración est. | Inicio | Depende de |
+|---|---|---|---|---|
+| 0 | Preparación, higiene y herramientas | 2–3 días | `<fecha>` | — |
+| 1 | Base SDD: constitution, `ARCHITECTURE.md`, contexto del agente y specs del sistema actual | 1–1,5 semanas | `<fecha>` | 0 |
+| 2 | Seguridad, evals de prompts y modo práctica | 2 semanas | `<fecha>` | 1 |
+| 3 | Arquitectura habilitante, fixtures y datos versionados | 2 semanas | `<fecha>` | 2 |
+| 4 | UX: asistente de primer uso y editor de perfil | 2 semanas | `<fecha>` | 3 |
+| 5 | UX: bandeja de pendientes, actividad y política de datos | 2–3 semanas | `<fecha>` | 3 |
+| 6 | UI y accesibilidad | 1 semana | `<fecha>` | 3 (en paralelo con 4 y 5) |
+| 7 | Distribución: firma Developer ID, notarización y aviso de versión | 1 semana | `<fecha>` | 5 |
+
+Ruta crítica: 0 → 1 → 2 → 3 → (4 ∥ 5 ∥ 6) → 7.
+
+### 2.1 Fase 0: preparación, higiene y herramientas
+
+| # | Actividad | Responsable | Duración | Verificación |
+|---|---|---|---|---|
+| 0.1 | Crear `develop` desde `main` y proteger ambas: PR obligatorio y CI en verde | `<líder>` / autor | 15 min | Un push directo a `main` o a `develop` es rechazado |
+| 0.2 | Build y test de línea base sobre `96e7a97`, resultado anotado en `docs/linea-base.md` | Claude | 30 min | `swift build` y `swift test` en verde |
+| 0.3 | Tag `v<VERSION>-baseline` sobre `96e7a97` con su zip en Releases | `<líder>` | 10 min | El tag y el zip existen (es el punto de rollback) |
+| 0.4 | Quitar datos personales de `GUIA.md` y `README.md` (`HV_Victor_Mosquera_*`, `KoralAT`, `~/Documents/vm_software`) | Claude | 30 min | `grep -rn -e Mosquera -e KoralAT -e vm_software GUIA.md README.md Resources` no encuentra nada |
+| 0.5 | Archivos de ignore (Anexo A) | Claude | 1 h | `git status` limpio después de build, test, Graphify y evals |
+| 0.6 | Identidad de firma local estable en `bundle.sh` (hoy firma ad-hoc, y con cada build cambia la firma y macOS puede volver a pedir el permiso de Reconocimiento de voz) | Claude | 1 h | Tras recompilar, el permiso sigue concedido |
+| 0.7 | swift-format y SwiftLint en CI (solo herramientas de desarrollo, no entran en la app) | Claude | 3 h | CI falla con un archivo mal formateado |
+| 0.8 | gitleaks en CI y en pre-commit | Claude | 1 h | Un token de prueba en un commit hace fallar CI |
+| 0.9 | Cobertura en CI (`swift test --enable-code-coverage`), umbral inicial = línea base | Claude | 1 h | El reporte se publica como artifact |
+| 0.10 | Dependabot para GitHub Actions | Claude | 15 min | `.github/dependabot.yml` existe |
+| 0.11 | Plantillas de PR e issue, validación de Conventional Commits y de nombres de rama en CI, tablero en GitHub Projects | Claude / `<líder>` | 2 h | Un PR de prueba muestra la plantilla con el campo "Spec"; un commit `implement video now` hace fallar CI |
+| 0.12 | Grafo de línea base con Graphify (en el worker) | Claude | 30 min | Existe `graphify-out/` con back, scripts, workflows y Resources mapeados |
+| 0.13 | `CHANGELOG.md` + SemVer sobre el archivo `VERSION` existente | Claude | 30 min | La primera entrada describe la línea base |
+
+### 2.2 Fase 1: base SDD
+
+| # | Actividad | Responsable | Duración | Verificación |
+|---|---|---|---|---|
+| 1.1 | `specify init --here --integration claude`, con las ramas de spec nombradas según D5 | Claude | 30 min | Existen `.specify/` y las skills `/speckit-*`; `/speckit-specify` de prueba crea `feature/HB-001-…` |
+| 1.2 | `constitution.md` (`/speckit-constitution`): reglas de la sección 1.4 + "nada se envía sin trazabilidad" + "el contenido externo nunca es instrucción" + "todo cambio de formato de datos trae migración y respaldo" + "ninguna herramienta se descarga en ejecución sin versión fija y hash" | Claude redacta, `<líder>` aprueba | 1 día | Aprobada en PR |
+| 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: módulos (`Hirebar`, `HirebarEngine`, `HirebarSources`, `HirebarCore`) y sus límites, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | Claude redacta (`principal-architect`), `<líder>` aprueba | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
+| 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado si D6 lo pide | Claude redacta, `<líder>` aprueba | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
+| 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | Claude redacta, `<líder>` revisa | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
+| 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | Claude redacta, `<líder>` revisa | 1 día | Ídem |
+| 1.7 | Carpeta `docs/adr/` con plantilla y el primer ADR ("adoptar SDD con Spec Kit") | Claude | 1 h | ADR-0001 aprobado |
+| 1.8 | Paso en CI: un PR que toca `Sources/` debe referenciar una spec | Claude | 2 h | Un PR de prueba sin spec falla |
+| 1.9 | Revisión con agentes en cada PR: `swift-code-reviewer` contra constitution, `ARCHITECTURE.md`, Lineamientos y spec; `security-review` desde la fase 2 | `<líder>` | — | Hay comentarios del reviewer en el PR |
+
+### 2.3 Fases 2 a 7: specs que se abren
+
+Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement` → PR a `develop`. El detalle de actividades vive en el `tasks.md` de cada spec.
+
+| Fase | Spec (`specs/NNN-nombre`, rama `feature/HB-NNN-nombre`) | Criterio de salida |
+|---|---|---|
+| 2 | `001-separar-lectura-ejecucion` | La IA lee y redacta sin poder actuar; el envío usa una lista cerrada de acciones; sin `bypassPermissions` con contenido externo. Incluye la revisión semanal de rendimiento del agente Contenido, que ahora abre Chrome en las redes |
+| 2 | `002-confirmar-envio-automatico` | Prender el envío automático pide confirmación explícita |
+| 2 | `003-emparejar-telegram` | El chat se vincula con un código que muestra la app, no con el primer mensaje |
+| 2 | `004-parser-comandos` | `CommandParser` puro con tests de tabla; ningún verbo se usa en dos comandos; los audios entran por el mismo parser |
+| 2 | `005-modo-practica` | Un agente en modo práctica hace todo menos enviar, y lo registra |
+| 2 | `006-evals-prompts` | Casos fijos para cada `instrucciones-*.md`: clasificación, "no inventa logros", inyección en vacante falsa → ninguna acción; corren en CI |
+| 2 | `007-herramientas-en-ejecucion` | ffmpeg resuelto según D7; ninguna descarga en ejecución sin versión fija y hash; tamaño máximo para los audios que llegan por Telegram |
+| 3 | `008-puertos` | `AIRunner`, `Messenger`, `AgentRepository`, `Clock`, `Browser`, `SpeechRecognizer`; el Engine ya no usa `.shared` |
+| 3 | `009-tests-engine` | Scheduler, Commands y Controller con tests sin red ni IA, incluido el flujo de nota de voz |
+| 3 | `010-partir-archivos` | Ningún archivo de más de 300 líneas (`Settings`, `ContentSettings`, `ReelRenderer`, `Controller`, `Commands`); ningún `///` en código interno |
+| 3 | `011-fixtures-portales` | Un HTML guardado por portal; cada scraper se testea contra su fixture |
+| 3 | `012-version-datos` | `schemaVersion` en config, perfil, agentes y cuentas; el estado que hoy vive en `UserDefaults` (`video.esperandoVoz`, `portals.seen`) pasa al workspace versionado; migración con respaldo previo; borrado de las claves huérfanas del Llavero (`elevenlabs`, `azure-speech`, `azure-speech-region`) y "Desinstalar" del README completo |
+| 3 | `013-logs-oslog` | `OSLog` con categoría por agente; sin datos personales en los registros |
+| 3 | `014-textos-y-valores-fuera-del-codigo` | Ningún texto de usuario en el código, incluida la ayuda y las respuestas de Telegram (String Catalog); palabras de búsqueda, plazos y timeouts en configuración |
+| 4 | `015-asistente-primer-uso` | Instalar y configurar sin editar JSON; checklist visible en el panel, con los permisos de macOS (Reconocimiento de voz) pedidos en el asistente y no a mitad de un flujo |
+| 4 | `016-editor-perfil` | Datos, experiencia, preferencias y `cvVariants` editables en Ajustes |
+| 5 | `017-bandeja-pendientes` | Aprobar desde el panel con vista previa de cada envío, incluido el video narrado |
+| 5 | `018-vista-actividad` | Cada envío queda trazado: qué, a quién, cuándo y con qué texto |
+| 5 | `019-politica-datos` | Retención definida para historiales, postulaciones y grabaciones de voz (`grabacion.*`), con borrado automático |
+| 6 | `020-accesibilidad` | VoiceOver lee todos los controles; el estado nunca depende solo del color; fuentes semánticas |
+| 6 | `021-panel-uso` | Zonas de clic separadas en la fila del agente; scroll con altura máxima; copy sin jerga |
+| 7 | `022-firma-notarizacion` | App firmada con Developer ID y notarizada; Gatekeeper no la bloquea |
+| 7 | `023-aviso-version` | La app avisa de releases nuevos en GitHub sin dependencias externas |
+
+## 3. Cierre (por fase)
+
+| # | Actividad | Responsable | Verificación |
+|---|---|---|---|
+| C1 | E2E en una Mac limpia: instalar, configurar y correr un agente en modo práctica (desde la fase 2) | Claude / `<líder>` | Checklist E2E completo |
+| C2 | Release con tag, zip y entrada en CHANGELOG | `<líder>` | Release publicado |
+| C3 | Grafo de Graphify actualizado y comparado con el anterior | Claude | Sin dependencias nuevas no explicadas |
+| C4 | Balance corto con el autor: qué salió y qué pasa a la siguiente fase | `<líder>` convoca | Notas en el issue de la fase |
+
+## 4. Rollback
+
+| Disparador (objetivo) | Acción | Consulta previa |
+|---|---|---|
+| Un envío sale sin aprobación con el envío automático apagado | Revertir al tag anterior y apagar todos los agentes | No: se revierte y se avisa después |
+| La app no abre o se cae al iniciar | Revertir al tag anterior | Autor |
+| Un agente deja de correr más de 24 h por un cambio nuevo | Revertir el PR causante | Autor |
+| Un cambio de formato daña archivos en `~/Library/Application Support/Hirebar/` | Restaurar el respaldo de la migración y revertir la versión | Autor |
+| Los evals de prompts bajan del umbral acordado tras un cambio de instrucciones | Revertir el cambio de `instrucciones-*.md` | No |
+| El video narrado deja de salir en la Mac de pruebas tras un cambio (permiso, ffmpeg o render) | Revertir el PR causante | Autor |
+
+## 5. Riesgos
+
+| Riesgo | Mitigación |
+|---|---|
+| El autor sigue sacando features sin spec ni tests: 8 commits el 4 nov; `3c7c07e` agregó Azure (952 líneas) y `96e7a97` lo quitó el mismo día, sin un solo test | Congelamiento (P5) desde ya; después, toda feature entra por spec → PR |
+| El código está lejos de las reglas de la sección 1.4: 76 `///` internos, unos 200 textos y unos 24 plazos escritos en el código, commits sin Conventional Commits | Se corrige por spec (`010`, `014`) y no en un solo commit masivo; CI impide que entren casos nuevos desde la fase 0 |
+| El Engine no tiene tests y el refactor rompe algo | Las specs as-is (fase 1) y los tests (fase 3) van antes de mover código |
+| La app descarga e instala ffmpeg con pip en la Mac del usuario, sin versión fija | Spec `007` y regla en la constitution |
+| La firma ad-hoc cambia en cada build y macOS vuelve a pedir permisos | Actividad 0.6 (firma local estable) y fase 7 (Developer ID) |
+| Los portales cambian su HTML | Fixtures (`011`) y alerta en CI |
+| Claude CLI cambia sus flags | El adaptador `AIRunner` (`008`) aísla el cambio |
+| Graphify solo está en el worker | El grafo se genera allí; el clon debe existir en el worker o sincronizarse antes de C3 |
+| Firma y notarización requieren cuenta de Apple Developer (pago anual) | La fase 7 va al final y no bloquea las anteriores |
+
+## Anexo A: archivos de ignore
+
+| Archivo | Para qué | Contenido propuesto |
+|---|---|---|
+| `.gitignore` (ampliar) | Que nada generado ni personal entre al repo | Mantener lo actual y agregar: `graphify-out/` (si D4 = ignorado), `*.xcresult`, `/coverage/`, `/evals/out/`, `.env`, `.env.*`, `*.p12`, `*.cer`, `*.mobileprovision`, `.claude/settings.local.json`, `*.mp3`, `*.m4a`, `*.oga`, `*.mp4` |
+| `.graphifyignore` | Mapear todo excepto lo generado, lo sensible y `.claude/` | `.build/`, `.swiftpm/`, `dist/`, `DerivedData/`, `graphify-out/`, `coverage/`, `evals/out/`, `.claude/`, `Tests/Fixtures/portals/` (HTML de terceros, no es código del proyecto) |
+| `.gitleaks.toml` | Reglas de gitleaks + allowlist | Allowlist solo para los placeholders de `Resources/inicial/` y los fixtures de tests |
+| `.gitleaksignore` | Falsos positivos puntuales | Vacío al inicio; cada entrada por fingerprint y con justificación en el PR |
+| `.swiftlint.yml` (`excluded:`) | Que el lint no revise lo generado | `.build`, `.swiftpm`, `DerivedData`, `Tests/Fixtures` |
+| `.gitattributes` | Que los fixtures no ensucien diffs ni estadísticas | `Tests/Fixtures/** linguist-generated=true -diff` |
+| `.claude/settings.json` (`permissions.deny`) | Claude Code no tiene archivo `.claudeignore`; los archivos que no debe leer se bloquean con permisos | `Read` denegado a `.env*`, `*.p12` y `~/Library/Application Support/Hirebar/**` |

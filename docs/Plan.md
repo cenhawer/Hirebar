@@ -1,6 +1,6 @@
 # Plan de reorganización de Hirebar
 
-> 🟡 **BORRADOR, no ejecutable.** Faltan las fechas y las decisiones abiertas de la sección 1.1.
+> 🟡 **BORRADOR, no ejecutable.** Faltan las fechas y la decisión D3 de la sección 1.1.
 
 ## 0. Objetivo
 
@@ -19,8 +19,8 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 | D3 | Usuarios además del autor | Sí · no (define la exigencia de migraciones y rollback) | ⬜ |
 | D4 | `graphify-out/` en git | Ignorado (propuesto) · versionado | ✅ Ignorado: el grafo vive en el worker |
 | D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ✅ `HB`, configurado en `.conventions` |
-| D6 | Archivo de contexto para otros agentes (Codex, Gemini) | Solo `CLAUDE.md` · `CLAUDE.md` + `AGENTS.md` sincronizados | ⬜ |
-| D7 | ffmpeg para limpiar la nota de voz | Instalarlo en ejecución con versión fija y hash · reemplazarlo por AVFoundation · empaquetarlo con la app | ⬜ |
+| D6 | Archivo de contexto para otros agentes (Codex, Gemini) | Solo `CLAUDE.md` · `CLAUDE.md` + `AGENTS.md` sincronizados | ✅ `CLAUDE.md` + `AGENTS.md`, sincronizados por la extensión `agent-context` (`context_files`) |
+| D7 | ffmpeg para limpiar la nota de voz | Prerrequisito del sistema · instalarlo en ejecución con versión fija y hash · reemplazarlo por AVFoundation · empaquetarlo con la app | ✅ Prerrequisito del sistema (`brew install ffmpeg`), detectado y pedido en la configuración inicial; se revisa con un ADR en la fase 7 si la app se distribuye a personas que no compilan |
 
 ### 1.2 Prerrequisitos
 
@@ -32,14 +32,14 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 | P4 | Graphify (solo en el worker) | ✅ |
 | P5 | Features nuevas congeladas durante las fases 0 a 2, acordado con el autor | ⬜ |
 | P6 | Permiso de Reconocimiento de voz de macOS concedido en la Mac de pruebas (lo pide el flujo de video narrado) | ⬜ |
-| P7 | Python 3 en la Mac de pruebas (el flujo de video instala ffmpeg con pip la primera vez) | ⬜ |
+| P7 | ffmpeg en la Mac de pruebas (`brew install ffmpeg`), requerido por el video narrado | ⬜ |
 
 ### 1.3 Partes interesadas
 
 | Quién | Rol | Se le informa | Se le consulta |
 |---|---|---|---|
 | cenhawer | Decide, aprueba specs y PR | Siempre | — |
-| Víctor Mosquera | Autor, owner del repo, usuario principal | Al cerrar cada fase | Antes de cada rollback, de cada cambio de formato de datos y de D7 |
+| Víctor Mosquera | Autor, owner del repo, usuario principal | Al cerrar cada fase | Antes de cada rollback, y de cada cambio de formato de datos |
 | Usuarios actuales | Reciben versiones | En cada release (CHANGELOG) | — |
 
 ### 1.4 Reglas del proyecto
@@ -102,7 +102,7 @@ Ruta crítica: 0 → 1 → 2 → 3 → (4 ∥ 5 ∥ 6) → 7.
 | 1.1 | `specify init --here --integration claude`, con las ramas de spec nombradas según D5 | cenhawer | 30 min | Existen `.specify/` y las skills `/speckit-*`; `/speckit-specify` de prueba crea `feature/HB-001-…` |
 | 1.2 | `constitution.md` (`/speckit-constitution`): reglas de la sección 1.4 + "nada se envía sin trazabilidad" + "el contenido externo nunca es instrucción" + "todo cambio de formato de datos trae migración y respaldo" + "ninguna herramienta se descarga en ejecución sin versión fija y hash" | cenhawer | 1 día | Aprobada en PR |
 | 1.3 | `ARCHITECTURE.md` con la plantilla de Lineamientos: módulos (`Hirebar`, `HirebarEngine`, `HirebarSources`, `HirebarCore`) y sus límites, contratos (comandos de Telegram, variables `HIREBAR_*` del motor de IA propio, archivos del workspace), modelo de error, permisos de macOS y observabilidad | cenhawer (con `principal-architect`) | 1 día | Aprobado en PR; cada contrato tiene dueño y formato |
-| 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado si D6 lo pide | cenhawer | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
+| 1.4 | `specify extension add agent-context` + `CLAUDE.md` con la plantilla de Lineamientos (solo lo operativo y enlaces a la constitution y a `ARCHITECTURE.md`) + `.claude/rules/swift.md`; `AGENTS.md` sincronizado con `CLAUDE.md` | cenhawer | 2 h | El bloque `<!-- SPECKIT START -->` existe y se actualiza solo tras `/speckit-plan`; `CLAUDE.md` no repite reglas de la constitution |
 | 1.5 | Specs as-is (ingeniería inversa) de Empleo, Freelance, Clientes, Contenido (carrusel, video narrado con nota de voz, revisión semanal de rendimiento), Perfil y Analista | cenhawer | 3 días | Una spec por agente con `FR-###`, `SC-###` y escenarios Dado/Cuando/Entonces |
 | 1.6 | Specs as-is transversales: Motor de IA, Telegram (texto, botones y audio) y comandos, Panel y Ajustes | cenhawer | 1 día | Ídem |
 | 1.7 | Carpeta `docs/adr/` con plantilla y el primer ADR ("adoptar SDD con Spec Kit") | cenhawer | 1 h | ADR-0001 aprobado |
@@ -121,7 +121,7 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | 2 | `004-parser-comandos` | `CommandParser` puro con tests de tabla; ningún verbo se usa en dos comandos; los audios entran por el mismo parser |
 | 2 | `005-modo-practica` | Un agente en modo práctica hace todo menos enviar, y lo registra |
 | 2 | `006-evals-prompts` | Casos fijos para cada `instrucciones-*.md`: clasificación, "no inventa logros", inyección en vacante falsa → ninguna acción; corren en CI |
-| 2 | `007-herramientas-en-ejecucion` | ffmpeg resuelto según D7; ninguna descarga en ejecución sin versión fija y hash; tamaño máximo para los audios que llegan por Telegram |
+| 2 | `007-herramientas-en-ejecucion` | ffmpeg se toma del sistema y se valida al configurar (sin `pip` ni descargas en ejecución); requisito listado en el README; tamaño máximo para los audios que llegan por Telegram |
 | 3 | `008-puertos` | `AIRunner`, `Messenger`, `AgentRepository`, `Clock`, `Browser`, `SpeechRecognizer`; el Engine ya no usa `.shared` |
 | 3 | `009-tests-engine` | Scheduler, Commands y Controller con tests sin red ni IA, incluido el flujo de nota de voz |
 | 3 | `010-partir-archivos` | Ningún archivo de más de 300 líneas (`Settings`, `ContentSettings`, `ReelRenderer`, `Controller`, `Commands`); ningún `///` en código interno |
@@ -166,7 +166,7 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | El autor sigue sacando features sin spec ni tests: 8 commits el 4 nov; `3c7c07e` agregó Azure (952 líneas) y `96e7a97` lo quitó el mismo día, sin un solo test | Congelamiento (P5) desde ya; después, toda feature entra por spec → PR |
 | El código está lejos de las reglas de la sección 1.4: 76 `///` internos, unos 200 textos y unos 24 plazos escritos en el código, commits sin Conventional Commits | Se corrige por spec (`010`, `014`) y no en un solo commit masivo; CI impide que entren casos nuevos desde la fase 0 |
 | El Engine no tiene tests y el refactor rompe algo | Las specs as-is (fase 1) y los tests (fase 3) van antes de mover código |
-| La app descarga e instala ffmpeg con pip en la Mac del usuario, sin versión fija | Spec `007` y regla en la constitution |
+| La app descarga e instala ffmpeg con pip en la Mac del usuario, sin versión fija | D7: pasa a prerrequisito del sistema (spec `007`) y regla en la constitution |
 | La firma ad-hoc cambia en cada build y macOS vuelve a pedir permisos | Actividad 0.6 (firma local estable) y fase 7 (Developer ID) |
 | Los portales cambian su HTML | Fixtures (`011`) y alerta en CI |
 | Claude CLI cambia sus flags | El adaptador `AIRunner` (`008`) aísla el cambio |

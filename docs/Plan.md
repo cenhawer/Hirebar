@@ -14,8 +14,8 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|
-| D1 | Forma de trabajo con el repo | Push directo a `VictorMMosqueraG/Hirebar` · fork + PR | ⬜ |
-| D2 | Máquina de build y test | M5 · worker (M1) | ⬜ |
+| D1 | Forma de trabajo con el repo | Push directo a `VictorMMosqueraG/Hirebar` · fork + PR | ✅ Fork + PR hacia `VictorMMosqueraG/Hirebar` |
+| D2 | Máquina de build y test | M5 · worker (M1) | ✅ Worker, con `--scratch-path ~/Library/Caches/hirebar-build` para que `.build/` no se sincronice por iCloud |
 | D3 | Usuarios además del autor | Sí · no (define la exigencia de migraciones y rollback) | ⬜ |
 | D4 | `graphify-out/` en git | Ignorado (propuesto) · versionado | ⬜ |
 | D5 | Código de proyecto para los tickets de las ramas (`feature/{TICKET}-{descripción}`) | `HB` (propuesto: ramas `feature/HB-001-nombre`) · otro | ⬜ |
@@ -27,7 +27,7 @@ Línea base: commit `96e7a97` ("Narrate shorts with the user's voice note").
 | # | Qué | Estado |
 |---|---|---|
 | P1 | Clon de trabajo en `~/Documents/workspace/projects/personal/hirebar`, rama `docs/reorganization-plan` | ✅ |
-| P2 | Xcode completo en la máquina de build (`swift test` necesita XCTest) | ⬜ |
+| P2 | Xcode completo en la máquina de build (`swift test` necesita XCTest) | ✅ Worker: Xcode, Swift 6.4.2 |
 | P3 | Spec Kit (`specify`) con la extensión `agent-context` disponible | ✅ |
 | P4 | Graphify (solo en el worker) | ✅ |
 | P5 | Features nuevas congeladas durante las fases 0 a 2, acordado con el autor | ⬜ |

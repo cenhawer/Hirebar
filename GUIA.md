@@ -83,7 +83,7 @@ Todo sale de un solo archivo: `workspace/perfil.json`. De ahí se alimentan:
 ### Agregar un logro
 En Telegram:
 ```
-logro bajé el tiempo de despliegue de 30 a 10 minutos en KoralAT con GitHub Actions
+logro bajé el tiempo de despliegue de 30 a 10 minutos en Acme con GitHub Actions
 ```
 - Claude lo agrega al trabajo que nombres (si no nombras ninguno, al actual), con verbo en pasado y con las tecnologías que menciones.
 - Si no das un número, no se inventa uno.
@@ -113,16 +113,16 @@ También en **Ajustes → Habilidades**: nombre, nivel y "otros nombres" (cómo 
 
 ### Regenerar las hojas de vida
 `hv` en Telegram o **Regenerar HV** en el detalle de Perfil. Los PDF quedan en `workspace/` con estos nombres y se usan al postular según la vacante:
-- `HV_Victor_Mosquera_Backend_Node.pdf`
-- `HV_Victor_Mosquera_Backend_NET.pdf`
-- `HV_Victor_Mosquera_Backend_Java.pdf`
+- `HV_Nombre_Apellido_Backend_Node.pdf`
+- `HV_Nombre_Apellido_Backend_NET.pdf`
+- `HV_Nombre_Apellido_Backend_Java.pdf`
 
 Son formato ATS (una columna, sin tablas ni imágenes, máximo 2 páginas). Hirebar las convierte a PDF con Google Chrome sin abrir ventana.
 
 ### Agregar otra hoja de vida
 En `perfil.json`, dentro de `cvVariants`, agrega un elemento y luego escribe `hv`:
 ```json
-{ "id": "cloud", "title": "Cloud / DevOps Engineer", "file": "HV_Victor_Mosquera_Cloud", "focus": ["AWS", "Docker", "Kubernetes", "Terraform"] }
+{ "id": "cloud", "title": "Cloud / DevOps Engineer", "file": "HV_Nombre_Apellido_Cloud", "focus": ["AWS", "Docker", "Kubernetes", "Terraform"] }
 ```
 - `id`: nombre corto, sin espacios.
 - `title`: el titular de esa hoja de vida.
@@ -201,7 +201,7 @@ Cualquier otra cosa: el bot responde con la lista completa.
 ## Actualizar Hirebar
 
 ```sh
-cd ~/Documents/vm_software/hirebar
+cd Hirebar
 git pull
 scripts/bundle.sh --install
 ```

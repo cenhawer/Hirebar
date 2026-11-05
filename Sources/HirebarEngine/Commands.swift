@@ -113,7 +113,7 @@ extension Controller {
         case "rearmar", "rehacer":
             remakeWithLastRecording(words.dropFirst().first)
         case "logro", "logros":
-            requestProfileChange("Logro", rest(of: message.text), example: "logro bajé el costo de AWS 20% en KoralAT")
+            requestProfileChange("Logro", rest(of: message.text), example: "logro bajé el costo de AWS 20% en Acme")
         case "trabajo":
             requestProfileChange("Cambio de trabajo", rest(of: message.text), example: "trabajo nuevo Backend Senior en Acme desde dic 2026")
         case "habilidad", "skill":

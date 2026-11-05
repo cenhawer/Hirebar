@@ -13,7 +13,7 @@ final class ContentAccountTests: XCTestCase {
     }
 
     func testSlug() {
-        XCTAssertEqual(ContentAccountStore.slug("Víctor Mosquera"), "victor-mosquera")
+        XCTAssertEqual(ContentAccountStore.slug("Andrés Peña"), "andres-pena")
         XCTAssertEqual(ContentAccountStore.slug("  Empresa  "), "empresa")
     }
 

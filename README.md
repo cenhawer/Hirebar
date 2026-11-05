@@ -59,7 +59,7 @@ La primera vez que se abre, Hirebar copia a esa carpeta los archivos de `Resourc
 ## Actualizar
 
 ```sh
-cd ~/Documents/vm_software/hirebar
+cd Hirebar
 git pull
 scripts/bundle.sh --install
 ```

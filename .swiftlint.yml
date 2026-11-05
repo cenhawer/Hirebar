@@ -1,0 +1,25 @@
+included:
+  - Sources
+  - Tests
+excluded:
+  - .build
+  - .swiftpm
+  - DerivedData
+  - Tests/Fixtures
+line_length:
+  warning: 140
+  error: 160
+  ignores_urls: true
+trailing_comma:
+  mandatory_comma: true
+identifier_name:
+  min_length: 2
+custom_rules:
+  no_comments:
+    name: "No comments"
+    regex: '^\s*//'
+    match_kinds:
+      - comment
+      - doccomment
+    message: "El código no lleva comentarios: los nombres deben explicar el código"
+    severity: error

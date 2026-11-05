@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+dist/
+DerivedData/
+graphify-out/
+coverage/
+evals/out/
+.claude/
+Tests/Fixtures/portals/

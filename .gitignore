@@ -7,8 +7,24 @@
 xcuserdata/
 DerivedData/
 Package.resolved
+*.xcresult
+/coverage/
+/evals/out/
+/graphify-out/
 
 # Nunca subir datos personales
 config.json
 workspace/
 *.pdf
+*.mp3
+*.m4a
+*.oga
+*.mp4
+
+# Nunca subir secretos ni certificados
+.env
+.env.*
+*.p12
+*.cer
+*.mobileprovision
+.claude/settings.local.json

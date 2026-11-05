@@ -85,7 +85,14 @@ Los tests necesitan Xcode completo, porque XCTest no viene en las herramientas d
 | Variable | Para qué |
 |---|---|
 | `HIREBAR_BUILD_PATH` | Carpeta de compilación de `bundle.sh` y `coverage.sh` (por defecto `.build`). Si el repositorio está en una carpeta sincronizada con iCloud, apúntala fuera, por ejemplo a `~/Library/Caches/hirebar-build`. |
-| `HIREBAR_SIGN_IDENTITY` | Identidad con la que `bundle.sh` firma la app (por defecto `-`, firma ad-hoc). Con una identidad fija, macOS conserva entre compilaciones el permiso de Reconocimiento de voz. |
+| `HIREBAR_SIGN_IDENTITY` | Identidad con la que `bundle.sh` firma la app (por defecto `-`, firma ad-hoc). Con una identidad fija, macOS conserva entre compilaciones el permiso de Reconocimiento de voz. Sirve un certificado Apple Development: lista los tuyos con `security find-identity -v -p codesigning` y usa el hash de 40 caracteres. |
+
+Para no pasarlas en cada comando, ponlas en `~/.zshenv` (zsh lo lee también en los comandos por SSH):
+
+```sh
+export HIREBAR_BUILD_PATH="$HOME/Library/Caches/hirebar-build"
+export HIREBAR_SIGN_IDENTITY="<hash de tu identidad>"
+```
 
 | Carpeta | Qué tiene |
 |---|---|

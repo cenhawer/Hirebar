@@ -3,14 +3,18 @@ import HirebarApplication
 import HirebarCore
 
 enum ClaudeCLI {
-    static let authFailureHints = ["failed to authenticate", "oauth session expired", "please run /login", "invalid api key",
-                                   "not logged in", "please log in", "codex login", "login required", "unauthenticated"]
+    static let authFailureHints = [
+        "failed to authenticate", "oauth session expired", "please run /login", "invalid api key",
+        "not logged in", "please log in", "codex login", "login required", "unauthenticated",
+    ]
     static let writeTools = ["Edit", "Write"]
 
     static func path() -> String? {
         let home = Paths.home.path
-        let candidates = ["\(home)/.local/bin/claude", "\(home)/.claude/local/claude",
-                          "/opt/homebrew/bin/claude", "/usr/local/bin/claude"]
+        let candidates = [
+            "\(home)/.local/bin/claude", "\(home)/.claude/local/claude",
+            "/opt/homebrew/bin/claude", "/usr/local/bin/claude",
+        ]
         if let found = candidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) { return found }
         let out = Shell.run("/bin/zsh", ["-lc", "command -v claude"])?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (out?.hasPrefix("/") ?? false) ? out : nil
@@ -23,10 +27,12 @@ enum ClaudeCLI {
         if useBrowser { arguments.append("--chrome") }
         arguments += ["--permission-mode", phase.permissionMode]
         if phase.restricted { arguments.append("--restricted") }
-        arguments += ["--tools", phase.tools.joined(separator: ","),
-                      "--append-system-prompt-file", playbook.path,
-                      "--output-format", "text",
-                      "--allowedTools", allowedTools(phase, profile: profile, browser: useBrowser).joined(separator: ",")]
+        arguments += [
+            "--tools", phase.tools.joined(separator: ","),
+            "--append-system-prompt-file", playbook.path,
+            "--output-format", "text",
+            "--allowedTools", allowedTools(phase, profile: profile, browser: useBrowser).joined(separator: ","),
+        ]
         let denied = deniedReads(settings.personalFiles, phase: phase, profile: profile)
         if !denied.isEmpty { arguments += ["--disallowedTools", denied.joined(separator: ",")] }
         return arguments
@@ -100,47 +106,76 @@ enum ClaudeCLI {
         case shell(String, [String: String])
     }
 
-    static func launch(engine: AIEngineSettings, prompt: String, playbook: URL, profile: RunProfile, browser: Bool,
-                       profiles: EngineProfiles, claudePath: () -> String? = path) -> Result<Launch, LaunchProblem> {
+    struct LaunchRequest {
+        let prompt: String
+        let playbook: URL
+        let profile: RunProfile
+        let browser: Bool
+    }
+
+    static let missingClaudeMessage =
+        "No encontré Claude Code en el Mac. Instálalo con: curl -fsSL https://claude.ai/install.sh | bash, "
+        + "inicia sesión con 'claude' y vuelve a responder si. O elige otra IA en Ajustes → Motor de IA."
+    static let missingProfilesMessage =
+        "No encontré los perfiles de permisos de la IA dentro de la app. Vuelve a instalarla con scripts/bundle.sh --install."
+
+    static func browserReadingMessage(_ kind: AIEngineKind) -> String {
+        "Esta tarea lee con el navegador y con \(kind.title) no puede hacerlo sin poder actuar. "
+            + "Corre solo con Claude Code: elígelo en Ajustes → Motor de IA."
+    }
+
+    static func launch(engine: AIEngineSettings, request: LaunchRequest, profiles: EngineProfiles, claudePath: () -> String? = path)
+        -> Result<Launch, LaunchProblem>
+    {
+        let profile = request.profile
+        let prompt = request.prompt
+        let playbook = request.playbook
+        let browser = request.browser
         switch engine.kind {
         case .claude:
             guard let claude = claudePath() else {
-                return .failure(LaunchProblem(
-                    message: "No encontré Claude Code en el Mac. Instálalo con: curl -fsSL https://claude.ai/install.sh | bash, inicia sesión con 'claude' y vuelve a responder si. O elige otra IA en Ajustes → Motor de IA.",
-                    status: "falta instalar Claude Code"))
+                return .failure(LaunchProblem(message: missingClaudeMessage, status: "falta instalar Claude Code"))
             }
-            return .success(.executable(claude, arguments(prompt: prompt, playbook: playbook, profile: profile, browser: browser,
-                                                          settings: profiles.claude)))
+            return .success(
+                .executable(
+                    claude,
+                    arguments(
+                        prompt: prompt, playbook: playbook, profile: profile, browser: browser,
+                        settings: profiles.claude)))
         case .codex, .gemini:
             let commands = engine.kind == .codex ? profiles.codex : profiles.gemini
             if browser && !profile.canAct && !commands.browserInRead {
-                return .failure(LaunchProblem(
-                    message: "Esta tarea lee con el navegador y con \(engine.kind.title) no puede hacerlo sin poder actuar. Corre solo con Claude Code: elígelo en Ajustes → Motor de IA.",
-                    status: "esta tarea necesita Claude Code"))
+                return .failure(LaunchProblem(message: browserReadingMessage(engine.kind), status: "esta tarea necesita Claude Code"))
             }
-            return .success(.shell(commands.command(profile),
-                                   AIEngineSettings.environment(prompt: prompt, instructions: playbook, profile: profile)))
+            return .success(
+                .shell(
+                    commands.command(profile),
+                    AIEngineSettings.environment(prompt: prompt, instructions: playbook, profile: profile)))
         case .custom:
             let command = engine.customCommand(for: profile)
             guard !command.isEmpty else {
                 let which = profile.canAct ? "de ejecución" : "de lectura"
-                return .failure(LaunchProblem(message: "Falta el comando \(which) de tu IA. Escríbelo en Ajustes → Motor de IA.",
-                                              status: "falta configurar la IA"))
+                return .failure(
+                    LaunchProblem(
+                        message: "Falta el comando \(which) de tu IA. Escríbelo en Ajustes → Motor de IA.",
+                        status: "falta configurar la IA"))
             }
             return .success(.shell(command, AIEngineSettings.environment(prompt: prompt, instructions: playbook, profile: profile)))
         }
     }
 
-    static func makeProcess(engine: AIEngineSettings, prompt: String, playbook: URL, output: URL, errors: URL,
-                            profile: RunProfile, browser: Bool) -> Result<Process, LaunchProblem> {
+    static func makeProcess(
+        engine: AIEngineSettings, prompt: String, playbook: URL, output: URL, errors: URL,
+        profile: RunProfile, browser: Bool
+    ) -> Result<Process, LaunchProblem> {
         let profiles: EngineProfiles
         do {
             profiles = try EngineProfiles.bundled()
         } catch {
-            return .failure(LaunchProblem(message: "No encontré los perfiles de permisos de la IA dentro de la app. Vuelve a instalarla con scripts/bundle.sh --install.",
-                                          status: "faltan los perfiles de la IA"))
+            return .failure(LaunchProblem(message: missingProfilesMessage, status: "faltan los perfiles de la IA"))
         }
-        return launch(engine: engine, prompt: prompt, playbook: playbook, profile: profile, browser: browser, profiles: profiles).map {
+        let request = LaunchRequest(prompt: prompt, playbook: playbook, profile: profile, browser: browser)
+        return launch(engine: engine, request: request, profiles: profiles).map {
             switch $0 {
             case .executable(let executable, let arguments):
                 return process(executable: executable, arguments: arguments, output: output, errors: errors)

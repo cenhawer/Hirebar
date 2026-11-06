@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Registro de acciones de una fase de ejecución",
+  "type": "object",
+  "required": ["schemaVersion", "batch", "actions"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "batch": { "type": "string" },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["itemId", "action", "target", "outcome", "at"],
+        "additionalProperties": false,
+        "properties": {
+          "itemId": { "type": "string" },
+          "action": { "enum": ["apply", "sendProposal", "sendFollowUp", "sendEmail", "draftEmail", "publish", "replyToClient"] },
+          "target": { "type": "object" },
+          "sentText": { "type": "string" },
+          "outcome": { "enum": ["done", "pending", "discarded"] },
+          "reason": { "type": "string" },
+          "at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

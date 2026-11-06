@@ -6,8 +6,9 @@
 
 ## Summary
 
-Cada ejecución de la IA pasa a tener un perfil: `read` para las tareas que leen contenido externo y
-`act` para las que envían. El perfil de lectura de Claude Code corre con `--permission-mode dontAsk
+Cada ejecución de la IA pasa a tener un perfil: `read` para las tareas que leen contenido externo,
+`draft` para las que escriben su resultado en una carpeta declarada sin actuar afuera (contenido,
+perfil, análisis) y `act` para las que envían. El perfil de lectura de Claude Code corre con `--permission-mode dontAsk
 --restricted` y sin herramientas de escritura ni de acción en Chrome; Codex y Gemini leen sin
 navegador; el comando propio usa dos comandos. La lectura devuelve propuestas estructuradas por la
 salida estándar; la ejecución recibe solo lo aprobado (con el cupo restante) y deja un registro de
@@ -111,6 +112,7 @@ Resources/
 └── inicial/instrucciones-*.md        lectura devuelve propuestas; ejecución deja el registro
 Tests/
 ├── HirebarDomainTests/               verificación, catálogo, normalización de destinos
+├── HirebarEngineTests/               perfiles de cada motor, comandos de pausa
 ├── HirebarApplicationTests/          parser, planificador con cupo, caso de uso con dobles
 └── Fixtures/
     ├── proposals/  execution/  injection/

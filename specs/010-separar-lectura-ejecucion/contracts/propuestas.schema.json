@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Propuestas de una fase de lectura",
+  "type": "object",
+  "required": ["schemaVersion", "proposals"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "action", "target", "title", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["apply", "sendProposal", "sendFollowUp", "sendEmail", "draftEmail", "publish", "replyToClient"] },
+          "target": {
+            "type": "object",
+            "oneOf": [
+              { "required": ["url"], "properties": { "url": { "type": "string", "format": "uri" } }, "additionalProperties": false },
+              { "required": ["email"], "properties": { "email": { "type": "string", "format": "email" } }, "additionalProperties": false },
+              { "required": ["network", "handle"], "properties": { "network": { "enum": ["linkedin", "instagram"] }, "handle": { "type": "string" } }, "additionalProperties": false }
+            ]
+          },
+          "title": { "type": "string" },
+          "source": { "type": "string" },
+          "text": { "type": "string" },
+          "fit": { "enum": ["ENCAJA", "RETO"] }
+        }
+      }
+    }
+  }
+}

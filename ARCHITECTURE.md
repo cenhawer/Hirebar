@@ -30,7 +30,7 @@ escribir correos y preparar publicaciones.
 | Lenguaje y build | Swift 6 con concurrencia estricta, SwiftPM sin paquetes externos |
 | Equipo | Un responsable (cenhawer) y el autor original (Víctor Mosquera) |
 | Escala | Una persona; decenas de avisos por hora; una ejecución de IA a la vez |
-| Prerrequisitos de sistema | IA de terminal con sesión iniciada, Google Chrome con la extensión de la IA, ffmpeg, bot de Telegram |
+| Prerrequisitos de sistema | IA de terminal con sesión iniciada, Google Chrome con la extensión de la IA, ffmpeg, bot de Telegram; permisos de Reconocimiento de voz y de notificaciones |
 
 ## 2. Estilo arquitectónico
 
@@ -88,14 +88,15 @@ flowchart TB
         portalsAdapter[HirebarPortals]
         storageAdapter[HirebarStorage]
         mediaAdapter[HirebarMedia]
+        notificationsAdapter[HirebarNotifications]
     end
     data[(~/Library/Application Support/Hirebar)]
     logs[(~/Library/Logs/Hirebar)]
 
     ui --> appcore
-    ui --> telegramAdapter & aiAdapter & portalsAdapter & storageAdapter & mediaAdapter
+    ui --> telegramAdapter & aiAdapter & portalsAdapter & storageAdapter & mediaAdapter & notificationsAdapter
     appcore --> domain
-    telegramAdapter & aiAdapter & portalsAdapter & storageAdapter & mediaAdapter --> appcore
+    telegramAdapter & aiAdapter & portalsAdapter & storageAdapter & mediaAdapter & notificationsAdapter --> appcore
     storageAdapter --> data
     storageAdapter --> logs
 ```
@@ -111,6 +112,7 @@ flowchart TB
 | `HirebarPortals` | Un adaptador por portal incluido y el cliente HTTP | `HirebarApplication` | `PortalSource`, `WebPageFetcher` |
 | `HirebarStorage` | Archivos del workspace con `schemaVersion` y migraciones, Llavero, registro | `HirebarApplication` | Repositorios, `SecretStore`, `Logger` |
 | `HirebarMedia` | Render de carrusel, video y hojas de vida; preparar la voz con ffmpeg; reconocimiento de voz | `HirebarApplication` | `MediaRenderer`, `AudioProcessor`, `SpeechRecognizer` |
+| `HirebarNotifications` | Notificaciones de macOS cuando Telegram no está configurado o falla; abren la bandeja del panel | `HirebarApplication` | `Messenger` |
 | `Hirebar` | Panel, menú, Ajustes; raíz de composición: instancia adaptadores, los conecta a los puertos y arranca | Todos | Ejecutable |
 
 **Reglas de dependencia:**
@@ -128,7 +130,7 @@ flowchart TB
 | Puerto | Dirección | Para qué | Adaptador |
 |---|---|---|---|
 | `CommandSource` | Entrada | Órdenes, aprobaciones y notas de voz de la persona | `HirebarTelegram` |
-| `Messenger` | Salida | Avisos, listas con botones, fotos, video, documentos | `HirebarTelegram` |
+| `Messenger` | Salida | Avisos, listas con botones, fotos, video, documentos | `HirebarTelegram`; respaldo `HirebarNotifications` |
 | `AIRunner` | Salida | Ejecutar una tarea con instrucciones y pedido; devolver respuesta o fallo tipado | `HirebarAI` |
 | `PortalSource` | Salida | Buscar avisos en un portal incluido | `HirebarPortals` |
 | `WebPageFetcher` | Salida | Leer la página de un aviso | `HirebarPortals` |
@@ -179,7 +181,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
 | `HirebarCore/Log.swift` | Storage | `Logger` sobre `OSLog` (spec `023`) |
-| `HirebarCore/Telegram.swift`, `Notifier.swift` | Telegram | `Messenger` y `CommandSource` |
+| `HirebarCore/Telegram.swift`, `Notifier.swift` | Telegram + Notifications | `Messenger` y `CommandSource`; el envío por ntfy.sh se elimina (spec `012`) |
 | `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarSources/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
@@ -207,6 +209,7 @@ Hirebar no expone una API HTTP. Consume:
 | Servicio | Uso | Adaptador |
 |---|---|---|
 | Telegram Bot API | `getUpdates` (long polling), `sendMessage`, `sendPhoto`, `sendVideo`, `sendDocument`, `editMessageReplyMarkup`, `answerCallbackQuery`, `getFile` | `HirebarTelegram` |
+| ntfy.sh | Respaldo cuando Telegram no está configurado: publica el aviso completo en un tema público. Se elimina en la spec `012-canal-de-mensajes` | `Notifier` (actual) |
 | Portales incluidos | Páginas de búsqueda y de cada aviso (LinkedIn, Get on Board, Computrabajo, elempleo, Magneto, Workana, Freelancer) | `HirebarPortals` |
 
 ### 4.2 Mensajería: comandos de Telegram
@@ -299,6 +302,7 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Tema | Regla | Estado actual |
 |---|---|---|
 | Identidad de la persona | Un solo chat de Telegram, vinculado con un código que muestra la app | Se vincula el primer chat que escribe (spec `012`) |
+| Canal de respaldo | Notificaciones de macOS, locales, que llevan a la bandeja del panel | Sin Telegram, las listas completas salen por un tema público de ntfy.sh (spec `012`) |
 | Secretos | Token de Telegram y claves en el Llavero; nunca en archivos ni en el registro | Cumple |
 | Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | La IA corre con `bypassPermissions` y lee contenido externo (spec `010`) |
 | Acciones de la IA | Lista cerrada de acciones validada por la app | No existe (spec `010`) |
@@ -328,7 +332,7 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Avisos repetidos | No se repiten durante su ventana (14, 21 o 30 días según la fuente) | Revisar portales |
 | Aviso de sesión vencida | Como máximo una vez por hora | `HirebarAI` |
 | Fallo parcial de un portal | Las demás fuentes siguen; el portal se reintenta en la siguiente vuelta | Revisar portales |
-| Fallo de Telegram | Los avisos quedan en los lotes y se pueden pedir con `estado` | `HirebarTelegram` |
+| Fallo de Telegram | Los avisos quedan en los lotes, llega una notificación de macOS y se pueden pedir con `estado` al volver | `HirebarTelegram`, `HirebarNotifications` |
 
 Los valores de esta tabla pasan a configuración (spec `024`).
 
@@ -366,5 +370,5 @@ Los valores de esta tabla pasan a configuración (spec `024`).
 | La IA maneja el navegador en vez de APIs oficiales | Los portales no tienen API para postular | Un portal publica una API de postulación o bloquea la automatización |
 | Prerrequisitos del sistema en vez de empaquetarlos | Hoy todos los usuarios compilan con Xcode | Hirebar se distribuye a personas que no compilan (ADR en la fase 7) |
 | Archivos en vez de base de datos | Una persona, volumen bajo, datos editables a mano | Las consultas del Analista o del historial se vuelven lentas |
-| Telegram como único canal | Es donde la persona aprueba desde el celular | Se agrega otro canal: entra como otro adaptador de `CommandSource` y `Messenger` |
+| Telegram como único canal para aprobar desde el celular | Es donde la persona ya está; las notificaciones de macOS solo avisan y llevan al panel | Se agrega otro canal: entra como otro adaptador de `CommandSource` y `Messenger` |
 | macOS 26 como mínimo | APIs actuales de SwiftUI, `@Observable` y Liquid Glass | `xcode-27` es estable en GitHub Actions: subir a macOS 27 |

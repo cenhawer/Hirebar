@@ -120,7 +120,7 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 |---|---|---|
 | 2 | `010-separar-lectura-ejecucion` | La IA lee y redacta sin poder actuar; el envío usa una lista cerrada de acciones; sin `bypassPermissions` con contenido externo. Incluye la revisión semanal de rendimiento del agente Contenido, que ahora abre Chrome en las redes |
 | 2 | `011-confirmar-envio-automatico` | Prender el envío automático pide confirmación explícita |
-| 2 | `012-canal-de-mensajes` | El chat se vincula con un código que muestra la app, no con el primer mensaje |
+| 2 | `012-canal-de-mensajes` | El chat de Telegram se vincula con un código que muestra la app, no con el primer mensaje; sin Telegram, el respaldo son las notificaciones de macOS (permiso pedido en la configuración inicial) que llevan a la bandeja del panel; se elimina ntfy.sh |
 | 2 | `013-parser-comandos` | `CommandParser` puro con tests de tabla; ningún verbo se usa en dos comandos; los audios entran por el mismo parser |
 | 2 | `014-modo-practica` | Un agente en modo práctica hace todo menos enviar, y lo registra |
 | 2 | `015-evals-prompts` | Casos fijos para cada `instrucciones-*.md`: clasificación, "no inventa logros", inyección en vacante falsa → ninguna acción; corren en CI |

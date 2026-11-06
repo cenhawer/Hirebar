@@ -5,6 +5,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ## [Sin publicar]
 
 ### Agregado
+- Un PR que toca `Sources/` o `Package.swift` tiene que nombrar en su descripción una spec existente (`specs/NNN-nombre`).
 - Validación en CI de nombres de rama y mensajes de commit (Conventional Commits).
 - Lint de formato y estilo en CI sobre las líneas que cambia cada PR.
 - Revisión de secretos con gitleaks en CI y en el hook de pre-commit.

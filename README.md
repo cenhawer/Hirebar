@@ -81,6 +81,7 @@ Los tests necesitan Xcode completo, porque XCTest no viene en las herramientas d
 | `scripts/coverage.sh` | Corre los tests y mide la cobertura de `Sources`. Falla si baja del mínimo de `.coverage-minimum` y lista los archivos que no tienen ningún test. |
 | `scripts/lint.sh <rama base>` | Revisa formato (swift-format) y estilo (SwiftLint) solo en las líneas que cambiaste respecto a esa rama. Sin rama base, revisa todo el código. |
 | `scripts/check-conventions.sh <rama base>` | Valida el nombre de la rama y los mensajes de commit con las reglas de `.conventions`. |
+| `scripts/check-spec-reference.sh <rama base> <descripción>` | Si el PR toca `Sources/` o `Package.swift`, exige que su descripción nombre una carpeta `specs/NNN-nombre` que exista en la rama. El CI lo corre también al editar la descripción. |
 
 | Variable | Para qué |
 |---|---|

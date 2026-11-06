@@ -1,5 +1,6 @@
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 enum TaskProfiles {
     static func profile(for mode: Mode, account: ContentAccount?) -> RunProfile {
@@ -18,6 +19,27 @@ enum TaskProfiles {
             return .draft(writablePaths: ["informes/"])
         case .jobs, .freelance, .prospectingSend, .linkedInPublish:
             return .act
+        }
+    }
+
+    static func allowedProposals(for mode: Mode) -> Set<ActionKind> {
+        switch mode {
+        case .portalScanJobs: return [.apply]
+        case .portalScanFreelance: return [.sendProposal]
+        case .social: return [.apply, .draftEmail]
+        case .followUp: return [.sendFollowUp, .replyToClient]
+        case .prospecting: return [.sendEmail, .sendFollowUp, .replyToClient]
+        case .jobs, .freelance, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate, .weeklyReport: return []
+        }
+    }
+
+    static func executionMode(for mode: Mode) -> Mode? {
+        switch mode {
+        case .portalScanJobs: return .jobs
+        case .portalScanFreelance: return .freelance
+        case .social, .followUp, .prospecting, .jobs, .freelance, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate,
+            .weeklyReport:
+            return nil
         }
     }
 

@@ -71,16 +71,16 @@ enum AgentPrompts {
             }.joined(separator: "\n")
             let what = agent == .jobs ? "vacantes" : "proyectos freelance"
             return """
-            Revisión de portales \(batch.id) (\(now)). Revisa estos portales que agregó \(owner) y busca \(what) recientes \
-            que encajen con sus habilidades, según tus instrucciones. NO postules ni envíes nada: devuelve lo encontrado en \
-            la lista entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker) al final de tu respuesta. Si no hay nada \
-            nuevo, responde solo \(Controller.noNewsMarker). \(browser)
+                Revisión de portales \(batch.id) (\(now)). Revisa estos portales que agregó \(owner) y busca \(what) recientes \
+                que encajen con sus habilidades, según tus instrucciones. NO postules ni envíes nada: devuelve lo encontrado en \
+                la lista entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker) al final de tu respuesta. Si no hay nada \
+                nuevo, responde solo \(Controller.noNewsMarker). \(browser)
 
-            Habilidades de \(owner):
-            \(Profile.load().summary)
+                Habilidades de \(owner):
+                \(Profile.load().summary)
 
-            \(portals)
-            """
+                \(portals)
+                """
         case .profileUpdate:
             let request = (try? String(contentsOf: Paths.workspaceFile(ProfileRequests.fileName), encoding: .utf8))?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""

@@ -376,9 +376,12 @@ public final class Controller {
         let agent = AgentKind.owner(of: execution)
         let auto = AgentStore.load(agent).autoApprove
         let noun = agent == .jobs ? "vacante(s)" : "proyecto(s)"
-        Notifier.announce(batch, title: "Tus portales: \(fresh.count) \(noun) para ti" + (auto ? " (envío automático)" : ""),
-                          footer: auto ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
-                                       : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar.")
+        let title = "Tus portales: \(fresh.count) \(noun) para ti" + (auto ? " (envío automático)" : "")
+        let footer =
+            auto
+            ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
+            : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
+        Notifier.announce(batch, title: title, footer: footer)
         if auto { autoApprove(batch) }
     }
 

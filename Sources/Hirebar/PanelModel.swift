@@ -117,11 +117,20 @@ final class PanelModel: ObservableObject {
         }
         if !stats.isEmpty && [.jobs, .freelance, .clients].contains(kind) { stats[0] = "Esta semana: " + stats[0] }
         let ids = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
-        return AgentCardData(id: kind, name: agent.name, purpose: agent.purpose, status: status, next: next,
-                             enabled: agent.enabled, autoApprove: agent.autoApprove, working: working, stats: stats,
-                             sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
-                             schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" },
-                             pauseReason: pauseReason)
+        return AgentCardData(
+            id: kind,
+            name: agent.name,
+            purpose: agent.purpose,
+            status: status,
+            next: next,
+            enabled: agent.enabled,
+            autoApprove: agent.autoApprove,
+            working: working,
+            stats: stats,
+            sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
+            schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" },
+            pauseReason: pauseReason
+        )
     }
 
     static func capitalized(_ text: String) -> String {

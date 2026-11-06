@@ -9,11 +9,11 @@ import XCTest
 final class PauseCommandTests: XCTestCase {
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-pause-\(UUID().uuidString)")
 
-    override class func setUp() {
+    override static func setUp() {
         setenv("HIREBAR_HOME", home.path, 1)
     }
 
-    override class func tearDown() {
+    override static func tearDown() {
         try? FileManager.default.removeItem(at: home)
     }
 

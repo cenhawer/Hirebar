@@ -7,8 +7,11 @@ public enum ActionKind: String, Codable, CaseIterable, Sendable {
     case publish
     case replyToClient
 
-    public var requiresText: Bool {
-        self != .apply
+    public var requiresApprovedText: Bool {
+        switch self {
+        case .sendEmail, .draftEmail, .sendFollowUp, .replyToClient: return true
+        case .apply, .sendProposal, .publish: return false
+        }
     }
 
     public var alwaysNeedsApproval: Bool {

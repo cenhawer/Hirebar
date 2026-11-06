@@ -7,8 +7,9 @@ Todas las entidades son tipos de valor de `HirebarDomain`, salvo que se indique 
 Catálogo cerrado (FR-005): `apply` (postular), `sendProposal`, `sendFollowUp`, `sendEmail`,
 `draftEmail`, `publish`, `replyToClient`.
 
-- `requiresText`: verdadero para `sendProposal`, `sendFollowUp`, `sendEmail`, `draftEmail`,
-  `replyToClient` y `publish`.
+- `requiresApprovedText`: verdadero para `sendEmail`, `draftEmail`, `sendFollowUp` y `replyToClient`,
+  cuyo texto la persona ve antes de aprobar. En `apply` y `sendProposal` la IA redacta al ejecutar, y
+  en `publish` el texto es el del borrador: se compara solo si la propuesta lo trae.
 - `alwaysNeedsApproval`: verdadero para `replyToClient` y `publish` (FR-015).
 
 ## Proposal
@@ -23,7 +24,7 @@ Resultado de una fase de lectura.
 | `target` | Target | Enlace, plataforma o destinatario |
 | `title` | String | Para mostrar en la lista |
 | `source` | String | De dónde salió (portal, publicación, correo) |
-| `text` | String? | Obligatorio si `action.requiresText` |
+| `text` | String? | Obligatorio si `action.requiresApprovedText` |
 | `fit` | Fit? | ENCAJA o RETO, cuando aplica |
 
 ## Target

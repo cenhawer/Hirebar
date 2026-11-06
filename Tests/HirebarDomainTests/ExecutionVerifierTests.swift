@@ -72,6 +72,13 @@ final class ExecutionVerifierTests: XCTestCase {
         XCTAssertEqual(result.violations.first?.reason, .textMismatch)
     }
 
+    func testProposalWithoutApprovedTextIsVerifiedByItemAndTarget() {
+        let project = Proposal(
+            id: "w:app", action: .sendProposal, target: .url("https://www.workana.com/job/app"), title: "App", source: "Workana")
+        let result = verify([approved(project)], [record(project, text: "Propuesta redactada al enviar.")])
+        XCTAssertFalse(result.requiresPause)
+    }
+
     func testDifferentActionOnAnApprovedItemIsUnauthorized() {
         let result = verify([approved(email)], [record(email, action: .replyToClient)])
         XCTAssertEqual(result.violations.first?.reason, .actionMismatch)

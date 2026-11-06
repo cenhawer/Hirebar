@@ -99,7 +99,7 @@ public enum ExecutionVerifier {
         guard record.outcome == .done else { return nil }
         if alreadyCompleted.contains(record.itemId) { return .repeated }
         if !record.target.matches(proposal.target) { return .targetMismatch }
-        if proposal.action.requiresText && comparable(record.sentText) != comparable(proposal.text) { return .textMismatch }
+        if proposal.text != nil && comparable(record.sentText) != comparable(proposal.text) { return .textMismatch }
         return nil
     }
 

@@ -90,3 +90,21 @@
   archivos (principio VIII).
 - **Alternatives considered**: comparar por similitud de texto (abre la puerta a cambios no
   aprobados).
+
+## R8. Exfiltración desde la fase de lectura
+
+- **Decision**: en `read` y `draft`, la IA no puede leer `perfil.json`, `perfil.md` ni `hv/`
+  (`Read` negado por ruta); los criterios que necesita para juzgar el encaje (habilidades, descartes,
+  enfoque de la cuenta) van en el pedido, sin datos de contacto. `WebFetch` queda limitado a los
+  dominios de la tarea cuando el motor lo permite. Las herramientas de Chrome permitidas en lectura
+  son solo `navigate`, `read_page`, `get_page_text`, `find` y las de pestañas; `computer`,
+  `form_input`, `javascript_tool`, `file_upload`, `upload_image`, `shortcuts_execute` y
+  `browser_batch` quedan fuera.
+- **Rationale**: un contenido con instrucciones podría pedir que la IA lea datos personales y los
+  mande en la dirección de una página. Sin acceso a esos archivos, no hay qué mandar.
+- **Riesgo residual**: `navigate` puede abrir cualquier dirección y Claude Code no restringe por
+  dominio las herramientas de un servidor MCP; con lo anterior, lo único expuesto es lo que ya está en
+  el pedido. Se cubre con casos de exfiltración en los evals de la spec `015-evals-prompts` y en el
+  `/security-review` de este PR.
+- **Alternatives considered**: quitar el navegador de la lectura (rompe redes y portales propios);
+  dar acceso completo al perfil (expone datos de contacto).

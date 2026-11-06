@@ -88,12 +88,12 @@ public struct AIEngineSettings: Codable, Sendable, Equatable {
     }
 
     public static let variablesHelp = """
-    $HIREBAR_PROMPT: el pedido de esta corrida.
-    $HIREBAR_INSTRUCTIONS: ruta del archivo con las reglas de la tarea (instrucciones-*.md).
-    $HIREBAR_FULL_PROMPT: reglas + pedido en un solo texto (para IA sin opción de reglas aparte).
-    $HIREBAR_WORKSPACE: carpeta de trabajo (también es la carpeta actual).
-    $HIREBAR_PHASE: read (leer), draft (redactar en las rutas de $HIREBAR_WRITABLE_PATHS) o act (enviar).
-    """
+        $HIREBAR_PROMPT: el pedido de esta corrida.
+        $HIREBAR_INSTRUCTIONS: ruta del archivo con las reglas de la tarea (instrucciones-*.md).
+        $HIREBAR_FULL_PROMPT: reglas + pedido en un solo texto (para IA sin opción de reglas aparte).
+        $HIREBAR_WORKSPACE: carpeta de trabajo (también es la carpeta actual).
+        $HIREBAR_PHASE: read (leer), draft (redactar en las rutas de $HIREBAR_WRITABLE_PATHS) o act (enviar).
+        """
 
     public static func environment(prompt: String, instructions: URL, profile: RunProfile) -> [String: String] {
         let rules = (try? String(contentsOf: instructions, encoding: .utf8)) ?? ""

@@ -161,15 +161,13 @@ public final class Controller {
         }
         let account = ContentAccountStore.find(batch.account)
         let profile = TaskProfiles.profile(for: batch.mode, account: account)
-        let launch = ClaudeCLI.makeProcess(
-            engine: AI.settings,
+        let request = ClaudeCLI.LaunchRequest(
             prompt: AgentPrompts.prompt(for: batch, items: items, owner: owner),
             playbook: Paths.playbook(for: batch.mode),
-            output: outURL,
-            errors: errURL,
             profile: profile,
             browser: TaskProfiles.needsBrowser(batch.mode, account: account)
         )
+        let launch = ClaudeCLI.makeProcess(engine: AI.settings, request: request, output: outURL, errors: errURL)
         guard case .success(let process) = launch else {
             if case .failure(let problem) = launch {
                 reply(problem.message)

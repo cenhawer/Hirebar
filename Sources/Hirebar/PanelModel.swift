@@ -22,6 +22,7 @@ struct AgentCardData: Identifiable {
     let stats: [String]
     let sources: [SourceToggle]
     let schedule: [String]
+    let pauseReason: String?
 
     var canAutoApprove: Bool { [.jobs, .freelance, .clients].contains(id) }
 }
@@ -97,8 +98,11 @@ final class PanelModel: ObservableObject {
         case .clients, .content, .analyst: status = agent.tasks.first.map { "Corre \($0.scheduleText)" } ?? "Sin horario"
         }
         if working { status = Self.capitalized(Controller.shared.status) }
+        let pauseReason = Controller.shared.pauseReason(of: kind)
         let next: String
-        if !agent.enabled {
+        if pauseReason != nil {
+            next = "en pausa"
+        } else if !agent.enabled {
             next = "apagado"
         } else if working {
             next = "trabajando"
@@ -116,7 +120,8 @@ final class PanelModel: ObservableObject {
         return AgentCardData(id: kind, name: agent.name, purpose: agent.purpose, status: status, next: next,
                              enabled: agent.enabled, autoApprove: agent.autoApprove, working: working, stats: stats,
                              sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
-                             schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" })
+                             schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" },
+                             pauseReason: pauseReason)
     }
 
     static func capitalized(_ text: String) -> String {
@@ -137,6 +142,11 @@ final class PanelModel: ObservableObject {
         var config = Config.load()
         config.setEnabled(source, !config.isEnabled(source))
         config.save()
+        refresh()
+    }
+
+    func resume(_ kind: AgentKind) {
+        Controller.shared.resumeAgent(kind)
         refresh()
     }
 

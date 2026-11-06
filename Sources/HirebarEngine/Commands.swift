@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 extension Controller {
     static let help = """
@@ -28,6 +29,7 @@ extension Controller {
     agentes: estado de cada agente (empleo, freelance, clientes, contenido, perfil, analista)
     agente <nombre> on / off: prende o apaga un agente
     corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
+    reanudar <nombre>: saca un agente de la pausa por una acción que no coincidió con lo aprobado
     auto si / auto no: envío automático de empleo y freelance (o "auto <agente> si", ej: "auto clientes si")
     (Puedes responder citando un aviso para elegir cuál lista.)
     """
@@ -57,10 +59,12 @@ extension Controller {
         var text = message.text.lowercased().folding(options: .diacriticInsensitive, locale: Locale(identifier: "es"))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         var batch: Batch?
+        var callbackArgument: String?
         if let callback = message.callbackId {
             Telegram.shared.answerCallback(callback, text: "Recibido")
             if let colon = text.firstIndex(of: ":") {
-                batch = BatchStore.find(id: String(text[text.index(after: colon)...]))
+                callbackArgument = String(text[text.index(after: colon)...])
+                batch = BatchStore.find(id: callbackArgument ?? "")
                 text = String(text[..<colon])
             }
         }
@@ -80,6 +84,10 @@ extension Controller {
             discard(batch ?? BatchStore.latestPending(), chatId: config.chatId)
         case "estado":
             reply(statusReport())
+        case "reanudar", "resume":
+            resumeAgent(named: callbackArgument ?? rest(of: message.text))
+        case "keep":
+            keepPaused(named: callbackArgument ?? "")
         case "seguimientos", "seguimiento":
             runScheduled(.followUp, manual: true)
         case "informe":
@@ -141,6 +149,42 @@ extension Controller {
 
         \(agentsReport())
         """
+    }
+
+    public func pauseReason(of kind: AgentKind) -> String? {
+        executionGuard.pause(of: AgentID(rawValue: kind.rawValue)).map { "lista \($0.batch) (\($0.reason))" }
+    }
+
+    @discardableResult
+    public func resumeAgent(_ kind: AgentKind) -> Bool {
+        let agent = AgentID(rawValue: kind.rawValue)
+        guard executionGuard.pause(of: agent) != nil else { return false }
+        do {
+            try executionGuard.resume(agent)
+            Log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
+            return true
+        } catch {
+            Log.write("Verificación: no pude reanudar \(kind.rawValue): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private func resumeAgent(named name: String) {
+        guard let kind = AgentKind.parse(name) else {
+            reply("Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>")
+            return
+        }
+        let agentName = AgentStore.load(kind).name
+        if resumeAgent(kind) {
+            reply("\(agentName) reanudado: las listas aprobadas se vuelven a ejecutar.")
+        } else {
+            reply("\(agentName) no estaba en pausa.")
+        }
+    }
+
+    private func keepPaused(named name: String) {
+        let agentName = AgentKind.parse(name).map { AgentStore.load($0).name } ?? "El agente"
+        reply("\(agentName) sigue en pausa. Escribe \"reanudar \(agentName.lowercased())\" cuando quieras.")
     }
 
     private func rest(of raw: String) -> String {
@@ -269,6 +313,7 @@ extension Controller {
             if agent.enabled {
                 if [.jobs, .freelance, .clients].contains(agent.id) { line += " · auto \(agent.autoApprove ? "sí" : "no")" }
                 if let next = Scheduler.shared.nextRun(of: agent.id) { line += " · próxima \(TextTools.countdown(next))" }
+                if let reason = pauseReason(of: agent.id) { line += " · en pausa: \(reason)" }
             }
             return line
         }.joined(separator: "\n")

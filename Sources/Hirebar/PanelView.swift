@@ -144,7 +144,7 @@ struct AgentRow: View {
                 Spacer(minLength: 6)
                 Text(agent.next)
                     .font(.system(size: 11).monospacedDigit())
-                    .foregroundStyle(agent.working ? Color.orange : Color.secondary)
+                    .foregroundStyle(agent.working || agent.pauseReason != nil ? Color.orange : Color.secondary)
                     .lineLimit(1)
                     .fixedSize()
                 Toggle("", isOn: Binding(get: { agent.enabled }, set: { _ in model.toggleEnabled(agent.id) }))
@@ -176,6 +176,17 @@ struct AgentRow: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if let reason = agent.pauseReason {
+                HStack(spacing: 8) {
+                    Label("En pausa: \(reason)", systemImage: "pause.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    Button("Reanudar") { model.resume(agent.id) }
+                        .controlSize(.small)
+                }
+            }
             Text(agent.status)
                 .font(.system(size: 11))
                 .fixedSize(horizontal: false, vertical: true)

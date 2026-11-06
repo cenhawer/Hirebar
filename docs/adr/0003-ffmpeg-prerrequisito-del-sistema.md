@@ -22,8 +22,8 @@ por la app en la configuración inicial. La app nunca instala ni descarga herram
 - La persona necesita Homebrew. Hoy no agrega fricción: todo el que instala Hirebar lo compila con
   Xcode.
 - El adaptador de `AudioProcessor` busca ffmpeg en el sistema y devuelve un error de prerrequisito si
-  falta (spec `007-herramientas-en-ejecucion`); el asistente de primer uso lo pide al inicio (spec
-  `016-asistente-primer-uso`).
+  falta (spec `016-herramientas-en-ejecucion`); el asistente de primer uso lo pide al inicio (spec
+  `025-asistente-primer-uso`).
 
 ## Alternativas consideradas
 

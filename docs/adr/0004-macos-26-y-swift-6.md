@@ -23,7 +23,7 @@ macOS 27 cuando la imagen `xcode-27` de GitHub Actions deje de ser preview.
 
 - La app no corre en Macs con macOS anterior a 26.
 - Se elimina el código de compatibilidad y `ObservableObject` pasa a `@Observable` (spec
-  `009-macos-26-swift-6`).
+  `018-macos-26-swift-6`).
 - La concurrencia estricta obliga a resolver los datos compartidos entre hilos que hoy usan
   `@unchecked Sendable` y semáforos.
 - El CI sigue en `macos-26`, sin depender de una imagen en preview.
@@ -39,4 +39,4 @@ macOS 27 cuando la imagen `xcode-27` de GitHub Actions deje de ser preview.
 
 - Constitución, restricciones técnicas.
 - `ARCHITECTURE.md` §1.
-- `docs/Plan.md`, decisión D8 y spec `009-macos-26-swift-6`.
+- `docs/Plan.md`, decisión D8 y spec `018-macos-26-swift-6`.

@@ -72,8 +72,19 @@ persona la levanta (FR-011a).
 
 ## RunProfile (HirebarApplication)
 
-`read` o `act`. El puerto `AIRunner` recibe el perfil junto con el pedido; cada adaptador lo traduce
-a los argumentos de su motor según `Resources/perfiles-ia.json`.
+`read`, `draft(paths)` o `act`. `draft` lleva la lista de carpetas o archivos donde la tarea puede
+escribir. El puerto `AIRunner` recibe el perfil junto con el pedido; cada adaptador lo traduce a los
+argumentos de su motor según `Resources/perfiles-ia.json`.
+
+| Tarea | Perfil |
+|---|---|
+| Redes, portales propios | `read` |
+| Búsqueda de clientes | `draft(prospeccion/)`, más el bloque de propuestas |
+| Seguimientos | `draft(seguimiento.json)`, más el bloque de propuestas |
+| Preparar contenido (con o sin revisión de rendimiento) | `draft(contenido/<cuenta>/)` |
+| Actualizar perfil y hojas de vida | `draft(perfil.json, perfil.md, hv/)` |
+| Análisis semanal | `draft(informes/)` |
+| Postular, enviar propuestas, enviar correos, publicar | `act` |
 
 ## Transiciones de una lista
 

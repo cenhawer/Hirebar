@@ -14,6 +14,19 @@
   con el navegador); mantener `bypassPermissions` con `--disallowedTools` (una lista de exclusión deja
   pasar las herramientas nuevas que aparezcan).
 
+## R1b. Perfil de redacción (`draft`)
+
+- **Decision**: un tercer perfil para las tareas que escriben archivos pero no actúan afuera:
+  preparar contenido (`contenido/<cuenta>/`), actualizar el perfil (`perfil.json`, `perfil.md`,
+  `hv/`) y el análisis semanal (`informes/`). Igual que `read`, más `Write` y `Edit` limitados por
+  regla de ruta a la carpeta o archivos declarados de la tarea; sin herramientas de acción de Chrome.
+- **Rationale**: esas tareas necesitan escribir su resultado, y Contenido además lee la web. Con
+  escritura limitada a su carpeta, un contenido externo malicioso solo puede alterar un borrador que
+  la persona revisa antes de publicar. Cierra además la divergencia de la spec `006-agente-analista`:
+  el análisis solo puede escribir en `informes/`.
+- **Alternatives considered**: darles el perfil `act` (podrían enviar); darles `read` y que devuelvan
+  los archivos por la salida estándar (láminas HTML y hojas de vida no caben bien en un solo bloque).
+
 ## R2. Herramientas de Claude in Chrome por fase
 
 - **Decision**: la lista de herramientas de Chrome permitidas en cada fase vive en un archivo de

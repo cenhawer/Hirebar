@@ -57,6 +57,10 @@ graphify update .
   `/speckit-analyze` → `/speckit-implement` → PR a `develop`.
 - La rama de cada spec se crea a mano con el número de su carpeta: `feature/HB-NNN-nombre`.
 - Orden de las specs y fases: `docs/Plan.md`.
+- Antes de abrir un PR: revisión del diff con `swift-code-reviewer` contra la constitución,
+  `ARCHITECTURE.md`, Lineamientos y la spec; si toca envíos, la IA, Telegram, secretos o contenido
+  externo, también `/security-review`. La revisión se corre en local y se marca en la plantilla del
+  PR.
 - El bloque entre `SPECKIT START` y `SPECKIT END` lo mantiene la extensión `agent-context` después
   de `/speckit-specify` y `/speckit-plan`; no se edita a mano. Su script necesita PyYAML; sin
   instalarlo: `uv run --no-project --with pyyaml bash

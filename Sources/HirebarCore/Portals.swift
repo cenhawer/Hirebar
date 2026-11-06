@@ -37,8 +37,6 @@ public struct CustomPortal: Codable, Identifiable, Sendable, Equatable {
 
 public enum PortalStore {
     public static var url: URL { Paths.workspaceFile("portales.json") }
-    public static var findingsURL: URL { Paths.workspaceFile("portales-hallazgos.json") }
-
     public static func load() -> [CustomPortal] {
         guard let data = try? Data(contentsOf: url) else { return [] }
         return (try? JSONDecoder().decode([CustomPortal].self, from: data)) ?? []
@@ -61,20 +59,4 @@ public enum PortalStore {
         load().filter { $0.agent == agent && $0.enabled && $0.isValid }
     }
 
-    public struct Finding: Codable, Sendable {
-        public var id: String
-        public var portal: String
-        public var titulo: String
-        public var url: String
-        public var detalle: String?
-        public var encaje: String?
-    }
-
-    public static func takeFindings() -> [Finding] {
-        guard let data = try? Data(contentsOf: findingsURL) else { return [] }
-        try? FileManager.default.removeItem(at: findingsURL)
-        if let list = try? JSONDecoder().decode([Finding].self, from: data) { return list }
-        struct Wrapped: Codable { var hallazgos: [Finding] }
-        return (try? JSONDecoder().decode(Wrapped.self, from: data))?.hallazgos ?? []
-    }
 }

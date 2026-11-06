@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Fit: String, Codable, Sendable {
     case strong = "ENCAJA"
@@ -140,4 +141,15 @@ public struct Batch: Codable, Sendable {
     }
 
     public var isManual: Bool { id.split(separator: "-").first?.hasSuffix("m") ?? false }
+}
+
+extension BatchItem {
+    public init(_ proposal: Proposal) {
+        id = proposal.id
+        platform = proposal.source
+        kind = (proposal.fit ?? .strong).rawValue
+        title = proposal.title
+        url = proposal.target.displayText
+        detail = [proposal.source, proposal.text].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
 }

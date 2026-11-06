@@ -131,7 +131,7 @@ flowchart TB
 |---|---|---|---|
 | `CommandSource` | Entrada | Órdenes, aprobaciones y notas de voz de la persona | `HirebarTelegram` |
 | `Messenger` | Salida | Avisos, listas con botones, fotos, video, documentos | `HirebarTelegram`; respaldo `HirebarNotifications` |
-| `AIRunner` | Salida | Ejecutar una tarea con instrucciones y pedido; devolver respuesta o fallo tipado | `HirebarAI` |
+| `AIRunner` | Salida | Ejecutar una tarea con instrucciones, pedido y perfil (`read`, `draft` o `act`); devolver respuesta o fallo tipado | `HirebarAI` |
 | `PortalSource` | Salida | Buscar avisos en un portal incluido | `HirebarPortals` |
 | `WebPageFetcher` | Salida | Leer la página de un aviso | `HirebarPortals` |
 | `MediaRenderer` | Salida | Carrusel, video corto y hojas de vida en PDF | `HirebarMedia` |
@@ -141,6 +141,24 @@ flowchart TB
 | `SecretStore` | Salida | Token de Telegram y claves | `HirebarStorage` |
 | `Clock` | Salida | Hora actual y temporizadores | `Hirebar` (raíz) |
 | `Logger` | Salida | Registro sin datos personales | `HirebarStorage` |
+
+### 3.1.1 Perfiles de ejecución de la IA
+
+Cada ejecución lleva un perfil. Los perfiles de cada motor viven en `Resources/perfiles-ia.json`,
+dentro del bundle de la app y fuera del alcance de la IA.
+
+| Perfil | Puede | No puede | Tareas |
+|---|---|---|---|
+| `read` | Leer archivos de la carpeta de trabajo, buscar en la web, ver páginas en Chrome | Escribir archivos, hacer clic, escribir en formularios, ejecutar código, enviar | Redes, portales propios |
+| `draft(rutas)` | Lo de `read`, más escribir solo en las rutas declaradas | Lo demás de `read` | Clientes, seguimientos, contenido, perfil, análisis |
+| `act` | Leer, escribir en la carpeta de trabajo y usar Chrome para actuar | Escribir fuera de la carpeta de trabajo | Postular, enviar propuestas, seguimientos, correos, publicar |
+
+Las tareas `read` y `draft` que proponen envíos devuelven sus propuestas en el bloque
+`HIREBAR_PROPOSALS_BEGIN` … `HIREBAR_PROPOSALS_END` de su salida (esquema en
+`specs/010-separar-lectura-ejecucion/contracts/propuestas.schema.json`). Las ejecuciones `act` dejan
+`workspace/ejecuciones/<lote>.acciones.json` (esquema en `contracts/registro-acciones.schema.json`), y la
+app verifica cada acción contra la copia de lo aprobado. Codex y Gemini CLI no tienen perfil `read`
+con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 ### 3.2 Casos de uso
 
@@ -230,6 +248,7 @@ Contrato de entrada con la persona. Agregar, quitar o cambiar un comando se escr
 | `video <cuenta>` · `rearmar <cuenta>` · nota de voz | Vista previa y guion; video narrado con la voz |
 | `logro <texto>` · `trabajo <texto>` · `habilidad <nombre> <domino/conozco/evito>` · `habilidades` · `hv` | Perfil y hojas de vida |
 | Responder citando un aviso | Elige a qué lista aplica la respuesta |
+| `reanudar <agente>` · botones "Reanudar <agente>" y "Mantener en pausa" | Levanta o mantiene la pausa de un agente por una acción no autorizada |
 
 El chat se vincula hoy con el primer mensaje que llega; la spec `012-canal-de-mensajes` lo cambia a
 un código que muestra la app.
@@ -242,6 +261,7 @@ un código que muestra la app.
 | `HIREBAR_INSTRUCTIONS` | Ruta del archivo de reglas de la tarea (`instrucciones-*.md`) |
 | `HIREBAR_FULL_PROMPT` | Reglas y pedido en un solo texto |
 | `HIREBAR_WORKSPACE` | Carpeta de trabajo, que también es la carpeta actual |
+| `HIREBAR_PHASE` | `read`, `draft` o `act`; "Otra IA" tiene un comando para lectura y otro para ejecución |
 
 Lo que la IA imprime es la respuesta que llega a Telegram; `SIN_NOVEDADES` indica que no hubo nada
 que reportar.
@@ -273,6 +293,8 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `workspace/hv/plantilla.html` · `HV_*.pdf` | Plantilla y hojas de vida generadas |
 | `workspace/postulaciones.md` · `historial-propuestas.md` · `informes/` · `ejecuciones/` · `prospeccion/` | Registros de lo enviado, análisis y salidas de cada ejecución |
 | `workspace/contenido/cuentas.json` · `contenido/<cuenta>/` | Cuentas de contenido; borrador, láminas, guion, video, grabación y rendimiento |
+| `workspace/ejecuciones/<lote>.acciones.json` | Registro de acciones de una ejecución `act` |
+| `estado/aprobados/<lote>.json` · `estado/verificaciones/<lote>.json` · `estado/pausas.json` | Copia de lo aprobado, verificación de cada acción y pausas de agentes; fuera del workspace, donde la IA no escribe |
 
 **Estado actual:** los archivos no tienen `schemaVersion` y parte del estado vive en `UserDefaults`
 (`telegram.offset`, `video.esperandoVoz`, `portals.seen`, `radar.seen`, `jobradar.seen` y las

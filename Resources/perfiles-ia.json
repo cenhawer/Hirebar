@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "claude": {
+    "personalFiles": ["perfil.json", "perfil.md", "hv/**"],
+    "read": {
+      "permissionMode": "dontAsk",
+      "restricted": true,
+      "tools": ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
+      "browserTools": [
+        "mcp__claude-in-chrome__navigate",
+        "mcp__claude-in-chrome__read_page",
+        "mcp__claude-in-chrome__get_page_text",
+        "mcp__claude-in-chrome__find",
+        "mcp__claude-in-chrome__tabs_context_mcp",
+        "mcp__claude-in-chrome__tabs_create_mcp",
+        "mcp__claude-in-chrome__tabs_close_mcp"
+      ],
+      "denyPersonalFiles": true
+    },
+    "draft": {
+      "permissionMode": "dontAsk",
+      "restricted": true,
+      "tools": ["Read", "Glob", "Grep", "WebSearch", "WebFetch", "Write", "Edit"],
+      "browserTools": [
+        "mcp__claude-in-chrome__navigate",
+        "mcp__claude-in-chrome__read_page",
+        "mcp__claude-in-chrome__get_page_text",
+        "mcp__claude-in-chrome__find",
+        "mcp__claude-in-chrome__tabs_context_mcp",
+        "mcp__claude-in-chrome__tabs_create_mcp",
+        "mcp__claude-in-chrome__tabs_close_mcp"
+      ],
+      "denyPersonalFiles": true
+    },
+    "act": {
+      "permissionMode": "dontAsk",
+      "restricted": true,
+      "tools": ["Read", "Glob", "Grep", "Write", "Edit"],
+      "browserTools": ["mcp__claude-in-chrome"],
+      "denyPersonalFiles": false
+    }
+  },
+  "codex": {
+    "read": "codex exec --sandbox read-only --skip-git-repo-check -C \"$HIREBAR_WORKSPACE\" \"$HIREBAR_FULL_PROMPT\"",
+    "draft": "codex exec --sandbox workspace-write --skip-git-repo-check -C \"$HIREBAR_WORKSPACE\" \"$HIREBAR_FULL_PROMPT\"",
+    "act": "codex exec --sandbox workspace-write --skip-git-repo-check -C \"$HIREBAR_WORKSPACE\" \"$HIREBAR_FULL_PROMPT\"",
+    "browserInRead": false
+  },
+  "gemini": {
+    "read": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode default -p \"$HIREBAR_FULL_PROMPT\"",
+    "draft": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode auto_edit -p \"$HIREBAR_FULL_PROMPT\"",
+    "act": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode yolo -p \"$HIREBAR_FULL_PROMPT\"",
+    "browserInRead": false
+  }
+}

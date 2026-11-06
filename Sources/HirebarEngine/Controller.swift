@@ -1,8 +1,11 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 public final class Controller {
     public static let shared = Controller()
+    let executionGuard = ExecutionGuard(store: FileExecutionStateStore.standard, alerts: TelegramExecutionAlerts())
     static let noNewsMarker = "SIN_NOVEDADES"
     static let maxRunSeconds: TimeInterval = 3600
     static let authAlertEvery: TimeInterval = 3600
@@ -41,10 +44,10 @@ public final class Controller {
     func reply(_ text: String) { Notifier.tell(text) }
 
     public func autoApprove(_ batch: Batch) {
-        approve(batch, picks: [])
+        approve(batch, picks: [], approvedBy: .autoSend)
     }
 
-    func approve(_ found: Batch?, picks: [Int]) {
+    func approve(_ found: Batch?, picks: [Int], approvedBy: Approver = .person) {
         guard var batch = found else {
             reply("No tengo listas pendientes de las últimas 24 horas.")
             return
@@ -59,11 +62,12 @@ public final class Controller {
             reply("Esos números no están en la lista (van del 1 al \(batch.items.count)).")
             return
         }
+        guard let ready = approvedWithinQuota(chosen, from: batch, approvedBy: approvedBy) else { return }
         batch.status = .running
         BatchStore.upsert(batch)
-        Metrics.bump(batch.mode, "aprobados", chosen.count)
+        Metrics.bump(batch.mode, "aprobados", ready.count)
         if let id = batch.messageId { Telegram.shared.removeButtons(chatId: Config.load().chatId, messageId: id) }
-        queue.append((batch, chosen))
+        queue.append((batch, ready))
         if running == nil {
             runNext()
         } else {
@@ -92,6 +96,9 @@ public final class Controller {
             return
         }
         let batch = Batch(mode: mode, status: .running, manual: manual, account: account)
+        if TaskProfiles.profile(for: mode, account: ContentAccountStore.find(account)).canAct {
+            guard prepareScheduledExecution(batch, manual: manual) else { return }
+        }
         BatchStore.upsert(batch)
         // Una publicación pedida a mano no espera detrás de las búsquedas: va de primera en la fila.
         if manual && mode == .linkedInDraft {
@@ -158,12 +165,22 @@ public final class Controller {
         if batch.mode == .linkedInDraft, let account = ContentAccountStore.find(batch.account) {
             SlideRenderer.prepare(account)
         }
-        let launch = ClaudeCLI.makeProcess(engine: AI.settings,
-                                           prompt: AgentPrompts.prompt(for: batch, items: items, owner: owner),
-                                           playbook: Paths.playbook(for: batch.mode),
-                                           output: outURL, errors: errURL,
-                                           browser: batch.mode != .linkedInDraft
-                                               || (ContentAccountStore.find(batch.account)?.needsPerformanceCheck ?? false))
+        let account = ContentAccountStore.find(batch.account)
+        let profile = TaskProfiles.profile(for: batch.mode, account: account)
+        if profile.canAct, let pause = executionGuard.pause(of: ExecutionApprovals.agent(of: batch.mode)) {
+            batch.status = batch.mode.hasItems ? .pending : .interrupted
+            BatchStore.upsert(batch)
+            reply(Self.pausedNotice(batch.mode, pause))
+            runNext()
+            return
+        }
+        let request = ClaudeCLI.LaunchRequest(
+            prompt: AgentPrompts.prompt(for: batch, items: items, owner: owner),
+            playbook: Paths.playbook(for: batch.mode),
+            profile: profile,
+            browser: TaskProfiles.needsBrowser(batch.mode, account: account)
+        )
+        let launch = ClaudeCLI.makeProcess(engine: AI.settings, request: request, output: outURL, errors: errURL)
         guard case .success(let process) = launch else {
             if case .failure(let problem) = launch {
                 reply(problem.message)
@@ -200,7 +217,7 @@ public final class Controller {
         if mode == .freelance || mode == .jobs {
             reply("\(AI.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
         }
-        Log.write("IA: inicia lote \(batchId) con \(items.count) elemento(s)")
+        Log.write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.maxRunSeconds) { [weak self] in
             guard let self, self.runningBatch == batchId, let process = self.running, process.isRunning else { return }
             Log.write("IA: lote \(batchId) superó 1 hora, se detiene")
@@ -226,6 +243,9 @@ public final class Controller {
                 BatchStore.upsert(batch)
             }
             report(batchId, mode: mode, code: code, output: output)
+            if TaskProfiles.profile(for: mode, account: nil).canAct {
+                executionGuard.verify(batch: batchId, agent: ExecutionApprovals.agent(of: mode))
+            }
         }
         setStatus(queue.isEmpty ? "en espera" : "siguiente lista…")
         runNext()
@@ -247,7 +267,7 @@ public final class Controller {
 
     private func report(_ batchId: String, mode: Mode, code: Int32, output: String) {
         if code == 0 && (mode == .portalScanJobs || mode == .portalScanFreelance) {
-            offerPortalFindings(mode)
+            offerProposals(from: output, mode: mode)
             if output.contains(Self.noNewsMarker) { return }
         }
         if code == 0 && (mode == .followUp || mode == .social || mode == .portalScanJobs || mode == .portalScanFreelance)
@@ -264,7 +284,7 @@ public final class Controller {
             reply("\(AI.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)\nRegistro: workspace/ejecuciones/\(batchId).log")
             return
         }
-        reply(String(output.suffix(3800)))
+        reply(String(ProposalParser.removingBlock(from: output).suffix(3800)))
         switch mode {
         case .prospecting: offerProspectingEmails()
         case .profileUpdate: finishProfileUpdate()
@@ -332,31 +352,51 @@ public final class Controller {
     }
 
     static let portalSeenKey = "portals.seen"
+    static let portalSeenWindow: TimeInterval = 30 * 86400
 
-    private func offerPortalFindings(_ mode: Mode) {
-        let agent: AgentKind = mode == .portalScanJobs ? .jobs : .freelance
+    private func offerProposals(from output: String, mode: Mode) {
+        guard let execution = TaskProfiles.executionMode(for: mode) else { return }
+        let proposals: [Proposal]
+        switch ProposalParser.parse(output) {
+        case .success(let parsed):
+            proposals = parsed
+        case .failure(.blockMissing):
+            return
+        case .failure(let failure):
+            Log.write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
+            reply("\(AI.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
+            return
+        }
+        let allowed = TaskProfiles.allowedProposals(for: mode)
+        let rejected = proposals.filter { !allowed.contains($0.action) }
+        for proposal in rejected {
+            Log.write("\(mode.rawValue): descartada una propuesta con acción no permitida para esta tarea (\(proposal.action.rawValue))")
+        }
         let now = Date()
         var seen = UserDefaults.standard.dictionary(forKey: Self.portalSeenKey) as? [String: Date] ?? [:]
-        seen = seen.filter { now.timeIntervalSince($0.value) < 30 * 86400 }
-        var hits: [Hit] = []
-        for finding in PortalStore.takeFindings() where !finding.url.isEmpty && seen[finding.url] == nil {
-            seen[finding.url] = now
-            let fit: Fit = (finding.encaje ?? "").uppercased().contains("RETO") ? .stretch : .strong
-            let detail = [finding.portal, finding.detalle ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
-            hits.append(Hit(id: "cp:" + finding.url, platform: finding.portal, fit: fit, title: finding.titulo,
-                            url: finding.url, detail: detail, score: fit.rank))
-        }
+        seen = seen.filter { now.timeIntervalSince($0.value) < Self.portalSeenWindow }
+        let fresh = proposals.filter { allowed.contains($0.action) && seen[$0.target.displayText] == nil }
+        for proposal in fresh { seen[proposal.target.displayText] = now }
         UserDefaults.standard.set(seen, forKey: Self.portalSeenKey)
-        guard !hits.isEmpty else { return }
-        let target: Mode = agent == .jobs ? .jobs : .freelance
-        let batch = Batch(mode: target, items: hits.sorted(by: Hit.ranked).map(BatchItem.init), status: .pending)
+        guard !fresh.isEmpty else { return }
+        let batch = Batch(mode: execution, items: fresh.map(BatchItem.init), status: .pending)
+        do {
+            try FileExecutionStateStore.standard.saveProposals(fresh, batch: batch.id)
+        } catch {
+            Log.write("\(mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
+            return
+        }
         BatchStore.upsert(batch)
-        Metrics.bump(target, "avisados", hits.count)
+        Metrics.bump(execution, "avisados", fresh.count)
+        let agent = AgentKind.owner(of: execution)
         let auto = AgentStore.load(agent).autoApprove
         let noun = agent == .jobs ? "vacante(s)" : "proyecto(s)"
-        Notifier.announce(batch, title: "Tus portales: \(hits.count) \(noun) para ti" + (auto ? " (envío automático)" : ""),
-                          footer: auto ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
-                                       : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar.")
+        let title = "Tus portales: \(fresh.count) \(noun) para ti" + (auto ? " (envío automático)" : "")
+        let footer =
+            auto
+            ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
+            : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
+        Notifier.announce(batch, title: title, footer: footer)
         if auto { autoApprove(batch) }
     }
 
@@ -403,6 +443,90 @@ public final class Controller {
             runScheduled(.prospectingSend)
         } else if !held.isEmpty {
             reply("Hay respuestas para aprobar: \"envia correos \(heldText)\" o \"no correos\".")
+        }
+    }
+
+    static func pausedNotice(_ mode: Mode, _ pause: AgentPause) -> String {
+        let name = AgentStore.load(AgentKind.owner(of: mode)).name
+        return "\(name) está en pausa desde la lista \(pause.batch) porque algo no coincidió con lo aprobado. "
+            + "No ejecuto nada de \(name) hasta que escribas \"reanudar \(name.lowercased())\"."
+    }
+
+    private func approvedWithinQuota(_ chosen: [BatchItem], from batch: Batch, approvedBy: Approver) -> [BatchItem]? {
+        let agentID = ExecutionApprovals.agent(of: batch.mode)
+        if let pause = executionGuard.pause(of: agentID) {
+            reply(Self.pausedNotice(batch.mode, pause))
+            return nil
+        }
+        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
+        let plan: ExecutionPlan
+        do {
+            plan = try executionGuard.approve(
+                ExecutionApprovals.proposals(for: batch, items: chosen),
+                batch: batch.id,
+                approvedBy: approvedBy,
+                agent: agentID,
+                dailyLimit: agentSettings.dailyLimit
+            )
+        } catch {
+            reply("No pude guardar la copia de lo aprobado, así que no ejecuto la lista: \(error.localizedDescription)")
+            return nil
+        }
+        guard !plan.now.isEmpty else {
+            reply("Hoy ya se cumplió el cupo diario de \(agentSettings.name). La lista sigue pendiente: apruébala mañana.")
+            return nil
+        }
+        let approvedIds = Set(plan.now.map(\.proposal.id))
+        let ready = chosen.filter { approvedIds.contains($0.id) }
+        let deferred = chosen.filter { !approvedIds.contains($0.id) }
+        if !deferred.isEmpty { deferBeyondQuota(deferred, from: batch, running: ready.count) }
+        return ready
+    }
+
+    private func deferBeyondQuota(_ items: [BatchItem], from batch: Batch, running count: Int) {
+        let rest = Batch(mode: batch.mode, items: items, status: .pending)
+        let ids = Set(items.map(\.id))
+        let proposals = ExecutionApprovals.store.proposals(batch: batch.id).filter { ids.contains($0.id) }
+        if !proposals.isEmpty { try? ExecutionApprovals.store.saveProposals(proposals, batch: rest.id) }
+        BatchStore.upsert(rest)
+        reply("Hoy queda cupo para \(count): ejecuto esos y dejo \(items.count) en una lista pendiente para mañana.")
+    }
+
+    private func prepareScheduledExecution(_ batch: Batch, manual: Bool) -> Bool {
+        let agentID = ExecutionApprovals.agent(of: batch.mode)
+        if let pause = executionGuard.pause(of: agentID) {
+            reply(Self.pausedNotice(batch.mode, pause))
+            return false
+        }
+        let proposals: [Proposal]
+        switch batch.mode {
+        case .prospectingSend:
+            proposals = ExecutionApprovals.emailProposals()
+        case .linkedInPublish:
+            proposals = ContentAccountStore.find(batch.account).flatMap(ExecutionApprovals.publishProposal).map { [$0] } ?? []
+        default:
+            return true
+        }
+        guard !proposals.isEmpty else {
+            reply("No encontré qué enviar en lo aprobado; no ejecuto nada.")
+            return false
+        }
+        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
+        do {
+            let plan = try executionGuard.approve(
+                proposals, batch: batch.id, approvedBy: manual ? .person : .autoSend, agent: agentID, dailyLimit: agentSettings.dailyLimit)
+            guard !plan.now.isEmpty else {
+                reply("Hoy ya se cumplió el cupo diario de \(agentSettings.name); no envío nada más hoy.")
+                return false
+            }
+            if batch.mode == .prospectingSend && !plan.deferred.isEmpty {
+                writeApproved(plan.now.map(\.proposal.id).joined(separator: ","))
+                reply("Hoy queda cupo para \(plan.now.count) correo(s): envío esos y los demás quedan sin enviar.")
+            }
+            return true
+        } catch {
+            reply("No pude guardar la copia de lo aprobado, así que no ejecuto nada: \(error.localizedDescription)")
+            return false
         }
     }
 

@@ -8,11 +8,16 @@ let package = Package(
         .executable(name: "Hirebar", targets: ["Hirebar"]),
     ],
     targets: [
-        .target(name: "HirebarCore"),
+        .target(name: "HirebarDomain"),
+        .target(name: "HirebarApplication", dependencies: ["HirebarDomain"]),
+        .target(name: "HirebarCore", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarSources", dependencies: ["HirebarCore"]),
-        .target(name: "HirebarEngine", dependencies: ["HirebarCore", "HirebarSources"]),
+        .target(name: "HirebarEngine", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain", "HirebarSources"]),
         .executableTarget(name: "Hirebar", dependencies: ["HirebarCore", "HirebarEngine"]),
-        .testTarget(name: "HirebarCoreTests", dependencies: ["HirebarCore"]),
+        .testTarget(name: "HirebarCoreTests", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain"]),
         .testTarget(name: "HirebarSourcesTests", dependencies: ["HirebarCore", "HirebarSources"]),
+        .testTarget(name: "HirebarDomainTests", dependencies: ["HirebarDomain"]),
+        .testTarget(name: "HirebarApplicationTests", dependencies: ["HirebarApplication", "HirebarDomain"]),
+        .testTarget(name: "HirebarEngineTests", dependencies: ["HirebarApplication", "HirebarCore", "HirebarEngine"]),
     ]
 )

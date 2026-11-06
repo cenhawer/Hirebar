@@ -536,6 +536,18 @@ struct CustomPortalsSection: View {
 struct EngineEditor: View {
     @ObservedObject var model: SettingsModel
 
+    static let customWarning =
+        "Hirebar no puede verificar qué permisos tienen estos comandos. El de lectura no debería poder enviar, "
+        + "publicar ni escribir fuera de la carpeta de trabajo. Igual, cada acción que reporte el de ejecución "
+        + "se compara con lo que aprobaste."
+    static let variablesFooter =
+        "Se ejecutan en una terminal con estas variables:\n" + AIEngineSettings.variablesHelp
+        + "\nLo que imprima es la respuesta que te llega a Telegram."
+    static let presetFooter =
+        "Con esta IA, las tareas que leen con el navegador (redes, tus portales, seguimientos, clientes y revisión "
+        + "de rendimiento) no corren: solo Claude Code puede leer con el navegador sin poder actuar. Si tu versión "
+        + "usa otras opciones, elige \"Otra IA\" y copia estos comandos para ajustarlos."
+
     var body: some View {
         Form {
             Section {
@@ -559,26 +571,45 @@ struct EngineEditor: View {
 
             if model.engine.kind == .custom {
                 Section {
-                    TextField("Comando", text: $model.engine.customCommand,
-                              prompt: Text("mi-ia --prompt \"$HIREBAR_FULL_PROMPT\""), axis: .vertical)
-                        .font(.system(.body, design: .monospaced))
-                        .lineLimit(2...5)
+                    TextField(
+                        "Comando de lectura y redacción",
+                        text: $model.engine.readCommand,
+                        prompt: Text("mi-ia --solo-lectura --prompt \"$HIREBAR_FULL_PROMPT\""),
+                        axis: .vertical
+                    )
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(2...5)
+                    TextField(
+                        "Comando de ejecución",
+                        text: $model.engine.actCommand,
+                        prompt: Text("mi-ia --prompt \"$HIREBAR_FULL_PROMPT\""),
+                        axis: .vertical
+                    )
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(2...5)
+                    Label(Self.customWarning, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
                 } header: {
-                    Text("Comando de tu IA")
+                    Text("Comandos de tu IA")
                 } footer: {
-                    Text("Se ejecuta en una terminal con estas variables:\n" + AIEngineSettings.variablesHelp + "\nLo que imprima es la respuesta que te llega a Telegram.")
+                    Text(Self.variablesFooter)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-            } else if model.engine.kind != .claude {
+            } else if let commands = EngineCommands.phases(for: model.engine.kind) {
                 Section {
-                    Text(model.engine.kind.commandTemplate)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
+                    LabeledContent("Lectura") {
+                        Text(commands.read).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                    }
+                    LabeledContent("Ejecución") {
+                        Text(commands.act).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                    }
                 } header: {
-                    Text("Comando que se usa")
+                    Text("Comandos que se usan")
                 } footer: {
-                    Text("Si tu versión usa otras opciones, elige \"Otra IA\" y copia este comando para ajustarlo.")
+                    Text(Self.presetFooter)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

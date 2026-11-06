@@ -1,36 +1,38 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 extension Controller {
     static let help = """
-    Comandos:
-    si: la IA envía/postula a toda la última lista
-    si 1 3: solo esos números
-    no: descarta la lista
-    estado: cupos, próximas búsquedas y qué está haciendo la IA
-    buscar: busca proyectos y vacantes ya (o "buscar freelance", "buscar empleo")
-    seguimientos: revisa y hace seguimientos ahora
-    informe: arma ya el informe semanal
-    anota <texto>: guarda algo para el informe (ej: anota entrevista el jueves)
-    post: arma ya una publicación con imágenes para cada cuenta de contenido (te llega aquí antes de subirla)
-    post <cuenta>: solo para esa cuenta (ej: post empresa)
-    publica <cuenta>: sube la publicación que te mandé (con una sola cuenta basta "publica")
-    post <cuenta> cambia <qué>: la rehace con tu cambio · post <cuenta> salta: la descarta
-    video <cuenta>: vuelve a mandar la vista previa sin voz y el guion para grabar
-    (nota de voz): leyendo el guion; te devuelvo el video con tu voz, listo para subir
-    rearmar <cuenta>: rehace el video con la última nota de voz que mandaste
-    envia correos: envía la lista de correos del día (o "envia correos 1 3", "no correos")
-    logro <texto>: agrega un logro a tu perfil y regenera tus hojas de vida
-    trabajo <texto>: registra un cambio de trabajo (ej: trabajo nuevo Backend Senior en Acme desde dic 2026)
-    habilidad <nombre> <domino|conozco|evito>: cambia una habilidad; afecta búsquedas y filtros al instante
-    habilidades: muestra tus habilidades por nivel
-    hv: regenera tus hojas de vida sin cambios
-    agentes: estado de cada agente (empleo, freelance, clientes, contenido, perfil, analista)
-    agente <nombre> on / off: prende o apaga un agente
-    corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
-    auto si / auto no: envío automático de empleo y freelance (o "auto <agente> si", ej: "auto clientes si")
-    (Puedes responder citando un aviso para elegir cuál lista.)
-    """
+        Comandos:
+        si: la IA envía/postula a toda la última lista
+        si 1 3: solo esos números
+        no: descarta la lista
+        estado: cupos, próximas búsquedas y qué está haciendo la IA
+        buscar: busca proyectos y vacantes ya (o "buscar freelance", "buscar empleo")
+        seguimientos: revisa y hace seguimientos ahora
+        informe: arma ya el informe semanal
+        anota <texto>: guarda algo para el informe (ej: anota entrevista el jueves)
+        post: arma ya una publicación con imágenes para cada cuenta de contenido (te llega aquí antes de subirla)
+        post <cuenta>: solo para esa cuenta (ej: post empresa)
+        publica <cuenta>: sube la publicación que te mandé (con una sola cuenta basta "publica")
+        post <cuenta> cambia <qué>: la rehace con tu cambio · post <cuenta> salta: la descarta
+        video <cuenta>: vuelve a mandar la vista previa sin voz y el guion para grabar
+        (nota de voz): leyendo el guion; te devuelvo el video con tu voz, listo para subir
+        rearmar <cuenta>: rehace el video con la última nota de voz que mandaste
+        envia correos: envía la lista de correos del día (o "envia correos 1 3", "no correos")
+        logro <texto>: agrega un logro a tu perfil y regenera tus hojas de vida
+        trabajo <texto>: registra un cambio de trabajo (ej: trabajo nuevo Backend Senior en Acme desde dic 2026)
+        habilidad <nombre> <domino|conozco|evito>: cambia una habilidad; afecta búsquedas y filtros al instante
+        habilidades: muestra tus habilidades por nivel
+        hv: regenera tus hojas de vida sin cambios
+        agentes: estado de cada agente (empleo, freelance, clientes, contenido, perfil, analista)
+        agente <nombre> on / off: prende o apaga un agente
+        corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
+        reanudar <nombre>: saca un agente de la pausa por una acción que no coincidió con lo aprobado
+        auto si / auto no: envío automático de empleo y freelance (o "auto <agente> si", ej: "auto clientes si")
+        (Puedes responder citando un aviso para elegir cuál lista.)
+        """
 
     static let approveVerbs: Set<String> = ["si", "dale", "ok", "listo", "envia", "enviar", "postula", "aplica"]
     static let emailVerbs: Set<String> = ["envia", "enviar", "envialos", "envie", "si", "dale", "ok", "no", "aprobado", "aprueba"]
@@ -57,10 +59,12 @@ extension Controller {
         var text = message.text.lowercased().folding(options: .diacriticInsensitive, locale: Locale(identifier: "es"))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         var batch: Batch?
+        var callbackArgument: String?
         if let callback = message.callbackId {
             Telegram.shared.answerCallback(callback, text: "Recibido")
             if let colon = text.firstIndex(of: ":") {
-                batch = BatchStore.find(id: String(text[text.index(after: colon)...]))
+                callbackArgument = String(text[text.index(after: colon)...])
+                batch = BatchStore.find(id: callbackArgument ?? "")
                 text = String(text[..<colon])
             }
         }
@@ -80,6 +84,10 @@ extension Controller {
             discard(batch ?? BatchStore.latestPending(), chatId: config.chatId)
         case "estado":
             reply(statusReport())
+        case "reanudar", "resume":
+            resumeAgent(named: callbackArgument ?? rest(of: message.text))
+        case "keep":
+            keepPaused(named: callbackArgument ?? "")
         case "seguimientos", "seguimiento":
             runScheduled(.followUp, manual: true)
         case "informe":
@@ -141,6 +149,42 @@ extension Controller {
 
         \(agentsReport())
         """
+    }
+
+    public func pauseReason(of kind: AgentKind) -> String? {
+        executionGuard.pause(of: AgentID(rawValue: kind.rawValue)).map { "lista \($0.batch) (\($0.reason))" }
+    }
+
+    @discardableResult
+    public func resumeAgent(_ kind: AgentKind) -> Bool {
+        let agent = AgentID(rawValue: kind.rawValue)
+        guard executionGuard.pause(of: agent) != nil else { return false }
+        do {
+            try executionGuard.resume(agent)
+            Log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
+            return true
+        } catch {
+            Log.write("Verificación: no pude reanudar \(kind.rawValue): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private func resumeAgent(named name: String) {
+        guard let kind = AgentKind.parse(name) else {
+            reply("Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>")
+            return
+        }
+        let agentName = AgentStore.load(kind).name
+        if resumeAgent(kind) {
+            reply("\(agentName) reanudado: las listas aprobadas se vuelven a ejecutar.")
+        } else {
+            reply("\(agentName) no estaba en pausa.")
+        }
+    }
+
+    private func keepPaused(named name: String) {
+        let agentName = AgentKind.parse(name).map { AgentStore.load($0).name } ?? "El agente"
+        reply("\(agentName) sigue en pausa. Escribe \"reanudar \(agentName.lowercased())\" cuando quieras.")
     }
 
     private func rest(of raw: String) -> String {
@@ -269,6 +313,7 @@ extension Controller {
             if agent.enabled {
                 if [.jobs, .freelance, .clients].contains(agent.id) { line += " · auto \(agent.autoApprove ? "sí" : "no")" }
                 if let next = Scheduler.shared.nextRun(of: agent.id) { line += " · próxima \(TextTools.countdown(next))" }
+                if let reason = pauseReason(of: agent.id) { line += " · en pausa: \(reason)" }
             }
             return line
         }.joined(separator: "\n")

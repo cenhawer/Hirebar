@@ -32,17 +32,6 @@ final class PortalTests: XCTestCase {
         XCTAssertTrue(PortalStore.active(for: .freelance).isEmpty)
     }
 
-    func testFindingsAcceptListOrWrappedAndAreConsumedOnce() throws {
-        let list = #"[{"id": "1", "portal": "Torre", "titulo": "Backend Node", "url": "https://torre.ai/j/1", "encaje": "ENCAJA"}]"#
-        try Data(list.utf8).write(to: PortalStore.findingsURL)
-        XCTAssertEqual(PortalStore.takeFindings().first?.titulo, "Backend Node")
-        XCTAssertTrue(PortalStore.takeFindings().isEmpty)
-
-        let wrapped = #"{"hallazgos": [{"id": "2", "portal": "Upwork", "titulo": "API", "url": "https://u/2"}]}"#
-        try Data(wrapped.utf8).write(to: PortalStore.findingsURL)
-        XCTAssertEqual(PortalStore.takeFindings().first?.portal, "Upwork")
-    }
-
     func testAgentGetsScanTaskOnce() {
         var agent = AgentSettings(id: .jobs, name: "Empleo", purpose: "")
         agent.ensurePortalScanTask()

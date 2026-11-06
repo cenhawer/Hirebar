@@ -1,0 +1,20 @@
+name: Spec
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a spec for source changes
+        env:
+          PULL_REQUEST_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s\n' "$PULL_REQUEST_BODY" > "$RUNNER_TEMP/pull-request-body.md"
+          scripts/check-spec-reference.sh "origin/${{ github.base_ref }}" "$RUNNER_TEMP/pull-request-body.md"

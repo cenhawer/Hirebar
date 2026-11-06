@@ -4,35 +4,35 @@ import HirebarDomain
 
 extension Controller {
     static let help = """
-    Comandos:
-    si: la IA envía/postula a toda la última lista
-    si 1 3: solo esos números
-    no: descarta la lista
-    estado: cupos, próximas búsquedas y qué está haciendo la IA
-    buscar: busca proyectos y vacantes ya (o "buscar freelance", "buscar empleo")
-    seguimientos: revisa y hace seguimientos ahora
-    informe: arma ya el informe semanal
-    anota <texto>: guarda algo para el informe (ej: anota entrevista el jueves)
-    post: arma ya una publicación con imágenes para cada cuenta de contenido (te llega aquí antes de subirla)
-    post <cuenta>: solo para esa cuenta (ej: post empresa)
-    publica <cuenta>: sube la publicación que te mandé (con una sola cuenta basta "publica")
-    post <cuenta> cambia <qué>: la rehace con tu cambio · post <cuenta> salta: la descarta
-    video <cuenta>: vuelve a mandar la vista previa sin voz y el guion para grabar
-    (nota de voz): leyendo el guion; te devuelvo el video con tu voz, listo para subir
-    rearmar <cuenta>: rehace el video con la última nota de voz que mandaste
-    envia correos: envía la lista de correos del día (o "envia correos 1 3", "no correos")
-    logro <texto>: agrega un logro a tu perfil y regenera tus hojas de vida
-    trabajo <texto>: registra un cambio de trabajo (ej: trabajo nuevo Backend Senior en Acme desde dic 2026)
-    habilidad <nombre> <domino|conozco|evito>: cambia una habilidad; afecta búsquedas y filtros al instante
-    habilidades: muestra tus habilidades por nivel
-    hv: regenera tus hojas de vida sin cambios
-    agentes: estado de cada agente (empleo, freelance, clientes, contenido, perfil, analista)
-    agente <nombre> on / off: prende o apaga un agente
-    corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
-    reanudar <nombre>: saca un agente de la pausa por una acción que no coincidió con lo aprobado
-    auto si / auto no: envío automático de empleo y freelance (o "auto <agente> si", ej: "auto clientes si")
-    (Puedes responder citando un aviso para elegir cuál lista.)
-    """
+        Comandos:
+        si: la IA envía/postula a toda la última lista
+        si 1 3: solo esos números
+        no: descarta la lista
+        estado: cupos, próximas búsquedas y qué está haciendo la IA
+        buscar: busca proyectos y vacantes ya (o "buscar freelance", "buscar empleo")
+        seguimientos: revisa y hace seguimientos ahora
+        informe: arma ya el informe semanal
+        anota <texto>: guarda algo para el informe (ej: anota entrevista el jueves)
+        post: arma ya una publicación con imágenes para cada cuenta de contenido (te llega aquí antes de subirla)
+        post <cuenta>: solo para esa cuenta (ej: post empresa)
+        publica <cuenta>: sube la publicación que te mandé (con una sola cuenta basta "publica")
+        post <cuenta> cambia <qué>: la rehace con tu cambio · post <cuenta> salta: la descarta
+        video <cuenta>: vuelve a mandar la vista previa sin voz y el guion para grabar
+        (nota de voz): leyendo el guion; te devuelvo el video con tu voz, listo para subir
+        rearmar <cuenta>: rehace el video con la última nota de voz que mandaste
+        envia correos: envía la lista de correos del día (o "envia correos 1 3", "no correos")
+        logro <texto>: agrega un logro a tu perfil y regenera tus hojas de vida
+        trabajo <texto>: registra un cambio de trabajo (ej: trabajo nuevo Backend Senior en Acme desde dic 2026)
+        habilidad <nombre> <domino|conozco|evito>: cambia una habilidad; afecta búsquedas y filtros al instante
+        habilidades: muestra tus habilidades por nivel
+        hv: regenera tus hojas de vida sin cambios
+        agentes: estado de cada agente (empleo, freelance, clientes, contenido, perfil, analista)
+        agente <nombre> on / off: prende o apaga un agente
+        corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
+        reanudar <nombre>: saca un agente de la pausa por una acción que no coincidió con lo aprobado
+        auto si / auto no: envío automático de empleo y freelance (o "auto <agente> si", ej: "auto clientes si")
+        (Puedes responder citando un aviso para elegir cuál lista.)
+        """
 
     static let approveVerbs: Set<String> = ["si", "dale", "ok", "listo", "envia", "enviar", "postula", "aplica"]
     static let emailVerbs: Set<String> = ["envia", "enviar", "envialos", "envie", "si", "dale", "ok", "no", "aprobado", "aprueba"]

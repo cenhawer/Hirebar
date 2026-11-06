@@ -62,33 +62,7 @@ public final class Controller {
             reply("Esos números no están en la lista (van del 1 al \(batch.items.count)).")
             return
         }
-        let agentID = ExecutionApprovals.agent(of: batch.mode)
-        if let pause = executionGuard.pause(of: agentID) {
-            reply(Self.pausedNotice(batch.mode, pause))
-            return
-        }
-        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
-        let plan: ExecutionPlan
-        do {
-            plan = try executionGuard.approve(
-                ExecutionApprovals.proposals(for: batch, items: chosen),
-                batch: batch.id,
-                approvedBy: approvedBy,
-                agent: agentID,
-                dailyLimit: agentSettings.dailyLimit
-            )
-        } catch {
-            reply("No pude guardar la copia de lo aprobado, así que no ejecuto la lista: \(error.localizedDescription)")
-            return
-        }
-        guard !plan.now.isEmpty else {
-            reply("Hoy ya se cumplió el cupo diario de \(agentSettings.name). La lista sigue pendiente: apruébala mañana.")
-            return
-        }
-        let approvedIds = Set(plan.now.map(\.proposal.id))
-        let ready = chosen.filter { approvedIds.contains($0.id) }
-        let deferred = chosen.filter { !approvedIds.contains($0.id) }
-        if !deferred.isEmpty { deferBeyondQuota(deferred, from: batch, running: ready.count) }
+        guard let ready = approvedWithinQuota(chosen, from: batch, approvedBy: approvedBy) else { return }
         batch.status = .running
         BatchStore.upsert(batch)
         Metrics.bump(batch.mode, "aprobados", ready.count)
@@ -476,6 +450,37 @@ public final class Controller {
         let name = AgentStore.load(AgentKind.owner(of: mode)).name
         return "\(name) está en pausa desde la lista \(pause.batch) porque algo no coincidió con lo aprobado. "
             + "No ejecuto nada de \(name) hasta que escribas \"reanudar \(name.lowercased())\"."
+    }
+
+    private func approvedWithinQuota(_ chosen: [BatchItem], from batch: Batch, approvedBy: Approver) -> [BatchItem]? {
+        let agentID = ExecutionApprovals.agent(of: batch.mode)
+        if let pause = executionGuard.pause(of: agentID) {
+            reply(Self.pausedNotice(batch.mode, pause))
+            return nil
+        }
+        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
+        let plan: ExecutionPlan
+        do {
+            plan = try executionGuard.approve(
+                ExecutionApprovals.proposals(for: batch, items: chosen),
+                batch: batch.id,
+                approvedBy: approvedBy,
+                agent: agentID,
+                dailyLimit: agentSettings.dailyLimit
+            )
+        } catch {
+            reply("No pude guardar la copia de lo aprobado, así que no ejecuto la lista: \(error.localizedDescription)")
+            return nil
+        }
+        guard !plan.now.isEmpty else {
+            reply("Hoy ya se cumplió el cupo diario de \(agentSettings.name). La lista sigue pendiente: apruébala mañana.")
+            return nil
+        }
+        let approvedIds = Set(plan.now.map(\.proposal.id))
+        let ready = chosen.filter { approvedIds.contains($0.id) }
+        let deferred = chosen.filter { !approvedIds.contains($0.id) }
+        if !deferred.isEmpty { deferBeyondQuota(deferred, from: batch, running: ready.count) }
+        return ready
     }
 
     private func deferBeyondQuota(_ items: [BatchItem], from batch: Batch, running count: Int) {

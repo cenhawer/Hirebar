@@ -571,14 +571,22 @@ struct EngineEditor: View {
 
             if model.engine.kind == .custom {
                 Section {
-                    TextField("Comando de lectura y redacción", text: $model.engine.readCommand,
-                              prompt: Text("mi-ia --solo-lectura --prompt \"$HIREBAR_FULL_PROMPT\""), axis: .vertical)
-                        .font(.system(.body, design: .monospaced))
-                        .lineLimit(2...5)
-                    TextField("Comando de ejecución", text: $model.engine.actCommand,
-                              prompt: Text("mi-ia --prompt \"$HIREBAR_FULL_PROMPT\""), axis: .vertical)
-                        .font(.system(.body, design: .monospaced))
-                        .lineLimit(2...5)
+                    TextField(
+                        "Comando de lectura y redacción",
+                        text: $model.engine.readCommand,
+                        prompt: Text("mi-ia --solo-lectura --prompt \"$HIREBAR_FULL_PROMPT\""),
+                        axis: .vertical
+                    )
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(2...5)
+                    TextField(
+                        "Comando de ejecución",
+                        text: $model.engine.actCommand,
+                        prompt: Text("mi-ia --prompt \"$HIREBAR_FULL_PROMPT\""),
+                        axis: .vertical
+                    )
+                    .font(.system(.body, design: .monospaced))
+                    .lineLimit(2...5)
                     Label(Self.customWarning, systemImage: "exclamationmark.triangle")
                         .font(.caption)
                         .foregroundStyle(.orange)

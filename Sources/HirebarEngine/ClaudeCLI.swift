@@ -124,9 +124,12 @@ enum ClaudeCLI {
             + "Corre solo con Claude Code: elígelo en Ajustes → Motor de IA."
     }
 
-    static func launch(engine: AIEngineSettings, request: LaunchRequest, profiles: EngineProfiles, claudePath: () -> String? = path)
-        -> Result<Launch, LaunchProblem>
-    {
+    static func launch(
+        engine: AIEngineSettings,
+        request: LaunchRequest,
+        profiles: EngineProfiles,
+        claudePath: () -> String? = path
+    ) -> Result<Launch, LaunchProblem> {
         let profile = request.profile
         let prompt = request.prompt
         let playbook = request.playbook
@@ -164,17 +167,13 @@ enum ClaudeCLI {
         }
     }
 
-    static func makeProcess(
-        engine: AIEngineSettings, prompt: String, playbook: URL, output: URL, errors: URL,
-        profile: RunProfile, browser: Bool
-    ) -> Result<Process, LaunchProblem> {
+    static func makeProcess(engine: AIEngineSettings, request: LaunchRequest, output: URL, errors: URL) -> Result<Process, LaunchProblem> {
         let profiles: EngineProfiles
         do {
             profiles = try EngineProfiles.bundled()
         } catch {
             return .failure(LaunchProblem(message: missingProfilesMessage, status: "faltan los perfiles de la IA"))
         }
-        let request = LaunchRequest(prompt: prompt, playbook: playbook, profile: profile, browser: browser)
         return launch(engine: engine, request: request, profiles: profiles).map {
             switch $0 {
             case .executable(let executable, let arguments):

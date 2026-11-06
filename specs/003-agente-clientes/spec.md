@@ -199,12 +199,13 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 | La aprobación de correos no queda como lista con historia: `pendientes.json` y `aprobados.json` se sobrescriben y se vacían | II | `028-vista-actividad` |
 | El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
-| `si`, `ok` y `no` se usan tanto para listas de avisos como para correos | — (anti-patrón de `AGENTS.md`) | `013-parser-comandos` |
 | Las listas descartadas (`descartados-<marca>.json`) no tienen retención | IV | `029-politica-datos` |
 | El motor del agente no tiene tests | VII | `019-tests-engine` |
 
 ## Hallazgos sin principio asociado
 
+- `si`, `ok` y `no` se usan tanto para listas de avisos como para correos (anti-patrón de
+  `AGENTS.md`). Se resuelve en `013-parser-comandos`.
 - Ajustes permite fijar un cupo diario para Clientes (10 por defecto), pero el pedido a la IA no lo
   incluye: hoy no tiene efecto. Se resuelve en `010-separar-lectura-ejecucion`, donde la app valida
   cada acción y puede hacer cumplir el cupo diario de todos los agentes que envían.

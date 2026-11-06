@@ -18,6 +18,7 @@ cp "$BIN_DIR/Hirebar" "$APP/Contents/MacOS/Hirebar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
 cp -R Resources/inicial "$APP/Contents/Resources/"
+cp Resources/perfiles-ia.json "$APP/Contents/Resources/"
 codesign --force --deep --sign "$SIGN_IDENTITY" "$APP"
 echo "Built $APP"
 

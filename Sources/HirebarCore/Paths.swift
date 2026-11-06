@@ -18,6 +18,7 @@ public enum Paths {
     public static var reports: URL { workspace.appendingPathComponent("informes", isDirectory: true) }
     public static var prospecting: URL { workspace.appendingPathComponent("prospeccion", isDirectory: true) }
     public static var linkedIn: URL { workspace.appendingPathComponent("linkedin", isDirectory: true) }
+    public static var state: URL { root.appendingPathComponent("estado", isDirectory: true) }
     public static var logs: URL { home.appendingPathComponent("Library/Logs/Hirebar", isDirectory: true) }
     public static var log: URL { logs.appendingPathComponent("hirebar.log") }
 
@@ -37,7 +38,7 @@ public enum Paths {
     public static var content: URL { workspace.appendingPathComponent("contenido", isDirectory: true) }
 
     public static func ensure() {
-        for dir in [root, workspace, runs, reports, prospecting, linkedIn, content, logs] {
+        for dir in [root, workspace, runs, reports, prospecting, linkedIn, content, state, logs] {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
     }

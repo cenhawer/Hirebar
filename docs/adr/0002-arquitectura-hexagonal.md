@@ -27,7 +27,7 @@ que cruza una capa no compila. Solo la raíz de composición instancia adaptador
 - Agregar un portal, un motor de IA u otro canal es agregar un adaptador, sin tocar el dominio.
 - Leer y actuar quedan como casos de uso distintos con puertos distintos.
 - Hay que mover y partir casi todos los archivos actuales; el destino de cada uno está en
-  `ARCHITECTURE.md` §3.3 y el trabajo en la spec `008-arquitectura-hexagonal`.
+  `ARCHITECTURE.md` §3.3 y el trabajo en la spec `017-arquitectura-hexagonal`.
 - Más targets y más protocolos que hoy: cada uno tiene que justificarse por un puerto real.
 
 ## Alternativas consideradas
@@ -42,4 +42,4 @@ que cruza una capa no compila. Solo la raíz de composición instancia adaptador
 
 - Constitución, principio VIII.
 - `ARCHITECTURE.md` §2 y §3.
-- `docs/Plan.md`, spec `008-arquitectura-hexagonal`.
+- `docs/Plan.md`, spec `017-arquitectura-hexagonal`.

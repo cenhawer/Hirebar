@@ -161,7 +161,7 @@ flowchart TB
 ### 3.3 Estado actual y destino de cada archivo
 
 Hoy el código tiene cuatro targets en cadena (`Hirebar` → `HirebarEngine` → `HirebarSources` →
-`HirebarCore`) y el motor usa singletons. La spec `008-arquitectura-hexagonal` lleva cada archivo a
+`HirebarCore`) y el motor usa singletons. La spec `017-arquitectura-hexagonal` lleva cada archivo a
 su destino; los que mezclan capas se parten.
 
 | Archivo actual | Destino | Nota |
@@ -169,7 +169,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/Models.swift` | Domain | `Batch`, `BatchItem`, `Hit`, `Fit`, `Mode` |
 | `HirebarCore/Agents.swift` | Domain + Storage | Entidades al dominio; `AgentStore` a un repositorio |
 | `HirebarCore/Profile.swift` | Domain + Storage | `Profile`, `Skill`, `CVVariant` al dominio; `ProfileEditor` a un repositorio |
-| `HirebarCore/SearchProfile.swift` | Domain + Storage | Las listas de palabras pasan a datos (spec `015`) |
+| `HirebarCore/SearchProfile.swift` | Domain + Storage | Las listas de palabras pasan a datos (spec `024`) |
 | `HirebarCore/ContentAccounts.swift` | Domain + Storage | Entidades al dominio; `ContentAccountStore` a un repositorio |
 | `HirebarCore/Portals.swift` | Domain + Storage | `CustomPortal` al dominio; `PortalStore` a un repositorio |
 | `HirebarCore/Quotas.swift` | Domain + Storage | Reglas de cupo al dominio; conteo persistido a un repositorio |
@@ -178,7 +178,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
 | `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
-| `HirebarCore/Log.swift` | Storage | `Logger` sobre `OSLog` (spec `014`) |
+| `HirebarCore/Log.swift` | Storage | `Logger` sobre `OSLog` (spec `023`) |
 | `HirebarCore/Telegram.swift`, `Notifier.swift` | Telegram | `Messenger` y `CommandSource` |
 | `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
@@ -186,17 +186,17 @@ su destino; los que mezclan capas se parten.
 | `HirebarSources/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
 | `HirebarSources/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarEngine/Controller.swift` | Application | Se parte en los casos de uso de lotes |
-| `HirebarEngine/Commands.swift` | Telegram + Application | Lectura de comandos al adaptador (`004-parser-comandos`); acciones a casos de uso |
+| `HirebarEngine/Commands.swift` | Telegram + Application | Lectura de comandos al adaptador (`013-parser-comandos`); acciones a casos de uso |
 | `HirebarEngine/Scheduler.swift` | Application | Programar tareas, con `Clock` |
 | `HirebarEngine/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
 | `HirebarEngine/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |
 | `HirebarEngine/EngineCheck.swift` | Application | Verificar prerrequisitos |
 | `HirebarEngine/AI.swift`, `ClaudeCLI.swift` | AI | `AIRunner` |
 | `HirebarEngine/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
-| `HirebarEngine/AudioTools.swift` | Media | `AudioProcessor`, con ffmpeg del sistema (spec `007`) |
+| `HirebarEngine/AudioTools.swift` | Media | `AudioProcessor`, con ffmpeg del sistema (spec `016`) |
 | `HirebarEngine/VoiceListener.swift` | Media + Domain | `VoiceListener` a `SpeechRecognizer`; `ScriptAligner` al dominio |
 | `HirebarEngine/Engine.swift` | Hirebar | Arranque en la raíz de composición |
-| `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `009`) |
+| `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `018`) |
 
 ## 4. Contratos
 
@@ -228,7 +228,7 @@ Contrato de entrada con la persona. Agregar, quitar o cambiar un comando se escr
 | `logro <texto>` · `trabajo <texto>` · `habilidad <nombre> <domino/conozco/evito>` · `habilidades` · `hv` | Perfil y hojas de vida |
 | Responder citando un aviso | Elige a qué lista aplica la respuesta |
 
-El chat se vincula hoy con el primer mensaje que llega; la spec `003-emparejar-telegram` lo cambia a
+El chat se vincula hoy con el primer mensaje que llega; la spec `012-canal-de-mensajes` lo cambia a
 un código que muestra la app.
 
 **Contrato con la IA de terminal** (motor propio y adaptadores):
@@ -273,7 +273,7 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 
 **Estado actual:** los archivos no tienen `schemaVersion` y parte del estado vive en `UserDefaults`
 (`telegram.offset`, `video.esperandoVoz`, `portals.seen`, `radar.seen`, `jobradar.seen` y las
-marcas del programador). La spec `013-version-datos` lleva todo al workspace con versión, migración
+marcas del programador). La spec `022-version-datos` lleva todo al workspace con versión, migración
 y respaldo previo.
 
 **Estrategia de migraciones:** cada repositorio conoce la versión que escribe; al leer una anterior,
@@ -298,18 +298,18 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 
 | Tema | Regla | Estado actual |
 |---|---|---|
-| Identidad de la persona | Un solo chat de Telegram, vinculado con un código que muestra la app | Se vincula el primer chat que escribe (spec `003`) |
+| Identidad de la persona | Un solo chat de Telegram, vinculado con un código que muestra la app | Se vincula el primer chat que escribe (spec `012`) |
 | Secretos | Token de Telegram y claves en el Llavero; nunca en archivos ni en el registro | Cumple |
-| Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | La IA corre con `bypassPermissions` y lee contenido externo (spec `001`) |
-| Acciones de la IA | Lista cerrada de acciones validada por la app | No existe (spec `001`) |
-| Envío automático | Se prende por agente con confirmación explícita | Se prende con una casilla (spec `002`) |
-| Herramientas | Sin descargas en ejecución sin versión fija y hash | ffmpeg se instala con `pip` en ejecución (spec `007`) |
+| Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | La IA corre con `bypassPermissions` y lee contenido externo (spec `010`) |
+| Acciones de la IA | Lista cerrada de acciones validada por la app | No existe (spec `010`) |
+| Envío automático | Se prende por agente con confirmación explícita | Se prende con una casilla (spec `011`) |
+| Herramientas | Sin descargas en ejecución sin versión fija y hash | ffmpeg se instala con `pip` en ejecución (spec `016`) |
 | Repositorio | Sin datos personales ni secretos; gitleaks en CI y pre-commit | Cumple |
 
 ## 7. Observabilidad
 
 - **Registro:** `~/Library/Logs/Hirebar/hirebar.log` hoy; pasa a `OSLog` con subsistema
-  `com.vmsoftware.hirebar` y una categoría por agente (spec `014`). Campos: agente, caso de uso,
+  `com.vmsoftware.hirebar` y una categoría por agente (spec `023`). Campos: agente, caso de uso,
   lote y resultado. Sin datos personales.
 - **Métricas de negocio:** avisos vistos, descartados y propuestos; envíos aprobados y hechos;
   respuestas; por agente y por semana. Las muestra el panel y las usa el Analista.
@@ -330,7 +330,7 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Fallo parcial de un portal | Las demás fuentes siguen; el portal se reintenta en la siguiente vuelta | Revisar portales |
 | Fallo de Telegram | Los avisos quedan en los lotes y se pueden pedir con `estado` | `HirebarTelegram` |
 
-Los valores de esta tabla pasan a configuración (spec `015`).
+Los valores de esta tabla pasan a configuración (spec `024`).
 
 ## 9. Entornos y despliegue
 
@@ -343,7 +343,7 @@ Los valores de esta tabla pasan a configuración (spec `015`).
 - **Release:** un tag `v*` sobre `main` publica el zip en GitHub Releases. Versión en `VERSION`,
   cambios en `CHANGELOG.md`.
 - **Instalación:** `scripts/bundle.sh --install` copia la app a `~/Applications`. La distribución a
-  personas que no compilan exige Developer ID y notarización (spec `023`).
+  personas que no compilan exige Developer ID y notarización (spec `032`).
 - **Cierre ordenado:** al salir, la ejecución en curso se detiene y su lote vuelve a pendiente.
   Estado actual: la app termina sin detenerla y recupera los lotes interrumpidos al volver a abrir.
 

@@ -54,14 +54,34 @@ final class ExecutionGuardTests: XCTestCase {
     }
 
     func testApprovingSavesTheApprovedCopyWithWhoApprovedIt() throws {
-        let items = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .autoSend)
-        XCTAssertEqual(store.approved["b1"], items)
-        XCTAssertEqual(items.first?.approvedBy, .autoSend)
-        XCTAssertEqual(items.first?.approvedAt, moment)
+        let plan = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .autoSend, agent: jobs, dailyLimit: nil)
+        XCTAssertEqual(store.approved["b1"], plan.now)
+        XCTAssertEqual(plan.now.first?.approvedBy, .autoSend)
+        XCTAssertEqual(plan.now.first?.approvedAt, moment)
+    }
+
+    func testApprovingSavesOnlyWhatFitsInTheRemainingQuota() throws {
+        store.completedToday = 19
+        let other = Proposal(id: "li:2", action: .apply, target: .url("https://linkedin.com/jobs/view/2"), title: "API", source: "LinkedIn")
+        let plan = try executionGuard.approve([vacancy, other], batch: "b1", approvedBy: .person, agent: jobs, dailyLimit: 20)
+        XCTAssertEqual(store.approved["b1"]?.map(\.proposal.id), ["li:1"])
+        XCTAssertEqual(plan.deferred.map(\.proposal.id), ["li:2"])
+    }
+
+    func testAutomaticApprovalNeverCoversClientRepliesOrPublications() throws {
+        let reply = Proposal(
+            id: "r1", action: .replyToClient, target: .email("cliente@acme.com"), title: "Acme", source: "Gmail", text: "Gracias.")
+        let post = Proposal(
+            id: "empresa", action: .publish, target: .account(network: "instagram", handle: "empresa"), title: "Post", source: "IG")
+        let plan = try executionGuard.approve([vacancy, reply, post], batch: "b1", approvedBy: .autoSend, agent: jobs, dailyLimit: nil)
+        XCTAssertEqual(plan.now.map(\.proposal.id), ["li:1"])
+        XCTAssertEqual(Set(plan.deferred.map(\.proposal.id)), ["r1", "empresa"])
+        let byPerson = try executionGuard.approve([reply, post], batch: "b2", approvedBy: .person, agent: jobs, dailyLimit: nil)
+        XCTAssertEqual(byPerson.now.count, 2)
     }
 
     func testAuthorizedExecutionIsSavedWithoutPauseOrAlert() throws {
-        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person)
+        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person, agent: jobs, dailyLimit: nil)
         store.logs["b1"] = log("li:1")
         let verification = executionGuard.verify(batch: "b1", agent: jobs)
         XCTAssertFalse(verification.requiresPause)
@@ -71,7 +91,7 @@ final class ExecutionGuardTests: XCTestCase {
     }
 
     func testUnauthorizedActionPausesTheAgentAndAlertsThePerson() throws {
-        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person)
+        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person, agent: jobs, dailyLimit: nil)
         store.logs["b1"] = log("li:999")
         executionGuard.verify(batch: "b1", agent: jobs)
         XCTAssertEqual(executionGuard.pause(of: jobs)?.reason, "notApproved")
@@ -79,7 +99,7 @@ final class ExecutionGuardTests: XCTestCase {
     }
 
     func testMissingLogPausesTheAgent() throws {
-        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person)
+        _ = try executionGuard.approve([vacancy], batch: "b1", approvedBy: .person, agent: jobs, dailyLimit: nil)
         executionGuard.verify(batch: "b1", agent: jobs)
         XCTAssertEqual(executionGuard.pause(of: jobs)?.reason, "logMissing")
         XCTAssertEqual(alerts.reviews.count, 1)

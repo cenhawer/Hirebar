@@ -26,11 +26,20 @@ public struct ExecutionGuard: Sendable {
         return max(0, dailyLimit - store.completedActions(agent: agent, since: startOfDay))
     }
 
-    public func approve(_ proposals: [Proposal], batch: String, approvedBy: Approver) throws -> [ApprovedItem] {
+    public func approve(
+        _ proposals: [Proposal],
+        batch: String,
+        approvedBy: Approver,
+        agent: AgentID,
+        dailyLimit: Int?
+    ) throws -> ExecutionPlan {
         let moment = now()
         let items = proposals.map { ApprovedItem(proposal: $0, batch: batch, approvedAt: moment, approvedBy: approvedBy) }
-        try store.saveApproved(items, batch: batch)
-        return items
+        let held = items.filter { approvedBy == .autoSend && $0.proposal.action.alwaysNeedsApproval }
+        let eligible = items.filter { !held.contains($0) }
+        let plan = ExecutionPlanner.plan(eligible, remainingQuota: remainingQuota(of: agent, dailyLimit: dailyLimit))
+        try store.saveApproved(plan.now, batch: batch)
+        return ExecutionPlan(now: plan.now, deferred: plan.deferred + held)
     }
 
     @discardableResult

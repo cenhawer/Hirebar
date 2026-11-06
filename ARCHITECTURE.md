@@ -351,12 +351,12 @@ Los valores de esta tabla pasan a configuración (spec `015`).
 
 | ADR | Título | Estado | Fecha |
 |---|---|---|---|
-| ADR-0001 | Desarrollo guiado por specs con Spec Kit | Propuesto | 2026-11-05 |
-| ADR-0002 | Arquitectura hexagonal con límites por targets de SwiftPM | Propuesto | 2026-11-05 |
-| ADR-0003 | ffmpeg como prerrequisito del sistema | Propuesto | 2026-11-05 |
-| ADR-0004 | macOS 26 y Swift 6 como base | Propuesto | 2026-11-05 |
+| [ADR-0001](docs/adr/0001-desarrollo-guiado-por-specs.md) | Desarrollo guiado por specs con Spec Kit | Aceptado | 2026-11-05 |
+| [ADR-0002](docs/adr/0002-arquitectura-hexagonal.md) | Arquitectura hexagonal con límites por targets de SwiftPM | Aceptado | 2026-11-05 |
+| [ADR-0003](docs/adr/0003-ffmpeg-prerrequisito-del-sistema.md) | ffmpeg como prerrequisito del sistema | Aceptado | 2026-11-05 |
+| [ADR-0004](docs/adr/0004-macos-26-y-swift-6.md) | macOS 26 y Swift 6 como base | Aceptado | 2026-11-05 |
 
-Se redactan en `docs/adr/` en la actividad 1.7 del plan.
+Índice y plantilla en `docs/adr/README.md`.
 
 ## 11. Trade-offs asumidos y cuándo revisar
 

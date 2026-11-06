@@ -16,13 +16,10 @@ public enum EngineCheck {
             FileManager.default.createFile(atPath: output.path, contents: nil)
             FileManager.default.createFile(atPath: errors.path, contents: nil)
             let launch = ClaudeCLI.makeProcess(engine: engine, prompt: "Responde solo: OK", playbook: rules,
-                                               output: output, errors: errors)
+                                               output: output, errors: errors, profile: .read, browser: false)
             guard case .success(let process) = launch else {
                 if case .failure(let problem) = launch { finish(false, problem.message, completion) }
                 return
-            }
-            if engine.kind == .claude {
-                process.arguments = (process.arguments ?? []).filter { $0 != "--chrome" }
             }
             do {
                 try process.run()

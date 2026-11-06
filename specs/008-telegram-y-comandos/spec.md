@@ -194,7 +194,6 @@ identificador del archivo y extensión `oga`.
 |---|---|---|
 | El chat se vincula con el primer mensaje que llega, de quien sea | Restricciones técnicas (vínculo por código) | `012-canal-de-mensajes` |
 | Sin Telegram, los avisos salen por un tema público de ntfy.sh | IV | `012-canal-de-mensajes` |
-| `si`, `ok`, `no` y `envia` sirven a la vez para listas y para correos | — (anti-patrón de `AGENTS.md`) | `013-parser-comandos` |
 | La lectura de comandos está mezclada con las acciones en un mismo archivo | VIII | `013-parser-comandos` · `017-arquitectura-hexagonal` |
 | El último mensaje procesado se guarda en `UserDefaults` | IV | `022-version-datos` |
 | La lista de comandos y las respuestas están escritas en el código | VI | `024-textos-y-valores-fuera-del-codigo` |
@@ -203,6 +202,8 @@ identificador del archivo y extensión `oga`.
 
 ## Hallazgos sin principio asociado
 
+- `si`, `ok`, `no` y `envia` sirven a la vez para listas y para correos (anti-patrón de
+  `AGENTS.md`). Se resuelve en `013-parser-comandos`.
 - `auto si` sin nombre cambia Empleo y Freelance pero no Clientes, aunque la respuesta muestra los
   tres. Se define en `013-parser-comandos`.
 - El token se valida solo por su forma: un token mal copiado con la forma correcta se guarda y el

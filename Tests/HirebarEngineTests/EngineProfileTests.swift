@@ -110,7 +110,9 @@ final class EngineProfileTests: XCTestCase {
 
     func launch(_ engine: AIEngineSettings, profile: RunProfile, browser: Bool) -> Result<ClaudeCLI.Launch, ClaudeCLI.LaunchProblem> {
         ClaudeCLI.launch(
-            engine: engine, prompt: "p", playbook: playbook, profile: profile, browser: browser, profiles: profiles,
+            engine: engine,
+            request: ClaudeCLI.LaunchRequest(prompt: "p", playbook: playbook, profile: profile, browser: browser),
+            profiles: profiles,
             claudePath: { "/usr/local/bin/claude" })
     }
 

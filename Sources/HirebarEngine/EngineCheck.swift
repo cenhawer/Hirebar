@@ -15,8 +15,9 @@ public enum EngineCheck {
             try? "Responde únicamente con la palabra OK, sin nada más.".write(to: rules, atomically: true, encoding: .utf8)
             FileManager.default.createFile(atPath: output.path, contents: nil)
             FileManager.default.createFile(atPath: errors.path, contents: nil)
-            let launch = ClaudeCLI.makeProcess(engine: engine, prompt: "Responde solo: OK", playbook: rules,
-                                               output: output, errors: errors, profile: .read, browser: false)
+            let launch = ClaudeCLI.makeProcess(
+                engine: engine, prompt: "Responde solo: OK", playbook: rules, output: output, errors: errors, profile: .read, browser: false
+            )
             guard case .success(let process) = launch else {
                 if case .failure(let problem) = launch { finish(false, problem.message, completion) }
                 return

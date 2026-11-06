@@ -65,18 +65,18 @@ public struct AIEngineSettings: Codable, Sendable, Equatable {
     }
 
     public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        kind = try c.decodeIfPresent(AIEngineKind.self, forKey: .kind) ?? .claude
-        readCommand = try c.decodeIfPresent(String.self, forKey: .readCommand) ?? ""
-        let legacyCommand = try c.decodeIfPresent(String.self, forKey: .customCommand) ?? ""
-        actCommand = try c.decodeIfPresent(String.self, forKey: .actCommand) ?? legacyCommand
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decodeIfPresent(AIEngineKind.self, forKey: .kind) ?? .claude
+        readCommand = try container.decodeIfPresent(String.self, forKey: .readCommand) ?? ""
+        let legacyCommand = try container.decodeIfPresent(String.self, forKey: .customCommand) ?? ""
+        actCommand = try container.decodeIfPresent(String.self, forKey: .actCommand) ?? legacyCommand
     }
 
     public func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(kind, forKey: .kind)
-        try c.encode(readCommand, forKey: .readCommand)
-        try c.encode(actCommand, forKey: .actCommand)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(readCommand, forKey: .readCommand)
+        try container.encode(actCommand, forKey: .actCommand)
     }
 
     public func customCommand(for profile: RunProfile) -> String {

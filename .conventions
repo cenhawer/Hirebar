@@ -3,3 +3,5 @@ COMMIT_TYPES="feat fix refactor test docs chore style perf ci build migration re
 BRANCH_TYPES_WITH_TICKET="feature fix hotfix refactor test chore style migration"
 BRANCH_TYPES_WITHOUT_TICKET="docs chore"
 DESCRIPTION_MAX_LENGTH=72
+SPEC_REQUIRED_PATHS="Sources Package.swift"
+SPECS_DIRECTORY=specs

@@ -12,3 +12,8 @@
 - [ ] `scripts/lint.sh origin/develop` sin violaciones en las líneas cambiadas
 - [ ] Cada escenario y `SC-###` tocado tiene un test
 - [ ] README o `docs/` actualizados si cambia la instalación, la configuración o el uso
+
+## Revisión
+
+- [ ] `swift-code-reviewer` sobre el diff, contra la constitución, `ARCHITECTURE.md`, Lineamientos y la spec; hallazgos resueltos o respondidos
+- [ ] `/security-review` si el cambio toca envíos, la IA, Telegram, secretos o contenido externo

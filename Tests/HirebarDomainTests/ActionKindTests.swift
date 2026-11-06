@@ -3,8 +3,9 @@ import XCTest
 @testable import HirebarDomain
 
 final class ActionKindTests: XCTestCase {
-    func testOnlyApplyCanBeSentWithoutText() {
-        XCTAssertEqual(ActionKind.allCases.filter { !$0.requiresText }, [.apply])
+    func testMessagesThePersonReadsBeforeApprovingRequireApprovedText() {
+        XCTAssertEqual(
+            Set(ActionKind.allCases.filter(\.requiresApprovedText)), [.sendEmail, .draftEmail, .sendFollowUp, .replyToClient])
     }
 
     func testPublishingAndClientRepliesAlwaysNeedApproval() {

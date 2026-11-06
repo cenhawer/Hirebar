@@ -32,7 +32,7 @@ public struct Proposal: Codable, Hashable, Sendable {
 
     public var isComplete: Bool {
         guard !id.isEmpty else { return false }
-        guard action.requiresText else { return true }
+        guard action.requiresApprovedText else { return true }
         return !(text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

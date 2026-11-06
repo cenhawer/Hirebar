@@ -20,12 +20,21 @@ public struct FileExecutionStateStore: ExecutionStateStore {
         let content: Content
     }
 
+    var proposalsFolder: URL { stateFolder.appendingPathComponent("propuestas", isDirectory: true) }
     var approvedFolder: URL { stateFolder.appendingPathComponent("aprobados", isDirectory: true) }
     var verificationsFolder: URL { stateFolder.appendingPathComponent("verificaciones", isDirectory: true) }
     var pausesFile: URL { stateFolder.appendingPathComponent("pausas.json") }
 
     public static func actionLogFile(batch: String, in runsFolder: URL = Paths.runs) -> URL {
         runsFolder.appendingPathComponent("\(batch).acciones.json")
+    }
+
+    public func proposals(batch: String) -> [Proposal] {
+        read([Proposal].self, from: proposalsFolder.appendingPathComponent("\(batch).json")) ?? []
+    }
+
+    public func saveProposals(_ proposals: [Proposal], batch: String) throws {
+        try write(proposals, to: proposalsFolder.appendingPathComponent("\(batch).json"))
     }
 
     public func approvedItems(batch: String) -> [ApprovedItem] {

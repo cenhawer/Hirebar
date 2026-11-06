@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 
 enum AgentPrompts {
@@ -71,8 +72,12 @@ enum AgentPrompts {
             let what = agent == .jobs ? "vacantes" : "proyectos freelance"
             return """
             Revisión de portales \(batch.id) (\(now)). Revisa estos portales que agregó \(owner) y busca \(what) recientes \
-            que encajen con su perfil, según tus instrucciones. NO postules ni envíes nada: solo deja lo encontrado en \
-            \(PortalStore.findingsURL.lastPathComponent). Si no hay nada nuevo, responde solo \(Controller.noNewsMarker). \(browser)
+            que encajen con sus habilidades, según tus instrucciones. NO postules ni envíes nada: devuelve lo encontrado en \
+            la lista entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker) al final de tu respuesta. Si no hay nada \
+            nuevo, responde solo \(Controller.noNewsMarker). \(browser)
+
+            Habilidades de \(owner):
+            \(Profile.load().summary)
 
             \(portals)
             """

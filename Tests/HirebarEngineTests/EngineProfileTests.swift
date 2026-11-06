@@ -1,6 +1,7 @@
 import Foundation
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 import XCTest
 
 @testable import HirebarEngine
@@ -113,7 +114,8 @@ final class EngineProfileTests: XCTestCase {
             engine: engine,
             request: ClaudeCLI.LaunchRequest(prompt: "p", playbook: playbook, profile: profile, browser: browser),
             profiles: profiles,
-            claudePath: { "/usr/local/bin/claude" })
+            claudePath: { "/usr/local/bin/claude" }
+        )
     }
 
     func testEachTaskGetsItsProfile() {
@@ -129,5 +131,13 @@ final class EngineProfileTests: XCTestCase {
         }
         XCTAssertFalse(TaskProfiles.needsBrowser(.weeklyReport, account: nil))
         XCTAssertFalse(TaskProfiles.needsBrowser(.profileUpdate, account: nil))
+    }
+
+    func testReadingTasksCanOnlyProposeTheirOwnActions() {
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .portalScanJobs), [.apply])
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .portalScanFreelance), [.sendProposal])
+        XCTAssertTrue(TaskProfiles.allowedProposals(for: .jobs).isEmpty)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanJobs), .jobs)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanFreelance), .freelance)
     }
 }

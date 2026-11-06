@@ -20,6 +20,14 @@ public enum Target: Hashable, Sendable {
         }
     }
 
+    public var displayText: String {
+        switch self {
+        case .url(let address): return address
+        case .email(let address): return address
+        case .account(let network, let handle): return "\(network): \(handle)"
+        }
+    }
+
     public func matches(_ other: Target) -> Bool {
         normalized == other.normalized
     }

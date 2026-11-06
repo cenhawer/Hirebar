@@ -1,6 +1,7 @@
 import Foundation
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 public final class Controller {
     public static let shared = Controller()
@@ -251,7 +252,7 @@ public final class Controller {
 
     private func report(_ batchId: String, mode: Mode, code: Int32, output: String) {
         if code == 0 && (mode == .portalScanJobs || mode == .portalScanFreelance) {
-            offerPortalFindings(mode)
+            offerProposals(from: output, mode: mode)
             if output.contains(Self.noNewsMarker) { return }
         }
         if code == 0 && (mode == .followUp || mode == .social || mode == .portalScanJobs || mode == .portalScanFreelance)
@@ -268,7 +269,7 @@ public final class Controller {
             reply("\(AI.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)\nRegistro: workspace/ejecuciones/\(batchId).log")
             return
         }
-        reply(String(output.suffix(3800)))
+        reply(String(ProposalParser.removingBlock(from: output).suffix(3800)))
         switch mode {
         case .prospecting: offerProspectingEmails()
         case .profileUpdate: finishProfileUpdate()
@@ -336,29 +337,46 @@ public final class Controller {
     }
 
     static let portalSeenKey = "portals.seen"
+    static let portalSeenWindow: TimeInterval = 30 * 86400
 
-    private func offerPortalFindings(_ mode: Mode) {
-        let agent: AgentKind = mode == .portalScanJobs ? .jobs : .freelance
+    private func offerProposals(from output: String, mode: Mode) {
+        guard let execution = TaskProfiles.executionMode(for: mode) else { return }
+        let proposals: [Proposal]
+        switch ProposalParser.parse(output) {
+        case .success(let parsed):
+            proposals = parsed
+        case .failure(.blockMissing):
+            return
+        case .failure(let failure):
+            Log.write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
+            reply("\(AI.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
+            return
+        }
+        let allowed = TaskProfiles.allowedProposals(for: mode)
+        let rejected = proposals.filter { !allowed.contains($0.action) }
+        for proposal in rejected {
+            Log.write("\(mode.rawValue): descartada una propuesta con acción no permitida para esta tarea (\(proposal.action.rawValue))")
+        }
         let now = Date()
         var seen = UserDefaults.standard.dictionary(forKey: Self.portalSeenKey) as? [String: Date] ?? [:]
-        seen = seen.filter { now.timeIntervalSince($0.value) < 30 * 86400 }
-        var hits: [Hit] = []
-        for finding in PortalStore.takeFindings() where !finding.url.isEmpty && seen[finding.url] == nil {
-            seen[finding.url] = now
-            let fit: Fit = (finding.encaje ?? "").uppercased().contains("RETO") ? .stretch : .strong
-            let detail = [finding.portal, finding.detalle ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
-            hits.append(Hit(id: "cp:" + finding.url, platform: finding.portal, fit: fit, title: finding.titulo,
-                            url: finding.url, detail: detail, score: fit.rank))
-        }
+        seen = seen.filter { now.timeIntervalSince($0.value) < Self.portalSeenWindow }
+        let fresh = proposals.filter { allowed.contains($0.action) && seen[$0.target.displayText] == nil }
+        for proposal in fresh { seen[proposal.target.displayText] = now }
         UserDefaults.standard.set(seen, forKey: Self.portalSeenKey)
-        guard !hits.isEmpty else { return }
-        let target: Mode = agent == .jobs ? .jobs : .freelance
-        let batch = Batch(mode: target, items: hits.sorted(by: Hit.ranked).map(BatchItem.init), status: .pending)
+        guard !fresh.isEmpty else { return }
+        let batch = Batch(mode: execution, items: fresh.map(BatchItem.init), status: .pending)
+        do {
+            try FileExecutionStateStore.standard.saveProposals(fresh, batch: batch.id)
+        } catch {
+            Log.write("\(mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
+            return
+        }
         BatchStore.upsert(batch)
-        Metrics.bump(target, "avisados", hits.count)
+        Metrics.bump(execution, "avisados", fresh.count)
+        let agent = AgentKind.owner(of: execution)
         let auto = AgentStore.load(agent).autoApprove
         let noun = agent == .jobs ? "vacante(s)" : "proyecto(s)"
-        Notifier.announce(batch, title: "Tus portales: \(hits.count) \(noun) para ti" + (auto ? " (envío automático)" : ""),
+        Notifier.announce(batch, title: "Tus portales: \(fresh.count) \(noun) para ti" + (auto ? " (envío automático)" : ""),
                           footer: auto ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
                                        : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar.")
         if auto { autoApprove(batch) }

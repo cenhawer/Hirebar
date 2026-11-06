@@ -36,6 +36,12 @@ final class FileExecutionStateStoreTests: XCTestCase {
         XCTAssertEqual(store.approvedItems(batch: "otro"), [])
     }
 
+    func testProposalsRoundTripOutsideTheWorkspace() throws {
+        try store.saveProposals([item.proposal], batch: "b1")
+        XCTAssertEqual(store.proposals(batch: "b1"), [item.proposal])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appendingPathComponent("estado/propuestas/b1.json").path))
+    }
+
     func testActionLogReadingDistinguishesMissingInvalidAndFound() throws {
         XCTAssertEqual(store.actionLog(batch: "b1").isMissing, true)
         let file = FileExecutionStateStore.actionLogFile(batch: "b1", in: folder.appendingPathComponent("workspace/ejecuciones"))

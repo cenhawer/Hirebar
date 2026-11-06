@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import HirebarDomain
 
 final class ActionKindTests: XCTestCase {

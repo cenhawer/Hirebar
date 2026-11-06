@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import HirebarDomain
 
 final class ExecutionVerifierTests: XCTestCase {
@@ -10,7 +11,8 @@ final class ExecutionVerifierTests: XCTestCase {
     }
 
     var application: Proposal {
-        Proposal(id: "li:4012", action: .apply, target: .url("https://www.linkedin.com/jobs/view/4012/"), title: "Backend", source: "LinkedIn")
+        Proposal(
+            id: "li:4012", action: .apply, target: .url("https://www.linkedin.com/jobs/view/4012/"), title: "Backend", source: "LinkedIn")
     }
 
     var email: Proposal {
@@ -53,7 +55,8 @@ final class ExecutionVerifierTests: XCTestCase {
     }
 
     func testActionOnAnItemThatWasNotApprovedIsUnauthorized() {
-        let stranger = Proposal(id: "li:9999", action: .apply, target: .url("https://linkedin.com/jobs/view/9999"), title: "Otra", source: "LinkedIn")
+        let stranger = Proposal(
+            id: "li:9999", action: .apply, target: .url("https://linkedin.com/jobs/view/9999"), title: "Otra", source: "LinkedIn")
         let result = verify([approved(application)], [record(stranger)])
         XCTAssertTrue(result.requiresPause)
         XCTAssertEqual(result.violations.first?.reason, .notApproved)

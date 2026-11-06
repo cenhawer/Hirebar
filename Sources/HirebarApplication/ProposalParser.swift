@@ -34,7 +34,7 @@ public enum ProposalParser {
 
     public static func removingBlock(from output: String) -> String {
         guard let begin = output.range(of: beginMarker, options: .backwards),
-              let end = output.range(of: endMarker, range: begin.upperBound..<output.endIndex)
+            let end = output.range(of: endMarker, range: begin.upperBound..<output.endIndex)
         else { return output }
         var remaining = output
         remaining.removeSubrange(begin.lowerBound..<end.upperBound)
@@ -43,7 +43,7 @@ public enum ProposalParser {
 
     static func lastBlock(in output: String) -> String? {
         guard let begin = output.range(of: beginMarker, options: .backwards),
-              let end = output.range(of: endMarker, range: begin.upperBound..<output.endIndex)
+            let end = output.range(of: endMarker, range: begin.upperBound..<output.endIndex)
         else { return nil }
         return String(output[begin.upperBound..<end.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
     }

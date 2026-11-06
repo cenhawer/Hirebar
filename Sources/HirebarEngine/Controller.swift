@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 
 public final class Controller {
@@ -158,12 +159,14 @@ public final class Controller {
         if batch.mode == .linkedInDraft, let account = ContentAccountStore.find(batch.account) {
             SlideRenderer.prepare(account)
         }
+        let account = ContentAccountStore.find(batch.account)
+        let profile = TaskProfiles.profile(for: batch.mode, account: account)
         let launch = ClaudeCLI.makeProcess(engine: AI.settings,
                                            prompt: AgentPrompts.prompt(for: batch, items: items, owner: owner),
                                            playbook: Paths.playbook(for: batch.mode),
                                            output: outURL, errors: errURL,
-                                           browser: batch.mode != .linkedInDraft
-                                               || (ContentAccountStore.find(batch.account)?.needsPerformanceCheck ?? false))
+                                           profile: profile,
+                                           browser: TaskProfiles.needsBrowser(batch.mode, account: account))
         guard case .success(let process) = launch else {
             if case .failure(let problem) = launch {
                 reply(problem.message)
@@ -200,7 +203,7 @@ public final class Controller {
         if mode == .freelance || mode == .jobs {
             reply("\(AI.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
         }
-        Log.write("IA: inicia lote \(batchId) con \(items.count) elemento(s)")
+        Log.write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.maxRunSeconds) { [weak self] in
             guard let self, self.runningBatch == batchId, let process = self.running, process.isRunning else { return }
             Log.write("IA: lote \(batchId) superó 1 hora, se detiene")

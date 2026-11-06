@@ -3,6 +3,11 @@ import HirebarDomain
 public struct ExecutionPlan: Equatable, Sendable {
     public let now: [ApprovedItem]
     public let deferred: [ApprovedItem]
+
+    public init(now: [ApprovedItem], deferred: [ApprovedItem]) {
+        self.now = now
+        self.deferred = deferred
+    }
 }
 
 public enum ExecutionPlanner {

@@ -50,6 +50,12 @@ public struct ExecutionVerification: Codable, Hashable, Sendable {
     public let unverifiedReason: UnverifiedReason?
     public let verdicts: [ActionVerdict]
 
+    public init(batch: String, unverifiedReason: UnverifiedReason?, verdicts: [ActionVerdict]) {
+        self.batch = batch
+        self.unverifiedReason = unverifiedReason
+        self.verdicts = verdicts
+    }
+
     public var violations: [ActionVerdict] {
         verdicts.filter { $0.status == .unauthorized }
     }

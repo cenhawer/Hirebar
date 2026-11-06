@@ -52,8 +52,24 @@ public struct FileExecutionStateStore: ExecutionStateStore {
         return .found(log)
     }
 
-    public func save(_ verification: ExecutionVerification) throws {
-        try write(verification, to: verificationsFolder.appendingPathComponent("\(verification.batch).json"))
+    struct StoredVerification: Codable {
+        let agent: AgentID
+        let verifiedAt: Date
+        let verification: ExecutionVerification
+    }
+
+    public func save(_ verification: ExecutionVerification, agent: AgentID) throws {
+        let stored = StoredVerification(agent: agent, verifiedAt: Date(), verification: verification)
+        try write(stored, to: verificationsFolder.appendingPathComponent("\(verification.batch).json"))
+    }
+
+    public func completedActions(agent: AgentID, since: Date) -> Int {
+        let files = (try? FileManager.default.contentsOfDirectory(at: verificationsFolder, includingPropertiesForKeys: nil)) ?? []
+        return files.compactMap { read(StoredVerification.self, from: $0) }
+            .filter { $0.agent == agent }
+            .flatMap(\.verification.verdicts)
+            .filter { $0.status == .authorized && $0.record?.outcome == .done && ($0.record?.at ?? .distantPast) >= since }
+            .count
     }
 
     public func pauses() -> [AgentPause] {

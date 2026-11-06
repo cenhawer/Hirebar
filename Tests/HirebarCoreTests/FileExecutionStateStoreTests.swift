@@ -55,6 +55,19 @@ final class FileExecutionStateStoreTests: XCTestCase {
         XCTAssertEqual(found.actions.count, 1)
     }
 
+    func testCompletedActionsCountOnlyAuthorizedDoneActionsOfTheAgentSinceTheGivenMoment() throws {
+        let jobs = AgentID(rawValue: "empleo")
+        let done = ActionRecord(itemId: "li:1", action: .apply, target: item.proposal.target, outcome: .done, at: moment)
+        let pending = ActionRecord(itemId: "li:2", action: .apply, target: item.proposal.target, outcome: .pending, at: moment)
+        let verification = ExecutionVerification(
+            batch: "b1", unverifiedReason: nil, verdicts: [.authorized(done), .authorized(pending)])
+        try store.save(verification, agent: jobs)
+        try store.save(
+            ExecutionVerification(batch: "b2", unverifiedReason: nil, verdicts: [.authorized(done)]), agent: AgentID(rawValue: "freelance"))
+        XCTAssertEqual(store.completedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 1)
+        XCTAssertEqual(store.completedActions(agent: jobs, since: moment.addingTimeInterval(60)), 0)
+    }
+
     func testPauseReplacesThePreviousPauseOfTheSameAgentAndResumeRemovesIt() throws {
         let jobs = AgentID(rawValue: "empleo")
         try store.pause(AgentPause(agent: jobs, batch: "b1", reason: "notApproved", since: moment))

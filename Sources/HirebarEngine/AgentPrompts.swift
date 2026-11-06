@@ -1,9 +1,37 @@
 import Foundation
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 enum AgentPrompts {
     static func prompt(for batch: Batch, items: [BatchItem], owner: String) -> String {
+        let base = basePrompt(for: batch, items: items, owner: owner)
+        guard TaskProfiles.profile(for: batch.mode, account: ContentAccountStore.find(batch.account)).canAct else { return base }
+        return base + "\n\n" + actionLogSection(for: batch)
+    }
+
+    static func actionLogSection(for batch: Batch) -> String {
+        let approved = ExecutionApprovals.store.approvedItems(batch: batch.id).map { item in
+            "- itemId: \(item.proposal.id) · action: \(item.proposal.action.rawValue) · target: \(ExecutionApprovals.targetJSON(item.proposal.target))"
+        }.joined(separator: "\n")
+        let file = FileExecutionStateStore.actionLogFile(batch: batch.id).lastPathComponent
+        return """
+            Registro obligatorio de acciones. Solo puedes actuar sobre esta lista aprobada; cualquier otra acción es una \
+            violación y pone en pausa al agente:
+            \(approved)
+
+            Al terminar, escribe ejecuciones/\(file) con exactamente este formato (fechas ISO 8601):
+            {"schemaVersion": 1, "batch": "\(batch.id)", "actions": [
+              {"itemId": "<itemId de la lista>", "action": "<action de la lista>", "target": <target de la lista, igual>,
+               "sentText": "<el texto que enviaste o publicaste, si hubo>", "outcome": "done | pending | discarded",
+               "reason": "<motivo si no quedó done>", "at": "<fecha y hora>"}
+            ]}
+            Registra todos los elementos de la lista, también los que no enviaste. Copia itemId, action y target tal como \
+            aparecen arriba.
+            """
+    }
+
+    static func basePrompt(for batch: Batch, items: [BatchItem], owner: String) -> String {
         let list = items.enumerated().map { index, item in
             "\(index + 1). [\(item.kind)] \(item.platform): \(item.title)\n   \(item.url)\n   \(item.detail)"
         }.joined(separator: "\n")

@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 import XCTest
 
 @testable import HirebarEngine

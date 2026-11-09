@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Housekeeping {
     static let keepRunsDays = 30.0

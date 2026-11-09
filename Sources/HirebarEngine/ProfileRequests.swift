@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public enum ProfileRequests {
     public static let fileName = "perfil-cambios.txt"

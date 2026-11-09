@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct LinkedInSource: JobSource {
     public let id = "linkedin"

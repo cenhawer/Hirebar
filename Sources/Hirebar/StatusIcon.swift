@@ -1,4 +1,5 @@
 import AppKit
+import HirebarDomain
 
 enum StatusIcon {
     static let symbol = "briefcase"

@@ -1,18 +1,13 @@
 import Foundation
-
-public struct PlatformQuota: Codable, Sendable {
-    public var restantes: Int?
-    public var total: Int?
-    public var renueva: String?
-    public var revisado: String?
-}
+import HirebarDomain
 
 public enum Quotas {
     public static var url: URL { Paths.workspaceFile("cupos.json") }
 
     public static func load() -> [String: PlatformQuota] {
         guard let data = try? Data(contentsOf: url),
-              let quotas = try? JSONDecoder().decode([String: PlatformQuota].self, from: data) else { return [:] }
+            let quotas = try? JSONDecoder().decode([String: PlatformQuota].self, from: data)
+        else { return [:] }
         return quotas
     }
 

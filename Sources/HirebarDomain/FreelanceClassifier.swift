@@ -1,5 +1,4 @@
 import Foundation
-import HirebarCore
 
 public enum FreelanceClassifier {
     public static func looksEnglish(_ text: String) -> Bool {

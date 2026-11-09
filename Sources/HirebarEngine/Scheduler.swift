@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public final class Scheduler {
     public static let shared = Scheduler()

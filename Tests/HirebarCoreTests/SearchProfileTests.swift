@@ -1,4 +1,6 @@
+import HirebarDomain
 import XCTest
+
 @testable import HirebarCore
 
 final class SearchProfileTests: XCTestCase {

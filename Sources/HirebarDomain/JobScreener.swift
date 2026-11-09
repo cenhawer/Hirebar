@@ -1,5 +1,4 @@
 import Foundation
-import HirebarCore
 
 public enum Screening: Equatable, Sendable {
     case keep(Fit)

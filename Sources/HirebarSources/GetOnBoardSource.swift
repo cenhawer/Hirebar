@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct GetOnBoardSource: JobSource {
     public let id = "getonboard"

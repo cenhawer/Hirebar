@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public enum Practice {
     public static func set(_ kind: AgentKind, on: Bool, from origin: String) {

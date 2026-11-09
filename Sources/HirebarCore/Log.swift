@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Log {
     private static let queue = DispatchQueue(label: "hirebar.log")

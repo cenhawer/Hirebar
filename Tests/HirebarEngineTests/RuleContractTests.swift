@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 import XCTest
 
 final class RuleContractTests: XCTestCase {

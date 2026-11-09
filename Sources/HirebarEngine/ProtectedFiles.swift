@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 struct ProtectedFiles {
     typealias Snapshot = [String: Data]

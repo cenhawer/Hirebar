@@ -1,6 +1,7 @@
 import Foundation
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 enum ClaudeCLI {
     static let authFailureHints = [

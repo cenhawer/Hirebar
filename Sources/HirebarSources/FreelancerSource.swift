@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct FreelancerSource: ListingSource {
     public let id = "freelancer"

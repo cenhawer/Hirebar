@@ -1,4 +1,5 @@
 import AppKit
+import HirebarDomain
 import WebKit
 
 /// Graba una escena HTML animada cuadro por cuadro con el motor web de macOS.

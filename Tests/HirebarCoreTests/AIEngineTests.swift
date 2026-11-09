@@ -1,4 +1,5 @@
 import HirebarApplication
+import HirebarDomain
 import XCTest
 
 @testable import HirebarCore

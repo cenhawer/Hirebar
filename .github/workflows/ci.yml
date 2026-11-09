@@ -47,6 +47,7 @@ jobs:
           python3 -m json.tool Resources/destinos.json > /dev/null
           python3 -m json.tool Resources/canal.json > /dev/null
           python3 -m json.tool Resources/herramientas.json > /dev/null
+          python3 -m json.tool Resources/comandos.json > /dev/null
 
   build:
     runs-on: macos-26

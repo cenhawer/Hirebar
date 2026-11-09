@@ -22,7 +22,9 @@ final class EngineProfileTests: XCTestCase {
     }
 
     func claudeArguments(_ profile: RunProfile, browser: Bool = true) -> [String] {
-        ClaudeCLI.arguments(prompt: "pedido", playbook: playbook, profile: profile, browser: browser, settings: profiles.claude)
+        ClaudeCLI.arguments(
+            prompt: "pedido", playbook: playbook, profile: profile, browser: browser, settings: profiles.claude,
+            protectedFiles: profiles.protectedFiles)
     }
 
     func values(after flag: String, in arguments: [String]) -> [String] {
@@ -85,12 +87,15 @@ final class EngineProfileTests: XCTestCase {
         XCTAssertTrue(allowed.contains("mcp__claude-in-chrome"))
         XCTAssertTrue(arguments.contains("--restricted"))
         XCTAssertEqual(values(after: "--permission-mode", in: arguments), ["dontAsk"])
-        XCTAssertFalse(arguments.contains("--disallowedTools"))
+        let denied = values(after: "--disallowedTools", in: arguments)
+        XCTAssertTrue(denied.contains("Write(./instrucciones-*.md)"))
+        XCTAssertTrue(denied.contains("Edit(./perfil.json)"))
+        XCTAssertFalse(denied.contains { $0.hasPrefix("Read(") })
     }
 
     func testCodexAndGeminiReadWithoutPermissionToAct() {
         XCTAssertTrue(profiles.codex.command(.read).contains("--sandbox read-only"))
-        XCTAssertTrue(profiles.gemini.command(.read).contains("--approval-mode default"))
+        XCTAssertTrue(profiles.gemini.command(.read).contains("--approval-mode plan"))
         XCTAssertFalse(profiles.gemini.command(.read).contains("yolo"))
     }
 

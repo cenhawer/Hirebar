@@ -8,6 +8,7 @@ public final class Controller {
     let targetRules = TargetRulesFile.bundled()
     lazy var executionGuard = ExecutionGuard(store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
+    private var protectedSnapshot: ProtectedFiles.Snapshot?
     static let noNewsMarker = "SIN_NOVEDADES"
     static let maxRunSeconds: TimeInterval = 3600
     static let authAlertEvery: TimeInterval = 3600
@@ -218,6 +219,7 @@ public final class Controller {
                 Controller.shared.finished(batchId, mode: mode, items: items, code: code, outURL: outURL, errURL: errURL)
             }
         }
+        protectedSnapshot = profile.canAct ? Self.protectedFiles()?.snapshot() : nil
         do {
             try process.run()
         } catch {
@@ -255,6 +257,7 @@ public final class Controller {
         Log.write("IA: lote \(batchId) terminó con código \(code)")
 
         let acts = TaskProfiles.profile(for: mode, account: nil).canAct
+        if acts { restoreProtectedFiles(after: batchId) }
         if code != 0 && ClaudeCLI.isAuthFailure(output + "\n" + errors) {
             handleAuthFailure(batchId, mode: mode, items: acts ? settleInterruptedExecution(batchId, mode: mode, items: items) : items)
         } else {
@@ -286,6 +289,19 @@ public final class Controller {
             Log.write("Verificación: \(batchId) falló: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    static func protectedFiles() -> ProtectedFiles? {
+        (try? EngineProfiles.bundled()).map { ProtectedFiles(folder: Paths.workspace, patterns: $0.restoredFiles) }
+    }
+
+    private func restoreProtectedFiles(after batchId: String) {
+        guard let before = protectedSnapshot, let files = Self.protectedFiles() else { return }
+        protectedSnapshot = nil
+        let restored = files.restoreChanges(since: before)
+        guard !restored.isEmpty else { return }
+        Log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
+        reply("\(AI.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
     }
 
     func activePause(of agent: AgentID) -> AgentPause? {

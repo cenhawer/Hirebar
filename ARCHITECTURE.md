@@ -193,13 +193,13 @@ su destino; los que mezclan capas se parten.
 |---|---|---|
 | `HirebarCore/Models.swift` | Domain | `Batch`, `BatchItem`, `Hit`, `Fit`, `Mode` |
 | `HirebarCore/Agents.swift` | Domain + Storage | Entidades al dominio; `AgentStore` a un repositorio |
-| `HirebarCore/Profile.swift` | Domain + Storage | `Profile`, `Skill`, `CVVariant` al dominio; `ProfileEditor` a un repositorio |
-| `HirebarCore/SearchProfile.swift` | Domain + Storage | Las listas de palabras pasan a datos (spec `024`) |
-| `HirebarCore/ContentAccounts.swift` | Domain + Storage | Entidades al dominio; `ContentAccountStore` a un repositorio |
-| `HirebarCore/Portals.swift` | Domain + Storage | `CustomPortal` al dominio; `PortalStore` a un repositorio |
-| `HirebarCore/Quotas.swift` | Domain + Storage | Reglas de cupo al dominio; conteo persistido a un repositorio |
+| `HirebarDomain/Profile.swift` · `HirebarCore/ProfileStore.swift` | Domain · Storage | Entidades en el dominio; lectura, `ProfileEditor` y `loadEffective` en el almacén |
+| `HirebarDomain/SearchProfile.swift` · `HirebarCore/SearchProfileStore.swift` | Domain · Storage | Las listas de palabras pasan a datos (spec `024`) |
+| `HirebarDomain/ContentAccounts.swift` · `HirebarCore/ContentAccountStore.swift` | Domain · Storage | Entidades en el dominio; carpetas, archivos y `ContentAccountStore` en el almacén |
+| `HirebarDomain/Portals.swift` · `HirebarCore/PortalStore.swift` | Domain · Storage | `CustomPortal` en el dominio; `PortalStore` en el almacén |
+| `HirebarDomain/PlatformQuota.swift` · `HirebarCore/Quotas.swift` | Domain · Storage | Cupo en el dominio; conteo persistido en el almacén |
 | `HirebarCore/AIEngine.swift` | Domain + AI | Elección del motor al dominio; comandos y variables al adaptador |
-| `HirebarCore/TextTools.swift` | Domain | Normalización de texto |
+| `HirebarDomain/TextTools.swift`, `Models.swift`, `Agents.swift` · `HirebarCore/AgentStore.swift` | Domain · Storage | Normalización, lotes, agentes y tareas en el dominio; `AgentStore` y la búsqueda por nombre en el almacén |
 | `HirebarCore/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
 | `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
@@ -207,7 +207,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/Telegram.swift`, `Notifier.swift`, `MacNotifications.swift` | Telegram + Notifications | `Messenger` y `CommandSource` |
 | `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
-| `HirebarSources/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
+| `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
 | `HirebarSources/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
 | `HirebarSources/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarEngine/Controller.swift` | Application | Se parte en los casos de uso de lotes |
@@ -219,7 +219,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarEngine/AI.swift`, `ClaudeCLI.swift` | AI | `AIRunner` |
 | `HirebarEngine/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
 | `HirebarEngine/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
-| `HirebarEngine/VoiceListener.swift` | Media + Domain | `VoiceListener` a `SpeechRecognizer`; `ScriptAligner` al dominio |
+| `HirebarEngine/VoiceListener.swift` · `HirebarDomain/ScriptAligner.swift` | Media · Domain | `VoiceListener` a `SpeechRecognizer`; alineación de la voz en el dominio |
 | `HirebarEngine/Engine.swift` | Hirebar | Arranque en la raíz de composición |
 | `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `018`) |
 

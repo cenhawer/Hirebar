@@ -1,13 +1,12 @@
-import Foundation
 import HirebarApplication
-import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
-public enum AI {
-    public static var settings: AIEngineSettings { Config.load().aiEngine }
-    public static var name: String { settings.displayName }
-    public static var capitalizedName: String { name.prefix(1).uppercased() + name.dropFirst() }
+public struct AI: Sendable {
+    public let settings: AIEngineSettings
+
+    public init(settings: AIEngineSettings) {
+        self.settings = settings
+    }
+
+    public var name: String { settings.displayName }
+    public var capitalizedName: String { name.prefix(1).uppercased() + name.dropFirst() }
 }

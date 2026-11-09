@@ -76,10 +76,12 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             AgentStore.update(kind) { $0.enabled.toggle() }
         })
         if [.jobs, .freelance, .clients].contains(kind) {
-            let autoSend = check("Envío automático", { AgentStore.load(kind).autoApprove }, { AutoSendConfirmation.toggle(kind) })
+            let agents = engine.controller.stores.agents
+            let autoSend = check(
+                "Envío automático", { AgentStore.load(kind).autoApprove }, { AutoSendConfirmation.toggle(kind, agents: agents) })
             menu.addItem(autoSend)
         }
-        let practice = check("Modo práctica", { AgentStore.load(kind).practice }, { Self.togglePractice(kind) })
+        let practice = check("Modo práctica", { AgentStore.load(kind).practice }, { [weak self] in self?.togglePractice(kind) })
         menu.addItem(practice)
         let sources = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
         if !sources.isEmpty {
@@ -113,8 +115,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
 
     static let menuOrigin = "el menú"
 
-    static func togglePractice(_ kind: AgentKind) {
-        Practice.set(kind, on: !AgentStore.load(kind).practice, from: menuOrigin)
+    func togglePractice(_ kind: AgentKind) {
+        Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.menuOrigin, agents: engine.controller.stores.agents)
     }
 
     func menuWillOpen(_ menu: NSMenu) { refresh() }
@@ -123,7 +125,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         for (item, kind) in headers { item.title = headerTitle(kind) }
         for (item, isOn) in checks { item.state = isOn() ? .on : .off }
         for (item, text) in labels { item.title = text() }
-        claudeItem.title = "\(AI.capitalizedName): \(engine.controller.status)"
+        claudeItem.title = "\(engine.controller.ai.capitalizedName): \(engine.controller.status)"
         let state = ChannelStatusText.describe(engine.controller.channel.state)
         telegramState.title = state
         telegramHeader.title = state

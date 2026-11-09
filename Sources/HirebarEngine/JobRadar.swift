@@ -14,21 +14,24 @@ public final class JobRadar: Radar {
     static let maxStrong = 6
     static let maxStretchOnly = 2
 
-    public init() {
+    let stores: Repositories
+
+    public init(stores: Repositories) {
+        self.stores = stores
         super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21)
     }
 
-    override var intervalMinutes: Int { AgentStore.load(.jobs).searchEveryMinutes ?? Config.load().jobMinutes }
+    override var intervalMinutes: Int { stores.agents.load(.jobs).searchEveryMinutes ?? stores.config.load().jobMinutes }
 
     public override func checkNow() {
-        let config = Config.load()
-        guard config.jobsOn, AgentStore.load(.jobs).enabled else {
+        let config = stores.config.load()
+        guard config.jobsOn, stores.agents.load(.jobs).enabled else {
             setStatus("apagado")
             return
         }
         guard beginCheck() else { return }
         let skip = Set(seen().keys)
-        let profile = SearchProfile.loadEffective()
+        let profile = stores.profile.effectiveSearch()
         let active = Catalog.jobs.filter { config.isEnabled($0.id) }
         Task {
             var found: [Hit] = []
@@ -90,22 +93,23 @@ public final class JobRadar: Radar {
             return
         }
         setStatus("\(hour), \(hits.count) avisada(s)")
-        Metrics.bump(.jobs, "avisados", hits.count)
-        Metrics.bump(.jobs, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
+        stores.metrics.bump(.jobs, "avisados", hits.count)
+        stores.metrics.bump(.jobs, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
         log.write("Empleo: \(hits.count) vacante(s) avisada(s)")
         let batch = Batch(mode: .jobs, items: hits.map(BatchItem.init), status: .pending)
-        BatchStore.upsert(batch)
+        stores.batches.upsert(batch)
         let title = fits.isEmpty
             ? "Radar empleo: nada de tu fuerte esta hora, pero hay \(hits.count) vacante(s) RETO"
             : "Radar empleo: \(hits.count) vacante(s) para ti"
-        let auto = AgentStore.load(.jobs).autoApprove
-        let automatic = "\(AI.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar."
+        let auto = stores.agents.load(.jobs).autoApprove
+        let ai = controller?.ai ?? AI(settings: stores.config.load().aiEngine)
+        let automatic = "\(ai.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar."
         let manual =
-            "Responde \"si\" y \(AI.name) revisa cada vacante, llena el formulario y te postula. "
+            "Responde \"si\" y \(ai.name) revisa cada vacante, llena el formulario y te postula. "
             + "\"si 1 3\" para elegir, \"no\" para descartar."
         controller?.notifier.announce(batch, title: auto ? title + " (postulación automática)" : title, footer: auto ? automatic : manual)
         if auto {
-            DispatchQueue.main.async { self.controller?.autoApprove(BatchStore.find(id: batch.id) ?? batch) }
+            DispatchQueue.main.async { self.controller?.autoApprove(self.stores.batches.find(id: batch.id) ?? batch) }
         }
     }
 }

@@ -246,7 +246,7 @@ Contrato de entrada con la persona. Agregar, quitar o cambiar un comando se escr
 | `seguimientos` · `informe` | Corre seguimientos o el análisis semanal ya |
 | `anota <texto>` | Guarda una nota para el análisis |
 | `corre <agente>` · `agente <agente> on/off` | Corre o prende/apaga un agente |
-| `auto si/no` · `auto <agente> si/no` | Envío automático |
+| `auto si/no` · `auto <agente> si/no` | Envío automático; prenderlo responde con la explicación y los botones "Sí, prender" (`autoon:<agentes>`) y "No" (`autocancel`) |
 | `envia correos [números]` · `no correos` | Correos del día |
 | `post [cuenta]` · `post <cuenta> cambia <qué>` · `post <cuenta> salta` · `publica [cuenta]` | Contenido |
 | `video <cuenta>` · `rearmar <cuenta>` · nota de voz | Vista previa y guion; video narrado con la voz |
@@ -333,7 +333,7 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Secretos | Token de Telegram y claves en el Llavero; nunca en archivos ni en el registro | Cumple |
 | Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | Cumple: perfiles `read` y `draft`; en lectura la IA no puede leer el perfil ni las hojas de vida. Riesgo residual de navegación documentado en `specs/010-separar-lectura-ejecucion/research.md` (R8) |
 | Acciones de la IA | Lista cerrada de acciones validada por la app | Cumple: catálogo de acciones, copia de lo aprobado fuera del workspace, registro y verificación de cada ejecución; una acción que no coincide pausa el agente |
-| Envío automático | Se prende por agente con confirmación explícita | Se prende con una casilla (spec `011`) |
+| Envío automático | Se prende por agente con confirmación explícita | Cumple: diálogo en la Mac y botón en Telegram; cada cambio queda en el registro con su origen |
 | Herramientas | Sin descargas en ejecución sin versión fija y hash | ffmpeg se instala con `pip` en ejecución (spec `016`) |
 | Repositorio | Sin datos personales ni secretos; gitleaks en CI y pre-commit | Cumple |
 

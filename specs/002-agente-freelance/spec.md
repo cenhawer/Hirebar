@@ -269,7 +269,6 @@ un `cupos.json` de prueba, el panel muestra los cupos y su renovación.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
 | Los proyectos vistos se guardan en `UserDefaults` | IV | `022-version-datos` |
 | Intervalos, máximos de competencia, presupuestos mínimos, ventanas y listas de idioma escritos en el código | VI | `024-textos-y-valores-fuera-del-codigo` |

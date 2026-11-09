@@ -15,11 +15,13 @@ struct ChannelSettings: Decodable, Equatable, Sendable {
     enum LoadFailure: Error {
         case missing
         case unsupportedVersion(Int)
+        case invalidValues
     }
 
     static func load(from url: URL) throws -> ChannelSettings {
         let settings = try JSONDecoder().decode(ChannelSettings.self, from: Data(contentsOf: url))
         guard settings.schemaVersion == supportedSchemaVersion else { throw LoadFailure.unsupportedVersion(settings.schemaVersion) }
+        guard settings.pairingMinutes > 0, settings.messagesPerMinute > 0 else { throw LoadFailure.invalidValues }
         return settings
     }
 

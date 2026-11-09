@@ -129,6 +129,10 @@ extension Controller {
         }
     }
 
+    public func sendTestMessage() {
+        Notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + statusReport())
+    }
+
     public static var welcome: String {
         "Listo, este chat quedó vinculado a Hirebar y solo atiende tu cuenta. Te avisaré aquí cada vez que aparezcan "
             + "proyectos o vacantes para ti.\n\n" + help
@@ -142,7 +146,7 @@ extension Controller {
             return false
         }
         guard Config.load().channelOwner != nil else {
-            if channel.offer(sender) {
+            if channel.offer(sender, text: message.text) {
                 Telegram.shared.send(Self.pairingReply, chatId: sender.chatId)
             } else {
                 Log.write("Telegram: ignorado un mensaje fuera de la vinculación")

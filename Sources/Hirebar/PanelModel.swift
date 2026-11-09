@@ -60,9 +60,6 @@ final class PanelModel: ObservableObject {
     @Published var telegramReady = false
     @Published var opensAtLogin = false
 
-    var onConfigureTelegram: (() -> Void)?
-    var onSendTest: (() -> Void)?
-    var onForgetChat: (() -> Void)?
     var onQuit: (() -> Void)?
     var onOpenSettings: ((SettingsPage?) -> Void)?
 
@@ -73,17 +70,9 @@ final class PanelModel: ObservableObject {
         claude = Controller.shared.status
         aiName = AI.capitalizedName
         claudeBusy = !Controller.shared.isIdle
-        let config = Config.load()
-        if !Telegram.shared.isConfigured {
-            telegram = "Telegram sin configurar"
-            telegramReady = false
-        } else if config.chatId == 0 {
-            telegram = "Envía /start a tu bot"
-            telegramReady = false
-        } else {
-            telegram = "Telegram conectado"
-            telegramReady = true
-        }
+        let channel = Controller.shared.channel.state
+        telegram = ChannelStatusText.describe(channel)
+        telegramReady = ChannelStatusText.isReady(channel)
         opensAtLogin = SMAppService.mainApp.status == .enabled
     }
 
@@ -166,6 +155,10 @@ final class PanelModel: ObservableObject {
 
     func editContentAccounts() {
         onOpenSettings?(.content)
+    }
+
+    func editChannel() {
+        onOpenSettings?(.channel)
     }
 
     func toggleLogin() {

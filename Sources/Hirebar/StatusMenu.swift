@@ -7,6 +7,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
 
     var onRefresh: ((Bool) -> Void)?
     var onOpenSettings: ((AgentKind) -> Void)?
+    var onOpenChannel: (() -> Void)?
     private var headers: [(NSMenuItem, AgentKind)] = []
     private var checks: [(NSMenuItem, () -> Bool)] = []
     private var labels: [(NSMenuItem, () -> String)] = []
@@ -35,9 +36,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         telegramState.isEnabled = false
         telegram.addItem(telegramState)
         telegram.addItem(.separator())
-        telegram.addItem(action("Configurar bot…") { [weak self] in self?.configureTelegram() })
+        telegram.addItem(action("Telegram y avisos…") { [weak self] in self?.onOpenChannel?() })
         telegram.addItem(action("Enviar aviso de prueba") { [weak self] in self?.sendTest() })
-        telegram.addItem(action("Volver a vincular el chat") { [weak self] in self?.forgetChat() })
         telegramHeader.submenu = telegram
         menu.addItem(telegramHeader)
 
@@ -109,17 +109,9 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         for (item, isOn) in checks { item.state = isOn() ? .on : .off }
         for (item, text) in labels { item.title = text() }
         claudeItem.title = "\(AI.capitalizedName): \(Controller.shared.status)"
-        let config = Config.load()
-        let state: String
-        if !Telegram.shared.isConfigured {
-            state = "Sin configurar"
-        } else if config.chatId == 0 {
-            state = "Bot listo: escríbele /start desde tu celular"
-        } else {
-            state = "Conectado a tu chat"
-        }
+        let state = ChannelStatusText.describe(Controller.shared.channel.state)
         telegramState.title = state
-        telegramHeader.title = "Telegram: \(state.lowercased())"
+        telegramHeader.title = state
         onRefresh?(!Controller.shared.isIdle)
     }
 
@@ -182,53 +174,12 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         NSWorkspace.shared.open(Paths.log)
     }
 
-    func configureTelegram() {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = "Bot de Telegram de Hirebar"
-        alert.informativeText = """
-        1. En Telegram abre @BotFather, envía /newbot y ponle un nombre.
-        2. Copia el token que te entrega y pégalo aquí.
-        3. Después abre tu bot desde el celular y envíale /start: ese chat queda vinculado.
-        """
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 340, height: 24))
-        field.placeholderString = "123456789:AA…"
-        alert.accessoryView = field
-        alert.addButton(withTitle: "Guardar")
-        alert.addButton(withTitle: "Cancelar")
-        alert.window.initialFirstResponder = field
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        let token = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard token.range(of: "^\\d{5,}:[A-Za-z0-9_-]{30,}$", options: .regularExpression) != nil else {
-            info("Ese token no parece válido. Debe verse como 123456789:AA… (cópialo completo de @BotFather).")
-            return
-        }
-        guard Telegram.shared.saveToken(token) else {
-            info("No pude guardar el token en el Llavero.")
-            return
-        }
-        var config = Config.load()
-        config.chatId = 0
-        config.save()
-        Telegram.shared.start()
-        refresh()
-        info("Guardado. Ahora abre tu bot en Telegram desde el celular y envíale /start.")
-    }
-
     func sendTest() {
         guard Notifier.canUseTelegram else {
-            info("Primero configura el bot y envíale /start desde tu celular.")
+            onOpenChannel?()
             return
         }
         Notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + Controller.shared.statusReport())
-    }
-
-    func forgetChat() {
-        var config = Config.load()
-        config.chatId = 0
-        config.save()
-        refresh()
-        info("Listo. El próximo mensaje que reciba el bot (envíale /start) quedará como tu chat.")
     }
 
     func info(_ message: String) {

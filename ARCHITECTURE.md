@@ -187,8 +187,10 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 Dominio, aplicación y adaptadores ya son targets propios (`HirebarStorage`, `HirebarTelegram`,
 `HirebarNotifications`, `HirebarPortals`, `HirebarMedia`, `HirebarAI`). `HirebarEngine` reúne los
-casos de uso de lotes, comandos, programación y radares, todavía con singletons; el paso 3 de la spec
-`017-arquitectura-hexagonal` los pasa a `HirebarApplication` con una raíz de composición.
+casos de uso de lotes, comandos, programación y radares; `Engine` es la raíz de composición del motor
+(crea Telegram con su almacén de secretos, el `Controller`, los radares y el programador, y los
+conecta) y la app recibe esa instancia. No hay singletons propios (test). El paso 3 de la spec
+`017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |
 |---|---|---|

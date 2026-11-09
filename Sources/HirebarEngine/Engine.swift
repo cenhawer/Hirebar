@@ -5,6 +5,7 @@ public enum Engine {
     public static func start(resources: URL?) {
         Paths.ensure()
         Paths.installTemplates(from: resources)
+        AudioTools.removeLegacyCopy()
         AgentStore.writeMissingDefaults()
         Controller.shared.start()
         FreelanceRadar.shared.start()

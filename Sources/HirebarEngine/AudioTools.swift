@@ -1,51 +1,30 @@
 import Foundation
 import HirebarCore
 
-/// Prepara la nota de voz de Telegram para el video. Telegram manda las notas de voz en Ogg/Opus, que macOS no
-/// abre, así que Hirebar instala solo (una vez) una copia de ffmpeg en un entorno de Python propio
-/// (paquete imageio-ffmpeg) y con ella convierte el audio, le quita ruido y le nivela el volumen.
 enum AudioTools {
-    static var folder: URL { Paths.root.appendingPathComponent("herramientas/python", isDirectory: true) }
-    static var python: URL { folder.appendingPathComponent("bin/python3") }
-    static var ffmpegPathFile: URL { folder.appendingPathComponent("ffmpeg-ruta.txt") }
+    static var legacyFolder: URL { Paths.root.appendingPathComponent("herramientas", isDirectory: true) }
 
     struct Problem: LocalizedError {
         let message: String
         var errorDescription: String? { message }
     }
 
-    /// Ruta de ffmpeg; lo instala si falta.
     static func ffmpeg() throws -> String {
-        if let saved = try? String(contentsOf: ffmpegPathFile, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
-           FileManager.default.isExecutableFile(atPath: saved) {
-            return saved
+        guard let tools = try? SystemTools.bundled() else {
+            throw Problem(message: "falta herramientas.json dentro de la app; vuelve a instalarla con scripts/bundle.sh --install")
         }
-        Log.write("Contenido: preparando la herramienta de audio (solo la primera vez)")
-        if !FileManager.default.isExecutableFile(atPath: python.path) {
-            let system = ["/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3"]
-                .first { FileManager.default.isExecutableFile(atPath: $0) }
-            guard let system else { throw Problem(message: "no encontré Python 3 en el Mac para preparar el audio") }
-            try? FileManager.default.removeItem(at: folder)
-            try FileManager.default.createDirectory(at: folder.deletingLastPathComponent(), withIntermediateDirectories: true)
-            guard run(system, ["-m", "venv", folder.path], timeout: 120).ok else {
-                throw Problem(message: "no pude preparar Python para el audio")
-            }
+        guard let path = tools.ffmpegPath() else {
+            throw Problem(message: "falta ffmpeg en el Mac. Instálalo con: \(tools.ffmpeg.install)")
         }
-        let pip = folder.appendingPathComponent("bin/pip").path
-        let install = run(pip, ["install", "--quiet", "--disable-pip-version-check", "imageio-ffmpeg"], timeout: 300)
-        guard install.ok else { throw Problem(message: "no pude instalar la herramienta de audio: \(install.output.suffix(200))") }
-        let found = run(python.path, ["-c", "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())"], timeout: 60)
-        let path = found.output.split(separator: "\n").last.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
-        guard found.ok, FileManager.default.isExecutableFile(atPath: path) else {
-            throw Problem(message: "no encontré ffmpeg después de instalarlo")
-        }
-        try? path.write(to: ffmpegPathFile, atomically: true, encoding: .utf8)
-        Log.write("Contenido: herramienta de audio lista")
         return path
     }
 
-    /// Convierte la nota de voz a M4A y la deja lista para un Short: quita el silencio del inicio y del final,
-    /// acorta las pausas largas entre frases (deja 0,3 s), le quita ruido de fondo y la deja con volumen de redes.
+    static func removeLegacyCopy() {
+        guard FileManager.default.fileExists(atPath: legacyFolder.path) else { return }
+        try? FileManager.default.removeItem(at: legacyFolder)
+        Log.write("Contenido: borré la copia de ffmpeg que Hirebar instalaba con Python; ahora usa la del sistema")
+    }
+
     static func prepareVoice(_ input: URL, to output: URL) throws {
         let tool = try ffmpeg()
         try? FileManager.default.removeItem(at: output)
@@ -65,7 +44,6 @@ enum AudioTools {
         }
     }
 
-    /// Pausas de la voz (inicio y fin de cada silencio de al menos 0,18 s), para cortar las escenas donde termina cada frase.
     static func pauses(in audio: URL) -> [(start: Double, end: Double)] {
         guard let tool = try? ffmpeg() else { return [] }
         let result = run(tool, ["-hide_banner", "-i", audio.path, "-af", "silencedetect=noise=-35dB:d=0.18", "-f", "null", "-"], timeout: 60)

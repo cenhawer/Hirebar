@@ -14,8 +14,7 @@ public enum Notifier {
         blocks.append(footer)
         let messages = chunks(blocks, limit: messageLimit)
         guard canUseTelegram else {
-            let hint = "(Configura Telegram en el menú de Hirebar para responder \"si\" desde el celular.)"
-            ntfy(title: title, message: messages.joined(separator: "\n\n") + "\n\n" + hint)
+            MacNotifications.show(title: title, body: "Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.")
             return
         }
         let label = batch.mode == .jobs ? "Sí, postular a todas" : "Sí, enviar todas"
@@ -28,7 +27,7 @@ public enum Notifier {
                 BatchStore.upsert(stored)
                 Log.write("Telegram: la lista \(batch.id) no llegó completa y se descartó")
                 let notice = "No pude mostrarte completa la lista \(batch.id), así que la descarté para que no se apruebe a ciegas."
-                Telegram.shared.send(notice, chatId: chatId)
+                tell(notice)
                 return
             }
             stored.messageId = id
@@ -81,11 +80,15 @@ public enum Notifier {
         }
     }
 
+    static let notificationTitle = "Hirebar"
+
     public static func tell(_ text: String) {
-        if canUseTelegram {
-            Telegram.shared.send(text, chatId: Config.load().chatId)
-        } else {
-            ntfy(title: "Hirebar", message: text)
+        guard canUseTelegram else {
+            MacNotifications.show(title: notificationTitle, body: text)
+            return
+        }
+        Telegram.shared.send(text, chatId: Config.load().chatId) { id in
+            if id == nil { MacNotifications.show(title: notificationTitle, body: text) }
         }
     }
 
@@ -113,16 +116,5 @@ public enum Notifier {
             return
         }
         Telegram.shared.sendVideo(file, caption: caption, chatId: Config.load().chatId, completion: completion)
-    }
-
-    public static func ntfy(title: String, message: String) {
-        let topic = Config.load().ntfyTopic
-        guard !topic.isEmpty, let url = URL(string: "https://ntfy.sh/") else {
-            Log.write("Aviso sin canal (configura Telegram o ntfy): \(title)")
-            return
-        }
-        let body: [String: Any] = ["topic": topic, "title": title,
-                                   "message": String(message.prefix(3800)), "priority": 4, "tags": ["briefcase"]]
-        DispatchQueue.global(qos: .utility).async { _ = Net.postJSON(url, body, timeout: 20) }
     }
 }

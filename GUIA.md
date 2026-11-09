@@ -8,7 +8,7 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 
 ### Encabezado
 - **Claude en espera / trabajando:** qué está haciendo Claude. Punto verde = libre; naranja = trabajando. Claude hace una cosa a la vez porque todos los agentes usan el mismo Chrome; lo demás espera en fila.
-- **Avión de papel:** Telegram. Azul = conectado; gris = falta configurarlo (engranaje → Configurar bot de Telegram).
+- **Avión de papel:** Telegram. Azul = conectado. Si falta algo, en su lugar aparece qué pasa ("Telegram sin configurar", "Esperando tu hola", "El token ya no sirve"); tócalo para ir a Ajustes → Telegram y avisos.
 
 ### Cada agente
 - **Nombre y descripción:** qué hace.
@@ -21,7 +21,7 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 - **Registro:** lo que la app hizo, minuto a minuto. Mira aquí cuando algo no corre.
 - **Datos:** tu carpeta (`~/Library/Application Support/Hirebar/`).
 - **Ajustes:** ventana para configurar agentes y habilidades sin editar archivos.
-- **Engranaje:** bot de Telegram, aviso de prueba, abrir al iniciar sesión y salir.
+- **Engranaje:** Telegram y avisos, abrir al iniciar sesión y salir.
 
 ## Los agentes
 
@@ -211,7 +211,8 @@ Cualquier otra cosa: el bot responde con la lista completa.
 | Síntoma | Qué hacer |
 |---|---|
 | Llega "La sesión de Claude Code se venció" | Abre Terminal, escribe `claude` y luego `/login`. Después `si` para reintentar la última lista: no se pierde. |
-| No llegan avisos | Engranaje → Enviar aviso de prueba. Si no llega, Configurar bot de Telegram y envíale `/start` a tu bot. |
+| No llegan avisos | Ajustes → Telegram y avisos → Enviar aviso de prueba. Si dice "El token ya no sirve", pega uno nuevo de @BotFather. Si te cambiaste de cuenta de Telegram, usa "Cambiar de cuenta". |
+| Alguien más le escribe a tu bot | No pasa nada: el bot solo atiende la cuenta que confirmaste; los demás mensajes se ignoran y quedan anotados en el registro. |
 | Un agente no corre a su hora | Mira que esté prendido y su horario en Ajustes. Si el Mac estaba dormido, corre al despertar dentro de su tolerancia. Revisa el **Registro**. |
 | Claude dice que no pudo enviar algo | Revisa que Chrome esté abierto, con la extensión Claude in Chrome y con sesión en ese portal. Hirebar nunca resuelve CAPTCHAs ni escribe contraseñas. |
 | No salen los PDF de la hoja de vida | Hace falta Google Chrome instalado en `/Applications`. El mensaje de Telegram dice cuál falló. |

@@ -27,8 +27,9 @@ muestra cada agente con su estado, su próxima ejecución y su interruptor.
 1. **Given** la app abierta, **When** la persona hace clic en el maletín, **Then** se abre el panel;
    con clic derecho o Control+clic se abre el menú clásico.
 2. **Given** el panel abierto, **When** se mira el encabezado, **Then** se ve la IA con un punto verde
-   (en espera) o naranja (trabajando) y el estado de Telegram (azul conectado, gris sin configurar o
-   esperando `/start`).
+   (en espera) o naranja (trabajando) y el estado de Telegram: el avión azul si está conectado; si no,
+   el estado en palabras ("Telegram sin configurar", "Esperando tu hola", "El token ya no sirve"), que
+   lleva a Ajustes → Telegram y avisos.
 3. **Given** el panel, **When** se miran los agentes, **Then** aparecen en tres grupos ("Buscar
    trabajo": Empleo y Freelance; "Conseguir clientes": Clientes y Contenido; "Tú": Perfil y Analista),
    cada uno con ícono, nombre, descripción, próxima ejecución ("en pausa", "apagado", "trabajando", "en 5 min",

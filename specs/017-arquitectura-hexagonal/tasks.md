@@ -22,4 +22,4 @@ description: "Tareas de implementación: arquitectura hexagonal"
 ## Paso 3: Casos de uso y composición
 
 - [ ] T008 Casos de uso de lotes, comandos, programación y radares en `HirebarApplication` (FR-003)
-- [ ] T009 Raíz de composición en `Hirebar`; sin `.shared` propios (FR-004, SC-002)
+- [x] T009 Raíz de composición (`Engine`) que crea y conecta Telegram, `Controller`, radares y programador; la app la recibe; sin `.shared` propios, vigilado por test (FR-004, SC-002)

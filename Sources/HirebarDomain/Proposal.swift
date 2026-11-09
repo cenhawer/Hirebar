@@ -30,8 +30,8 @@ public struct Proposal: Codable, Hashable, Sendable {
         self.fit = fit
     }
 
-    public var isComplete: Bool {
-        guard !id.isEmpty else { return false }
+    public func isComplete(using rules: TargetRules) -> Bool {
+        guard !id.isEmpty, target.isValid(using: rules) else { return false }
         guard action.requiresApprovedText else { return true }
         return !(text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }

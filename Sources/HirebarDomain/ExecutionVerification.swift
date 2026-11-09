@@ -66,7 +66,12 @@ public struct ExecutionVerification: Codable, Hashable, Sendable {
 }
 
 public enum ExecutionVerifier {
-    public static func verify(batch: String, approved: [ApprovedItem], reading: ActionLogReading) -> ExecutionVerification {
+    public static func verify(
+        batch: String,
+        approved: [ApprovedItem],
+        reading: ActionLogReading,
+        rules: TargetRules = .strict
+    ) -> ExecutionVerification {
         let log: ActionLog
         switch reading {
         case .missing:
@@ -89,7 +94,7 @@ public enum ExecutionVerifier {
                 verdicts.append(.unauthorized(record, .notApproved))
                 continue
             }
-            if let violation = violation(of: record, against: item.proposal, alreadyCompleted: completed) {
+            if let violation = violation(of: record, against: item.proposal, alreadyCompleted: completed, rules: rules) {
                 verdicts.append(.unauthorized(record, violation))
                 continue
             }
@@ -100,16 +105,21 @@ public enum ExecutionVerifier {
         return ExecutionVerification(batch: batch, unverifiedReason: nil, verdicts: verdicts + missing.map(ActionVerdict.missing))
     }
 
-    static func violation(of record: ActionRecord, against proposal: Proposal, alreadyCompleted: Set<String>) -> ViolationReason? {
+    static func violation(
+        of record: ActionRecord,
+        against proposal: Proposal,
+        alreadyCompleted: Set<String>,
+        rules: TargetRules
+    ) -> ViolationReason? {
         if record.action != proposal.action { return .actionMismatch }
         guard record.outcome == .done else { return nil }
         if alreadyCompleted.contains(record.itemId) { return .repeated }
-        if !record.target.matches(proposal.target) { return .targetMismatch }
+        if !record.target.matches(proposal.target, using: rules) { return .targetMismatch }
         if proposal.text != nil && comparable(record.sentText) != comparable(proposal.text) { return .textMismatch }
         return nil
     }
 
-    static func comparable(_ text: String?) -> String {
+    public static func comparable(_ text: String?) -> String {
         (text ?? "").replacingOccurrences(of: "\r\n", with: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

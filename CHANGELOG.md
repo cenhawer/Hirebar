@@ -12,6 +12,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - "Otra IA" usa dos comandos: lectura y ejecución.
 - Los correos de prospección llegan a Telegram con destinatario, asunto y texto completos, y `envia correos` aprueba esa lista.
 - Las listas largas llegan en varios mensajes; si una no llega completa, se descarta.
+- Ajustes → Telegram y avisos: el token se valida con Telegram, le escribes "hola" a tu bot, confirmas tu nombre y el bot queda anclado a tu cuenta; mensajes y botones de otras cuentas se ignoran.
+- Sin Telegram, o si un mensaje no llega, el aviso aparece como notificación de macOS y al tocarla se abre el panel.
 - Un PR que toca `Sources/` o `Package.swift` tiene que nombrar en su descripción una spec existente (`specs/NNN-nombre`).
 - Validación en CI de nombres de rama y mensajes de commit (Conventional Commits).
 - Lint de formato y estilo en CI sobre las líneas que cambia cada PR.
@@ -21,6 +23,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Plantillas de PR e issues, y Dependabot para GitHub Actions.
 
 ### Cambiado
+- Se quitó el envío de avisos a ntfy.sh.
+- Una instalación con el chat ya vinculado queda anclada a esa misma cuenta sin pedir nada.
 - La búsqueda en redes ya no postula sola y los seguimientos ya no se envían solos: necesitan tu aprobación o el envío automático del agente.
 - Las respuestas a clientes y las publicaciones nunca se aprueban solas.
 - Con Codex o Gemini, las tareas que leen con el navegador no corren.

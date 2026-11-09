@@ -13,33 +13,32 @@ común. Las desviaciones de la constitución se listan al final con la spec que 
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Configurar el bot y vincular el chat (Priority: P1)
+### User Story 1 - Configurar el bot y anclarlo a la persona (Priority: P1)
 
-La persona crea un bot con @BotFather, pega su token en Hirebar y le escribe `/start` desde el
-celular. Desde ahí, ese chat es el único que Hirebar escucha.
+La persona crea un bot con @BotFather, pega su token en Ajustes → Telegram y avisos, le escribe
+"hola" desde su Telegram y confirma su nombre en la Mac. Desde ahí, el bot atiende solo a su cuenta.
 
 **Why this priority**: sin el canal, la persona no puede aprobar nada desde el celular.
 
-**Independent Test**: con un doble de la API de Telegram, guardar un token válido inicia el sondeo; el
-primer mensaje vincula su chat y los mensajes de otros chats se ignoran.
+**Independent Test**: con updates de ejemplo, un mensaje privado posterior a empezar la vinculación
+se propone, la confirmación ancla esa cuenta y los mensajes de otras cuentas se ignoran.
 
 **Acceptance Scenarios**:
 
-1. **Given** el menú o el panel, **When** la persona elige "Configurar bot de Telegram…", **Then**
-   ve los pasos para crear el bot y un campo para pegar el token.
-2. **Given** un token que no tiene la forma `<5 o más dígitos>:<30 o más caracteres>`, **When** la
-   persona lo guarda, **Then** se le dice que no parece válido y no se guarda.
-3. **Given** un token con la forma correcta, **When** se guarda, **Then** queda en el Llavero, se
-   olvida el chat vinculado, empieza el sondeo y se le pide enviar `/start` al bot.
-4. **Given** que no hay chat vinculado, **When** llega el primer mensaje de cualquier chat, **Then**
-   ese chat queda vinculado y recibe la confirmación con la lista de comandos.
-5. **Given** un chat vinculado, **When** llega un mensaje de otro chat, **Then** se ignora y se anota
-   en el registro.
-6. **Given** que la persona elige "Volver a vincular el chat", **When** lo elige, **Then** se olvida
-   el chat sin pedir confirmación y el siguiente mensaje que reciba el bot lo vincula de nuevo.
-7. **Given** que la persona elige "Enviar aviso de prueba", **When** Telegram está listo, **Then**
-   llega al chat un mensaje de prueba con el mismo contenido de `estado`; si no, se le pide
-   configurar el bot y enviarle `/start`.
+1. **Given** Ajustes → Telegram y avisos, **When** la persona pega un token y lo comprueba, **Then** la
+   app lo valida con Telegram (`getMe`), muestra el nombre del bot y lo guarda en el Llavero; un token
+   inválido se explica y no se guarda.
+2. **Given** un token válido, **When** empieza la vinculación y la persona le escribe al bot desde su
+   chat privado, **Then** la app muestra su nombre y usuario y pide confirmarlo (detalle en la spec
+   `012-canal-de-mensajes`).
+3. **Given** la confirmación, **When** la persona dice que sí, **Then** el bot queda anclado a su ID de
+   usuario y a ese chat, y llega la bienvenida con la lista de comandos.
+4. **Given** el bot anclado, **When** escribe otra cuenta, llega un mensaje de un grupo o alguien más
+   pulsa un botón, **Then** se ignora sin responder y se anota en el registro sin el contenido.
+5. **Given** el bot anclado, **When** la persona elige "Cambiar de cuenta", **Then** se borra el
+   anclaje y empieza una vinculación nueva; "Quitar bot" borra además el token del Llavero.
+6. **Given** que la persona elige "Enviar aviso de prueba", **When** Telegram está listo, **Then**
+   llega al chat un mensaje de prueba con el mismo contenido de `estado`.
 
 ---
 
@@ -112,7 +111,7 @@ identificador del archivo y extensión `oga`.
 
 **Acceptance Scenarios**:
 
-1. **Given** una nota de voz, un audio o un video circular, **When** llega del chat vinculado,
+1. **Given** una nota de voz, un audio o un video circular, **When** llega de la persona anclada,
    **Then** se descarga (si pesa más de 500 bytes) con su extensión (`oga`, la del archivo o `mp4`) y
    pasa al flujo del video narrado.
 
@@ -120,11 +119,11 @@ identificador del archivo y extensión `oga`.
 
 ### Edge Cases
 
-- Telegram no responde o el token es inválido: el sondeo reintenta cada 15 segundos sin avisar.
+- Telegram no responde: el sondeo reintenta cada 15 segundos sin avisar. Si Telegram rechaza el
+  token, el panel muestra "El token ya no sirve" y los avisos pasan a notificaciones de macOS.
 - El token cambia: el sondeo vuelve a empezar desde el primer mensaje pendiente.
 - La app se reinicia: retoma desde el último mensaje procesado, sin repetir comandos.
-- Telegram no está configurado: los avisos salen por ntfy.sh si hay un tema configurado (se elimina
-  en la spec `012-canal-de-mensajes`).
+- Telegram no está configurado o un envío falla: el aviso aparece como notificación de macOS.
 - `envia`, `enviar`, `envialos`, `envie`, `si`, `dale`, `ok`, `aprobado` o `aprueba` junto a la
   palabra `correos` aprueban correos, y `no correos` los descarta; en cambio `listo correos`,
   `postula correos` o `aplica correos` aprueban la última lista de avisos.
@@ -135,19 +134,18 @@ identificador del archivo y extensión `oga`.
 
 **Canal**
 
-- **FR-001**: El token MUST guardarse solo en el Llavero de macOS y validarse por su forma antes de
-  guardarlo.
+- **FR-001**: El token MUST guardarse solo en el Llavero de macOS, después de validarlo con Telegram.
 - **FR-002**: Hirebar MUST recibir mensajes con sondeo largo (`getUpdates`, 50 segundos, solo
   mensajes y botones), recordar el último procesado entre reinicios y reintentar cada 15 segundos si
   falla.
-- **FR-003**: El primer chat que escribe sin chat vinculado MUST quedar vinculado; los demás MUST
-  ignorarse.
+- **FR-003**: Hirebar MUST atender solo mensajes y botones de la cuenta anclada en su chat privado;
+  los demás MUST ignorarse.
 - **FR-004**: Hirebar MUST poder enviar textos (hasta 4.000 caracteres, con botones), fotos, videos
   (hasta 300 segundos de subida) y documentos (pie de hasta 1.000 caracteres), y quitar los botones de
   un mensaje.
-- **FR-005**: El menú y el panel MUST ofrecer "Configurar bot de Telegram…", "Enviar aviso de
-  prueba" y "Volver a vincular el chat", y mostrar si Telegram está sin configurar, esperando
-  `/start` o conectado.
+- **FR-005**: Ajustes MUST ofrecer la sección "Telegram y avisos" (vinculación, aviso de prueba,
+  "Cambiar de cuenta", "Quitar bot" y permiso de notificaciones), y el menú y el panel MUST mostrar el
+  estado del canal y llevar a esa sección.
 
 **Comandos**
 
@@ -163,14 +161,15 @@ identificador del archivo y extensión `oga`.
 - **FR-010**: Los nombres de agente MUST aceptar sinónimos (por ejemplo, `trabajo` para Empleo,
   `correos` para Clientes, `hv` para Perfil).
 - **FR-011**: Un texto que no es comando MUST responderse con la lista de comandos.
-- **FR-012**: Las notas de voz, audios y videos circulares del chat vinculado MUST pasar al flujo
+- **FR-012**: Las notas de voz, audios y videos circulares de la persona anclada MUST pasar al flujo
   del video narrado.
 
 ### Key Entities
 
-- **Mensaje entrante (TelegramMessage)**: chat, texto, mensaje citado, identificador de botón y, si
-  es audio, el identificador del archivo y su extensión.
-- **Chat vinculado**: identificador del único chat que Hirebar escucha, en `config.json`.
+- **Mensaje entrante (TelegramMessage)**: chat, remitente (ID, nombre, usuario, tipo de chat y hora),
+  texto, mensaje citado, identificador de botón y, si es audio, el identificador del archivo y su
+  extensión.
+- **Dueño del canal**: ID de usuario, chat y nombre de la persona anclada, en `config.json`.
 - **Token del bot**: en el Llavero, cuenta `telegram-bot`.
 - **Último mensaje procesado**: en `UserDefaults` (`telegram.offset`).
 
@@ -178,7 +177,7 @@ identificador del archivo y extensión `oga`.
 
 ### Measurable Outcomes
 
-- **SC-001**: Ningún mensaje de un chat distinto del vinculado produce una acción.
+- **SC-001**: Ningún mensaje ni botón de una cuenta distinta de la anclada produce una acción.
 - **SC-002**: Ningún comando se ejecuta dos veces después de un reinicio.
 - **SC-003**: Pulsar un botón y escribir el comando equivalente citando el mismo mensaje producen la
   misma acción.
@@ -186,15 +185,13 @@ identificador del archivo y extensión `oga`.
 
 ## Assumptions
 
-- La persona crea el bot con @BotFather y le escribe `/start` antes que nadie.
+- La persona crea el bot con @BotFather y usa Telegram en un chat privado con él.
 - La API de Telegram permite sondeo largo sin servidor propio.
 
 ## Divergencias con la constitución
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| El chat se vincula con el primer mensaje que llega, de quien sea | Restricciones técnicas (vínculo por código) | `012-canal-de-mensajes` |
-| Sin Telegram, los avisos salen por un tema público de ntfy.sh | IV | `012-canal-de-mensajes` |
 | La lectura de comandos está mezclada con las acciones en un mismo archivo | VIII | `013-parser-comandos` · `017-arquitectura-hexagonal` |
 | El último mensaje procesado se guarda en `UserDefaults` | IV | `022-version-datos` |
 | La lista de comandos y las respuestas están escritas en el código | VI | `024-textos-y-valores-fuera-del-codigo` |

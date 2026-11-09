@@ -169,6 +169,15 @@ final class ExecutionGuardTests: XCTestCase {
         XCTAssertEqual(known.now.map(\.proposal.id), ["s1"])
     }
 
+    func testAutomaticColdEmailWaitsForThePerson() throws {
+        let cold = Proposal(
+            id: "n1", action: .sendEmail, target: .email("contacto@acme.com"), title: "Hola", source: "Acme", text: "Texto")
+        let plan = try executionGuard.approve([cold], batch: "b1", approvedBy: .autoSend, agent: jobs, dailyLimit: nil)
+        XCTAssertEqual(plan.held.map(\.proposal.id), ["n1"])
+        let byPerson = try executionGuard.approve([cold], batch: "b2", approvedBy: .person, agent: jobs, dailyLimit: nil)
+        XCTAssertEqual(byPerson.now.map(\.proposal.id), ["n1"])
+    }
+
     func testPauseThatCannotBeSavedStillAlertsAndFails() {
         store.failsToPause = true
         XCTAssertThrowsError(try executionGuard.verify(batch: "b1", agent: jobs)) { error in

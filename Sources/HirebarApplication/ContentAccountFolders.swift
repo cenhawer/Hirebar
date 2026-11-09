@@ -7,6 +7,8 @@ extension ContentAccount {
     public var draft: URL { folder.appendingPathComponent("borrador.md") }
     public var videoFolder: URL { folder.appendingPathComponent("video", isDirectory: true) }
     public var changes: URL { folder.appendingPathComponent("cambios.txt") }
+    public var videoScript: URL { videoFolder.appendingPathComponent("guion.json") }
+    public var videoDescription: URL { videoFolder.appendingPathComponent("texto.md") }
     public var performance: URL { folder.appendingPathComponent("rendimiento.md") }
     public var relativeFolder: String { "contenido/\(id)" }
 }

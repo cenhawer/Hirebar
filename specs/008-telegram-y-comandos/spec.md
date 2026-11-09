@@ -124,9 +124,10 @@ identificador del archivo y extensión `oga`.
 - El token cambia: el sondeo vuelve a empezar desde el primer mensaje pendiente.
 - La app se reinicia: retoma desde el último mensaje procesado, sin repetir comandos.
 - Telegram no está configurado o un envío falla: el aviso aparece como notificación de macOS.
-- `envia`, `enviar`, `envialos`, `envie`, `si`, `dale`, `ok`, `aprobado` o `aprueba` junto a la
-  palabra `correos` aprueban correos, y `no correos` los descarta; en cambio `listo correos`,
-  `postula correos` o `aplica correos` aprueban la última lista de avisos.
+- Cada verbo pertenece a un solo comando (`Resources/comandos.json`); la palabra `correos` no cambia
+  el comando, solo el destino: `si correos` o `envia correos 1 3` aprueban la última lista de correos y
+  `no correos` la descarta. `auto si` sin nombre cambia Empleo y Freelance; Clientes se prende con
+  `auto clientes si`.
 
 ## Requirements *(mandatory)*
 
@@ -150,7 +151,9 @@ identificador del archivo y extensión `oga`.
 **Comandos**
 
 - **FR-006**: Los textos MUST normalizarse (minúsculas, sin tildes, sin espacios al borde) antes de
-  interpretarse; la primera palabra es el verbo.
+  interpretarse; la primera palabra es el verbo y cada verbo pertenece a un solo comando del
+  vocabulario `Resources/comandos.json`, que interpreta un `CommandParser` puro en
+  `HirebarApplication`, también para las notas de voz.
 - **FR-007**: Los botones MUST traer el identificador de su lista (`si:<lista>`, `no:<lista>`) y
   responderse con "Recibido".
 - **FR-008**: Una respuesta que cita un mensaje MUST aplicar a la lista de ese mensaje.
@@ -192,18 +195,13 @@ identificador del archivo y extensión `oga`.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| La lectura de comandos está mezclada con las acciones en un mismo archivo | VIII | `013-parser-comandos` · `017-arquitectura-hexagonal` |
+| Las acciones de los comandos viven en el adaptador, no en casos de uso | VIII | `017-arquitectura-hexagonal` |
 | El último mensaje procesado se guarda en `UserDefaults` | IV | `022-version-datos` |
 | La lista de comandos y las respuestas están escritas en el código | VI | `024-textos-y-valores-fuera-del-codigo` |
 | El cliente usa `Thread`, `DispatchSemaphore` y un singleton | VIII | `017-arquitectura-hexagonal` · `018-macos-26-swift-6` |
-| La lectura de comandos no tiene tests | VII | `013-parser-comandos` |
 
 ## Hallazgos sin principio asociado
 
-- `si`, `ok`, `no` y `envia` sirven a la vez para listas y para correos (anti-patrón de
-  `AGENTS.md`). Se resuelve en `013-parser-comandos`.
-- `auto si` sin nombre cambia Empleo y Freelance pero no Clientes, aunque la respuesta muestra los
-  tres. Se define en `013-parser-comandos`.
 - El token se valida solo por su forma: un token mal copiado con la forma correcta se guarda y el
   sondeo falla en silencio cada 15 segundos. Se resuelve en `012-canal-de-mensajes`, que lo verifica
   contra Telegram al guardarlo.

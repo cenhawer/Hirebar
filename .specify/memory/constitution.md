@@ -124,8 +124,8 @@ y cada integración se cambia sin tocar el resto.
 - CI: GitHub Actions en `macos-26`, con los jobs `conventions`, `quality` y `build`.
 - Motores de IA: Claude Code (recomendado), Codex, Gemini CLI o un comando propio, siempre por la
   terminal y con las variables `HIREBAR_*` documentadas en `ARCHITECTURE.md`.
-- Mensajería: Telegram, vinculado a un único chat mediante un código de emparejamiento que muestra
-  la app.
+- Mensajería: Telegram, anclado al ID de usuario de una sola persona en su chat privado, que ella
+  confirma en la app viendo su nombre, su usuario, su ID y el mensaje recibido (ADR-0005).
 - Firma: identidad estable configurable (`HIREBAR_SIGN_IDENTITY`); la distribución pública exige
   Developer ID y notarización.
 - Convenciones técnicas de la organización: `Lineamientos/` (Engineering Standards).
@@ -157,4 +157,4 @@ y cada integración se cambia sin tocar el resto.
 - Toda revisión de PR verifica el cumplimiento. Una desviación del código actual respecto a esta
   constitución es un hallazgo y se corrige por spec, en el orden de `docs/Plan.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-05
+**Version**: 1.0.1 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-09

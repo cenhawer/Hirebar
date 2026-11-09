@@ -64,10 +64,10 @@ extension Controller {
 
     func list(for target: ListTarget) -> Batch? {
         switch target {
-        case .batch(let id): return BatchStore.find(id: id)
-        case .reply(let messageId): return BatchStore.find(messageId: messageId) ?? BatchStore.latestPending()
+        case .batch(let id): return stores.batches.find(id: id)
+        case .reply(let messageId): return stores.batches.find(messageId: messageId) ?? stores.batches.latestPending()
         case .emails: return latestPendingEmails()
-        case .latest: return BatchStore.latestPending()
+        case .latest: return stores.batches.latestPending()
         }
     }
 
@@ -133,7 +133,7 @@ extension Controller {
         case .jobChange:
             requestProfileChange("Cambio de trabajo", command.rest, example: "trabajo nuevo Backend Senior en Acme desde dic 2026")
         case .skill: handleSkill(command.rest)
-        case .skills: reply(Profile.load().summary)
+        case .skills: reply(stores.profile.load().summary)
         default: reply(Self.help)
         }
     }
@@ -141,11 +141,11 @@ extension Controller {
     static let practiceOrigin = "Telegram"
 
     func handlePractice(_ words: [String]) {
-        let named = words.count > 1 ? AgentKind.parse(words.dropLast().joined(separator: " ")) : nil
+        let named = words.count > 1 ? stores.agents.parse(words.dropLast().joined(separator: " ")) : nil
         if let named, let value = words.last, ["si", "on", "no", "off"].contains(value) {
-            Practice.set(named, on: value == "si" || value == "on", from: Self.practiceOrigin)
+            Practice.set(named, on: value == "si" || value == "on", from: Self.practiceOrigin, agents: stores.agents)
         }
-        let lines = AgentKind.allCases.map { "\(AgentStore.load($0).name): \(AgentStore.load($0).practice ? "en práctica" : "real")" }
+        let lines = AgentKind.allCases.map { "\(stores.agents.load($0).name): \(stores.agents.load($0).practice ? "en práctica" : "real")" }
         reply("Modo práctica · " + lines.joined(separator: " · ") + "\nCambiar: \"practica empleo si\", \"practica empleo no\".")
     }
 
@@ -154,7 +154,7 @@ extension Controller {
             reply("Escribe qué anotar, por ejemplo: anota entrevista el jueves")
             return
         }
-        Metrics.event(note)
+        stores.metrics.event(note)
         reply("Anotado para el informe del domingo.")
     }
 
@@ -180,7 +180,7 @@ extension Controller {
             log.write("Telegram: ignorado un mensaje sin remitente")
             return false
         }
-        guard Config.load().channelOwner != nil else {
+        guard stores.config.load().channelOwner != nil else {
             if channel.offer(sender, text: message.text) {
                 telegram.send(Self.pairingReply, chatId: sender.chatId)
             } else {
@@ -202,8 +202,8 @@ extension Controller {
 
     public func statusReport() -> String {
         """
-        \(AI.capitalizedName): \(status)
-        Cupos: \(Quotas.summary())
+        \(ai.capitalizedName): \(status)
+        Cupos: \(stores.quotas.summary())
         Búsqueda freelance: \(freelanceRadar?.status ?? "")
         Búsqueda de empleo: \(jobRadar?.status ?? "")
 
@@ -233,7 +233,7 @@ extension Controller {
         unsavedPauses[agent] = nil
         do {
             try executionGuard.resume(agent)
-            log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
+            log.write("Verificación: \(stores.agents.load(kind).name) reanudado por la persona")
             return true
         } catch {
             log.write("Verificación: no pude reanudar \(kind.rawValue): \(error.localizedDescription)")
@@ -242,14 +242,14 @@ extension Controller {
     }
 
     func resumeAgent(named name: String) {
-        guard let kind = AgentKind.parse(name) else {
+        guard let kind = stores.agents.parse(name) else {
             reply("Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>")
             return
         }
-        let agentName = AgentStore.load(kind).name
+        let agentName = stores.agents.load(kind).name
         if resumeAgent(kind) {
             let since = Date().addingTimeInterval(-24 * 3600)
-            let waiting = BatchStore.load().filter {
+            let waiting = stores.batches.load().filter {
                 $0.status == .pending && $0.created > since && AgentKind.owner(of: $0.mode) == kind && $0.mode.hasItems
             }
             let lists = waiting.map(\.id).joined(separator: ", ")
@@ -261,11 +261,11 @@ extension Controller {
     }
 
     func keepPaused(named name: String) {
-        guard let kind = AgentKind.parse(name) else {
+        guard let kind = stores.agents.parse(name) else {
             reply("El agente sigue en pausa.")
             return
         }
-        reply("\(AgentStore.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando quieras.")
+        reply("\(stores.agents.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando quieras.")
     }
 
     private func requestProfileChange(_ kind: String, _ text: String, example: String) {
@@ -280,7 +280,7 @@ extension Controller {
     private func handleSkill(_ text: String) {
         var parts = text.split(separator: " ").map(String.init)
         guard parts.count >= 2, let level = SkillLevel.parse(parts.removeLast()) else {
-            if !text.isEmpty, let skill = Profile.load().skill(named: text) {
+            if !text.isEmpty, let skill = stores.profile.load().skill(named: text) {
                 reply("\(skill.name): \(skill.level.rawValue)")
             } else {
                 reply("Escribe: habilidad <nombre> <domino|conozco|evito>, por ejemplo: habilidad Go conozco")
@@ -288,7 +288,7 @@ extension Controller {
             return
         }
         let name = parts.joined(separator: " ")
-        switch ProfileEditor.setSkill(name, level: level) {
+        switch stores.profile.setSkill(name, level: level) {
         case .added:
             reply("Agregué \(name) como \(level.rawValue). Ya cuenta en la próxima búsqueda.")
         case .updated(let from):
@@ -302,12 +302,12 @@ extension Controller {
 
     func latestPendingEmails() -> Batch? {
         let since = Date().addingTimeInterval(-24 * 3600)
-        return BatchStore.load().filter { $0.mode == .prospectingSend && $0.status == .pending && $0.created > since }
+        return stores.batches.load().filter { $0.mode == .prospectingSend && $0.status == .pending && $0.created > since }
             .max { $0.created < $1.created }
     }
 
     private func discardList(_ found: Batch?) {
-        discard(found, chatId: Config.load().chatId)
+        discard(found, chatId: stores.config.load().chatId)
         guard found?.status == .pending, found?.mode == .prospectingSend else { return }
         let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
         let stamp = Int(Date().timeIntervalSince1970)
@@ -320,8 +320,8 @@ extension Controller {
             return
         }
         target.status = .discarded
-        BatchStore.upsert(target)
-        Metrics.bump(target.mode, "listas_descartadas")
+        stores.batches.upsert(target)
+        stores.metrics.bump(target.mode, "listas_descartadas")
         if let id = target.messageId { telegram.removeButtons(chatId: chatId, messageId: id) }
         reply("Descartada. Sigo buscando.")
     }
@@ -329,20 +329,20 @@ extension Controller {
     static let autoSendOrigin = "Telegram"
 
     private func handleAuto(_ rest: [String]) {
-        let named = rest.count > 1 ? AgentKind.parse(rest.dropLast().joined(separator: " ")) : nil
+        let named = rest.count > 1 ? stores.agents.parse(rest.dropLast().joined(separator: " ")) : nil
         let targets: [AgentKind] = (named.map { [$0] } ?? [.jobs, .freelance]).filter(AutoSend.agents.contains)
         if let value = rest.last, ["si", "on"].contains(value) {
-            let pending = targets.filter { !AgentStore.load($0).autoApprove }
+            let pending = targets.filter { !stores.agents.load($0).autoApprove }
             if !pending.isEmpty {
                 askToTurnOnAutoSend(pending)
                 return
             }
         }
         if let value = rest.last, ["no", "off"].contains(value) {
-            for kind in targets { AutoSend.turnOff(kind, from: Self.autoSendOrigin) }
+            for kind in targets { AutoSend.turnOff(kind, from: Self.autoSendOrigin, agents: stores.agents) }
         }
         let lines = [AgentKind.jobs, .freelance, .clients].map { kind -> String in
-            let agent = AgentStore.load(kind)
+            let agent = stores.agents.load(kind)
             return "\(agent.name): \(agent.autoApprove ? "SÍ" : "no")"
         }
         reply("Envío automático · " + lines.joined(separator: " · ") + "\nCambiar: \"auto si\", \"auto no\", \"auto empleo no\", \"auto clientes si\".")
@@ -351,30 +351,30 @@ extension Controller {
     func askToTurnOnAutoSend(_ kinds: [AgentKind]) {
         let names = kinds.map(\.rawValue).joined(separator: ",")
         askPerson(
-            AutoSend.explanation(for: kinds) + "\n\n¿Lo prendo?",
+            AutoSend.explanation(for: kinds, agents: stores.agents) + "\n\n¿Lo prendo?",
             buttons: [[("Sí, prender", "autoon:\(names)"), ("No", "autocancel:\(names)")]])
     }
 
     func confirmAutoSend(_ names: String) {
         let kinds = names.split(separator: ",").compactMap { AgentKind(rawValue: String($0)) }.filter(AutoSend.agents.contains)
         guard !kinds.isEmpty else { return }
-        for kind in kinds { AutoSend.turnOn(kind, from: Self.autoSendOrigin) }
-        reply("Envío automático prendido: " + kinds.map { AgentStore.load($0).name }.joined(separator: ", ") + ".")
+        for kind in kinds { AutoSend.turnOn(kind, from: Self.autoSendOrigin, agents: stores.agents) }
+        reply("Envío automático prendido: " + kinds.map { stores.agents.load($0).name }.joined(separator: ", ") + ".")
     }
 
     private func handleAgentSwitch(_ rest: [String]) {
-        guard let value = rest.last, ["on", "off", "si", "no"].contains(value),
-              let kind = AgentKind.parse(rest.dropLast().joined(separator: " ")) else {
+        let named = stores.agents.parse(rest.dropLast().joined(separator: " "))
+        guard let value = rest.last, ["on", "off", "si", "no"].contains(value), let kind = named else {
             reply("Escribe: agente <nombre> on / off, por ejemplo: agente clientes off")
             return
         }
         let on = value == "on" || value == "si"
-        AgentStore.update(kind) { $0.enabled = on }
-        reply("\(AgentStore.load(kind).name): \(on ? "prendido" : "apagado").")
+        stores.agents.update(kind) { $0.enabled = on }
+        reply("\(stores.agents.load(kind).name): \(on ? "prendido" : "apagado").")
     }
 
     private func handleRunNow(_ name: String) {
-        guard let kind = AgentKind.parse(name) else {
+        guard let kind = stores.agents.parse(name) else {
             reply("Escribe: corre <empleo | freelance | clientes | contenido | perfil | analista>")
             return
         }
@@ -382,7 +382,7 @@ extension Controller {
     }
 
     public func runAgentNow(_ kind: AgentKind) {
-        let agent = AgentStore.load(kind)
+        let agent = stores.agents.load(kind)
         switch kind {
         case .jobs: jobRadar?.checkNow()
         case .freelance: freelanceRadar?.checkNow()
@@ -401,7 +401,7 @@ extension Controller {
     }
 
     public func agentsReport() -> String {
-        AgentStore.all().map { agent in
+        stores.agents.all().map { agent in
             var line = "\(agent.name): \(agent.enabled ? "prendido" : "apagado")"
             if agent.enabled {
                 if [.jobs, .freelance, .clients].contains(agent.id) { line += " · auto \(agent.autoApprove ? "sí" : "no")" }
@@ -420,11 +420,11 @@ extension Controller {
 
     /// Cuenta a la que se refiere un comando sobre un borrador: la nombrada, o la única que tiene borrador.
     func draftAccount(named word: String?, verb: String, suffix: String = "") -> AccountLookup {
-        if let word, let account = ContentAccountStore.match(word) {
-            return account.hasDraft ? .found(account)
-                : .problem("\(account.title) no tiene publicación pendiente. Escribe \"post \(account.id)\" para armar una.")
+        if let word, let account = stores.contentAccounts.match(word) {
+            let missing = "\(account.title) no tiene publicación pendiente. Escribe \"post \(account.id)\" para armar una."
+            return stores.contentAccounts.hasDraft(account) ? .found(account) : .problem(missing)
         }
-        let pending = ContentAccountStore.load().filter(\.hasDraft)
+        let pending = stores.contentAccounts.load().filter { stores.contentAccounts.hasDraft($0) }
         switch pending.count {
         case 0: return .problem("No tengo publicaciones pendientes. Escribe \"post\" para que arme una.")
         case 1: return .found(pending[0])
@@ -436,11 +436,11 @@ extension Controller {
 
     /// Vuelve a mandar la vista previa sin voz y el guion para grabar.
     private func rebuildVideo(_ word: String?) {
-        let withScenes = ContentAccountStore.load().filter {
+        let withScenes = stores.contentAccounts.load().filter {
             FileManager.default.fileExists(atPath: $0.videoFolder.appendingPathComponent("guion.json").path)
         }
         let account: ContentAccount
-        if let word, let named = ContentAccountStore.match(word) {
+        if let word, let named = stores.contentAccounts.match(word) {
             account = named
         } else if withScenes.count == 1 {
             account = withScenes[0]
@@ -470,9 +470,9 @@ extension Controller {
 
     /// Rehace el video con la última nota de voz guardada de la cuenta.
     private func remakeWithLastRecording(_ word: String?) {
-        let accounts = ContentAccountStore.load()
-        let waiting = ContentAccountStore.find(UserDefaults.standard.string(forKey: Controller.waitingVoiceKey))
-        guard let account = word.flatMap(ContentAccountStore.match) ?? waiting ?? accounts.first(where: \.video) else {
+        let accounts = stores.contentAccounts.load()
+        let waiting = stores.contentAccounts.find(UserDefaults.standard.string(forKey: Controller.waitingVoiceKey))
+        guard let account = word.flatMap(stores.contentAccounts.match) ?? waiting ?? accounts.first(where: \.video) else {
             reply("No sé de qué cuenta. Escribe: rearmar <cuenta>")
             return
         }
@@ -500,7 +500,7 @@ extension Controller {
                 if let text = Controller.copyText(account.videoFolder.appendingPathComponent("texto.md")) {
                     self?.reply("Descripción del video de \(account.title), lista para copiar:\n\n\(text)")
                 }
-                let several = ContentAccountStore.load().count > 1
+                let several = (self?.stores.contentAccounts.load().count ?? 0) > 1
                 self?.reply("¿Lo subo? Responde \"\(several ? "publica \(account.id)" : "publica")\" para subir el carrusel y este video. "
                             + "Si quieres repetir la grabación, manda otra nota de voz.")
             }
@@ -529,10 +529,10 @@ extension Controller {
             return
         }
         let waiting = UserDefaults.standard.string(forKey: Controller.waitingVoiceKey)
-        let candidates = ContentAccountStore.load().filter {
+        let candidates = stores.contentAccounts.load().filter {
             $0.video && FileManager.default.fileExists(atPath: $0.videoFolder.appendingPathComponent("guion.json").path)
         }
-        guard let account = ContentAccountStore.find(waiting) ?? candidates.first else {
+        guard let account = stores.contentAccounts.find(waiting) ?? candidates.first else {
             reply("Recibí tu audio, pero no tengo ningún video esperando voz. Escribe \"post <cuenta>\" con el video prendido.")
             return
         }
@@ -551,7 +551,7 @@ extension Controller {
     private func handlePost(_ rest: String) {
         var parts = rest.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ", maxSplits: 2).map(String.init)
         var named: ContentAccount?
-        if let first = parts.first, let account = ContentAccountStore.match(first) {
+        if let first = parts.first, let account = stores.contentAccounts.match(first) {
             named = account
             parts.removeFirst()
         }

@@ -80,7 +80,7 @@ final class PanelModel: ObservableObject {
         let pauses = engine.controller.pauseReasons()
         agents = AgentKind.allCases.map { card($0, running: running, pauseReason: pauses[$0]) }
         claude = engine.controller.status
-        aiName = AI.capitalizedName
+        aiName = engine.controller.ai.capitalizedName
         claudeBusy = !engine.controller.isIdle
         let channel = engine.controller.channel.state
         telegram = ChannelStatusText.describe(channel)
@@ -141,14 +141,14 @@ final class PanelModel: ObservableObject {
     }
 
     func togglePractice(_ kind: AgentKind) {
-        Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.panelOrigin)
+        Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.panelOrigin, agents: engine.controller.stores.agents)
         refresh()
     }
 
     static let panelOrigin = "el panel"
 
     func toggleAutoApprove(_ kind: AgentKind) {
-        AutoSendConfirmation.toggle(kind)
+        AutoSendConfirmation.toggle(kind, agents: engine.controller.stores.agents)
         refresh()
     }
 

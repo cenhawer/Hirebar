@@ -11,7 +11,11 @@ public final class Scheduler {
     weak var jobRadar: JobRadar?
     weak var freelanceRadar: FreelanceRadar?
 
-    public init() {}
+    let stores: Repositories
+
+    public init(stores: Repositories) {
+        self.stores = stores
+    }
     static let cleanupHour = 19
 
     public var onChange: (() -> Void)?
@@ -47,9 +51,9 @@ public final class Scheduler {
 
     private func tick() {
         let now = Date()
-        for agent in AgentStore.all() where agent.enabled {
+        for agent in stores.agents.all() where agent.enabled {
             for task in agent.tasks {
-                if Self.isIdlePortalScan(task.mode) { continue }
+                if Self.isIdlePortalScan(task.mode, portals: stores.portals) { continue }
                 guard let slot = task.dueSlot(at: now) else { continue }
                 once(Self.key(for: task, day: slot.day, hour: slot.hour)) {
                     Log.write("Programador: \(agent.name) · \(task.mode.rawValue) de las \(slot.hour) h")
@@ -61,10 +65,10 @@ public final class Scheduler {
         onChange?()
     }
 
-    static func isIdlePortalScan(_ mode: Mode) -> Bool {
+    static func isIdlePortalScan(_ mode: Mode, portals: PortalRepository) -> Bool {
         switch mode {
-        case .portalScanJobs: return PortalStore.active(for: .jobs).isEmpty
-        case .portalScanFreelance: return PortalStore.active(for: .freelance).isEmpty
+        case .portalScanJobs: return portals.active(for: .jobs).isEmpty
+        case .portalScanFreelance: return portals.active(for: .freelance).isEmpty
         default: return false
         }
     }
@@ -76,11 +80,11 @@ public final class Scheduler {
         let due = (weekday == 1 && hour >= Self.cleanupHour) || weekday == 2
         guard due, controller?.isIdle ?? false else { return }
         let sunday = weekday == 2 ? now.addingTimeInterval(-86400) : now
-        once("sched.limpieza.\(Metrics.weekKey(sunday))") { Housekeeping.run() }
+        once("sched.limpieza.\(WeekKey.of(sunday))") { Housekeeping.run() }
     }
 
     public func nextRun(of kind: AgentKind) -> Date? {
-        let agent = AgentStore.load(kind)
+        let agent = stores.agents.load(kind)
         guard agent.enabled else { return nil }
         let search: Date?
         switch kind {
@@ -88,7 +92,8 @@ public final class Scheduler {
         case .freelance: search = freelanceRadar?.nextRun
         default: search = nil
         }
-        let tasks = agent.tasks.filter { !Self.isIdlePortalScan($0.mode) }.compactMap { $0.nextStart(after: Date()) }.min()
+        let active = agent.tasks.filter { !Self.isIdlePortalScan($0.mode, portals: stores.portals) }
+        let tasks = active.compactMap { $0.nextStart(after: Date()) }.min()
         return [search, tasks].compactMap { $0 }.min()
     }
 }

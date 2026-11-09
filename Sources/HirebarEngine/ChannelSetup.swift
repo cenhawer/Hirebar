@@ -58,7 +58,10 @@ public final class ChannelSetup {
     private var guardian: ChannelGuard
     public var onChange: ((ChannelState) -> Void)?
 
-    init(settings: ChannelSettings?, telegram: ChannelTelegram, now: @escaping () -> Date = Date.init) {
+    let configs: ConfigRepository
+
+    init(settings: ChannelSettings?, telegram: ChannelTelegram, configs: ConfigRepository, now: @escaping () -> Date = Date.init) {
+        self.configs = configs
         self.settings = settings
         self.telegram = telegram
         self.now = now
@@ -69,7 +72,7 @@ public final class ChannelSetup {
         guard settings != nil else { return .misconfigured }
         guard telegram.isConfigured() else { return .notConfigured }
         if telegram.tokenRejected() { return .tokenRejected }
-        let config = Config.load()
+        let config = configs.load()
         let bot = config.botUsername
         if let owner = config.channelOwner { return .connected(owner, bot: bot) }
         guard let pairing else { return .unlinked(bot: bot) }
@@ -83,10 +86,10 @@ public final class ChannelSetup {
         let check = await Telegram.check(token: token)
         guard case .valid(let username) = check else { return check }
         guard telegram.saveToken(token) else { return .notSaved }
-        var config = Config.load()
+        var config = configs.load()
         config.channelOwner = nil
         config.botUsername = username
-        config.save()
+        configs.save(config)
         telegram.start()
         startPairing()
         return check
@@ -109,7 +112,7 @@ public final class ChannelSetup {
     }
 
     func offer(_ sender: ChannelSender, text: String) -> Bool {
-        guard Config.load().channelOwner == nil, pairing != nil, pairing?.receive(sender, text: text, at: now()) == true else {
+        guard configs.load().channelOwner == nil, pairing != nil, pairing?.receive(sender, text: text, at: now()) == true else {
             return false
         }
         notify()
@@ -118,9 +121,9 @@ public final class ChannelSetup {
 
     public func confirm(welcome: String) {
         guard let candidate = pairing?.current else { return }
-        var config = Config.load()
+        var config = configs.load()
         config.channelOwner = candidate.owner
-        config.save()
+        configs.save(config)
         pairing = nil
         log.write("Telegram: bot anclado a la cuenta confirmada")
         telegram.send(welcome, candidate.owner.chatId)
@@ -133,30 +136,30 @@ public final class ChannelSetup {
     }
 
     public func changeAccount() {
-        var config = Config.load()
+        var config = configs.load()
         config.channelOwner = nil
-        config.save()
+        configs.save(config)
         startPairing()
     }
 
     public func removeBot() -> ChannelChange {
         guard telegram.removeToken() else { return .keychainFailed }
-        var config = Config.load()
+        var config = configs.load()
         config.channelOwner = nil
         config.botUsername = ""
-        config.save()
+        configs.save(config)
         pairing = nil
         notify()
         return .done
     }
 
     func admit(_ sender: ChannelSender) -> ChannelDecision {
-        guardian.check(sender, owner: Config.load().channelOwner, now: now())
+        guardian.check(sender, owner: configs.load().channelOwner, now: now())
     }
 
     @MainActor
     public func completeMissingDetails() async {
-        var config = Config.load()
+        var config = configs.load()
         guard telegram.isConfigured() else { return }
         if config.botUsername.isEmpty, let username = await telegram.botUsername() {
             config.botUsername = username
@@ -164,7 +167,7 @@ public final class ChannelSetup {
         if let owner = config.channelOwner, owner.name.isEmpty, let name = await telegram.chatName(owner.chatId) {
             config.channelOwner = ChannelOwner(userId: owner.userId, chatId: owner.chatId, name: name, username: owner.username)
         }
-        config.save()
+        configs.save(config)
         notify()
     }
 

@@ -1,4 +1,5 @@
 import AppKit
+import HirebarApplication
 import HirebarDomain
 import HirebarEngine
 import HirebarNotifications
@@ -10,21 +11,21 @@ enum AutoSendConfirmation {
     static let origin = "la Mac"
     static let settingsOrigin = "Ajustes"
 
-    static func ask(_ kinds: [AgentKind]) -> Bool {
+    static func ask(_ kinds: [AgentKind], agents: AgentRepository) -> Bool {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "¿Prender el envío automático?"
-        alert.informativeText = AutoSend.explanation(for: kinds)
+        alert.informativeText = AutoSend.explanation(for: kinds, agents: agents)
         alert.addButton(withTitle: "Prender")
         alert.addButton(withTitle: "Cancelar")
         return alert.runModal() == .alertFirstButtonReturn
     }
 
-    static func toggle(_ kind: AgentKind) {
+    static func toggle(_ kind: AgentKind, agents: AgentRepository) {
         if AgentStore.load(kind).autoApprove {
-            AutoSend.turnOff(kind, from: origin)
-        } else if ask([kind]) {
-            AutoSend.turnOn(kind, from: origin)
+            AutoSend.turnOff(kind, from: origin, agents: agents)
+        } else if ask([kind], agents: agents) {
+            AutoSend.turnOn(kind, from: origin, agents: agents)
         }
     }
 }

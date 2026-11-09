@@ -10,9 +10,10 @@ private let log = Log(.telegram)
 
 struct TelegramExecutionAlerts: ExecutionAlerts {
     let notifier: Notifier
+    let agents: AgentRepository
 
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {
-        let name = AgentKind(rawValue: agent.rawValue).map { AgentStore.load($0).name } ?? agent.rawValue
+        let name = AgentKind(rawValue: agent.rawValue).map { agents.load($0).name } ?? agent.rawValue
         let text = Self.message(agentName: name, alias: agent.rawValue, verification: verification, pauseSaved: pauseSaved)
         log.write("Verificación: \(name) en pausa por la lista \(verification.batch)")
         guard notifier.canUseTelegram else {
@@ -20,7 +21,7 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
             return
         }
         notifier.telegram.send(
-            text, chatId: Config.load().chatId,
+            text, chatId: notifier.chatId,
             buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
     }
 

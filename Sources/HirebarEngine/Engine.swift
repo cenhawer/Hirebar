@@ -15,11 +15,12 @@ public final class Engine {
     public let scheduler: Scheduler
 
     public init() {
+        let stores = Repositories.files
         telegram = Telegram(secrets: KeychainSecretStore())
-        controller = Controller(telegram: telegram)
-        jobRadar = JobRadar()
-        freelanceRadar = FreelanceRadar()
-        scheduler = Scheduler()
+        controller = Controller(telegram: telegram, stores: stores)
+        jobRadar = JobRadar(stores: stores)
+        freelanceRadar = FreelanceRadar(stores: stores)
+        scheduler = Scheduler(stores: stores)
         jobRadar.controller = controller
         freelanceRadar.controller = controller
         scheduler.controller = controller
@@ -34,7 +35,7 @@ public final class Engine {
         Paths.ensure()
         Paths.installTemplates(from: resources)
         AudioTools.removeLegacyCopy()
-        AgentStore.writeMissingDefaults()
+        controller.stores.agents.writeMissingDefaults()
         controller.start()
         freelanceRadar.start()
         jobRadar.start()

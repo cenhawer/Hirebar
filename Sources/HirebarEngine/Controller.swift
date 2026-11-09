@@ -8,6 +8,7 @@ public final class Controller {
     let targetRules = TargetRulesFile.bundled()
     lazy var executionGuard = ExecutionGuard(store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
+    public let channel = ChannelSetup(settings: try? ChannelSettings.bundled())
     private var protectedSnapshot: ProtectedFiles.Snapshot?
     static let noNewsMarker = "SIN_NOVEDADES"
     static let maxRunSeconds: TimeInterval = 3600

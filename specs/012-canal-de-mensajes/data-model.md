@@ -13,7 +13,8 @@ Se guarda en `config.json` → `channelOwner`.
 
 ## ChannelSender (HirebarDomain)
 
-Remitente de un mensaje o botón: `userId`, `chatId`, `name`, `username`, `isPrivateChat`, `sentAt`.
+Remitente de un mensaje o botón: `userId`, `chatId`, `name`, `username`, `isPrivateChat`, `sentAt` y
+`viaButton` (los botones nunca cuentan para la vinculación).
 
 ## ChannelGuard (HirebarApplication)
 
@@ -22,8 +23,9 @@ minuto para el límite `messagesPerMinute`.
 
 ## ChannelPairing (HirebarApplication)
 
-`startedAt` y `window`. `candidate(from: sender)` devuelve el dueño propuesto si el chat es privado,
-el mensaje es posterior al inicio y la vinculación no venció; `isExpired(at:)`.
+`startedAt`, `window`, cola de `PairingCandidate` (dueño propuesto y texto recibido) y cuentas
+rechazadas. `receive(sender, text:, at:)` encola un mensaje de texto privado posterior al inicio y
+dentro de la ventana; `current` es el primero; `declineCurrent()` lo rechaza y pasa al siguiente.
 
 ## Resources/canal.json
 

@@ -39,7 +39,8 @@ el nombre en la Mac y recibir el aviso de prueba en ese chat.
 1. **Given** un token pegado en Ajustes, **When** la persona lo comprueba, **Then** la app lo valida
    con Telegram y muestra el nombre del bot; un token inválido muestra el error sin guardarse.
 2. **Given** un token válido, **When** la persona empieza la vinculación y le escribe al bot desde su
-   chat privado, **Then** la app muestra su nombre y usuario y pide confirmarlo.
+   chat privado, **Then** la app muestra su nombre, usuario, ID y el texto que escribió, y pide
+   confirmarlo.
 3. **Given** el nombre mostrado, **When** la persona confirma, **Then** el bot queda anclado a su ID de
    usuario y a ese chat, y llega un mensaje de bienvenida con la ayuda.
 4. **Given** el nombre mostrado, **When** la persona dice que no es ella, **Then** la app descarta ese
@@ -120,9 +121,10 @@ El panel y Ajustes muestran en qué estado está el canal y qué hacer, sin conc
 
 - **FR-001**: La app MUST validar el token con Telegram antes de guardarlo y mostrar el nombre del
   bot; el token se guarda solo en el Llavero.
-- **FR-002**: La vinculación MUST aceptar solo mensajes de un chat privado enviados después de
-  empezarla y dentro de su tiempo de espera, y MUST pedir a la persona que confirme el nombre y el
-  usuario de quien escribió.
+- **FR-002**: La vinculación MUST aceptar solo mensajes de texto de un chat privado enviados después
+  de empezarla y dentro de su tiempo de espera (los botones no cuentan), y MUST pedir a la persona que
+  confirme viendo el nombre, el usuario, el ID y el texto recibido, con una advertencia si la cuenta
+  no tiene usuario. Los demás candidatos quedan en cola.
 - **FR-003**: Al confirmar, la app MUST guardar el ID de usuario, el chat y el nombre de la persona,
   y mandar la bienvenida con la ayuda a ese chat.
 - **FR-004**: Con el bot anclado, la app MUST atender solo mensajes y botones cuyo remitente sea el ID
@@ -131,15 +133,18 @@ El panel y Ajustes muestran en qué estado está el canal y qué hacer, sin conc
 - **FR-005**: La app MUST ignorar los mensajes de la persona que superen el límite por minuto.
 - **FR-006**: Una configuración con un chat privado vinculado MUST migrar a ese mismo usuario
   anclado; un chat de grupo MUST quedar sin anclar.
-- **FR-007**: Sin Telegram configurado o sin persona anclada, y cuando un envío a Telegram falla, los
-  avisos MUST mostrarse como notificaciones de macOS; tocar una MUST abrir el panel.
+- **FR-007**: Sin Telegram configurado, sin persona anclada, con el token rechazado o cuando un envío a
+  Telegram falla, los avisos MUST mostrarse como notificaciones de macOS; tocar una MUST abrir el
+  panel. El permiso se pide al abrir la app por primera vez y un aviso que no se puede mostrar queda en
+  el registro.
 - **FR-008**: La app MUST NOT enviar avisos a ntfy.sh ni a ningún otro servicio público; el tema de
   ntfy de configuraciones viejas se descarta.
 - **FR-009**: Ajustes MUST tener una sección "Telegram y avisos" con la vinculación paso a paso, el
   permiso de notificaciones, el aviso de prueba, "Cambiar de cuenta" y "Quitar bot"; el panel MUST
   mostrar el estado del canal y llevar a esa sección.
 - **FR-010**: El tiempo de espera de la vinculación y el límite de mensajes por minuto MUST vivir en
-  un archivo de recursos, no en el código.
+  un archivo de recursos, no en el código; si el archivo falta o no es válido, el bot MUST no atender
+  a nadie y Ajustes MUST decir que hay que reinstalar.
 
 ### Key Entities
 

@@ -51,6 +51,17 @@ enum AgentPrompts {
             """
     }
 
+    static func approvedEmails(for batch: Batch) -> String {
+        ExecutionApprovals.store.approvedItems(batch: batch.id).map { item in
+            """
+            itemId \(item.proposal.id) · para: \(item.proposal.target.displayText)
+            asunto: \(item.proposal.title)
+            texto:
+            \(item.proposal.text ?? "")
+            """
+        }.joined(separator: "\n\n")
+    }
+
     static func basePrompt(for batch: Batch, items: [BatchItem], owner: String) -> String {
         let list = items.enumerated().map { index, item in
             "\(index + 1). [\(item.kind)] \(item.platform): \(item.title)\n   \(item.url)\n   \(item.detail)"
@@ -108,10 +119,11 @@ enum AgentPrompts {
                 """
         case .prospectingSend:
             return """
-            Envío de prospección \(batch.id) (\(now)). \(owner) aprobó desde Telegram los correos indicados en \
-            prospeccion/aprobados.json de la lista prospeccion/pendientes.json. Envíalos desde su Gmail según tus \
-            instrucciones. \(browser)
-            """
+                Envío de prospección \(batch.id) (\(now)). \(owner) aprobó desde Telegram estos correos: envíalos desde su \
+                Gmail con exactamente el destinatario, el asunto y el texto de cada uno, según tus instrucciones. \(browser)
+
+                \(approvedEmails(for: batch))
+                """
         case .social:
             return """
                 Búsqueda en redes \(batch.id) (\(now), semana \(week)). Busca publicaciones de las últimas horas que ofrezcan \

@@ -44,6 +44,7 @@ jobs:
           python3 -m json.tool Resources/inicial/perfil.json > /dev/null
           python3 -m json.tool Resources/inicial/cupos.json > /dev/null
           python3 -m json.tool Resources/perfiles-ia.json > /dev/null
+          python3 -m json.tool Resources/destinos.json > /dev/null
 
   build:
     runs-on: macos-26

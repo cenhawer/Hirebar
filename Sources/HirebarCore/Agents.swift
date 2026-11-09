@@ -16,8 +16,14 @@ public enum AgentKind: String, Codable, CaseIterable, Sendable {
         case "contenido", "redes sociales", "publicaciones", "posts": return .content
         case "perfil", "hv": return .profile
         case "analista", "informe", "analisis": return .analyst
-        default: return nil
+        default: return named(text)
         }
+    }
+
+    static func named(_ text: String) -> AgentKind? {
+        let wanted = TextTools.normalize(text).trimmingCharacters(in: .whitespaces)
+        guard !wanted.isEmpty else { return nil }
+        return allCases.first { TextTools.normalize(AgentStore.load($0).name).trimmingCharacters(in: .whitespaces) == wanted }
     }
 
     public static func owner(of mode: Mode) -> AgentKind {

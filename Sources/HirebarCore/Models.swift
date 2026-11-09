@@ -136,21 +136,24 @@ public struct Batch: Codable, Sendable {
         self.account = account
     }
 
+    static let uniqueSuffixLength = 4
+
     public static func newId(_ prefix: String) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyyMMdd-HHmmss"
-        return "\(prefix)-\(formatter.string(from: Date()))"
+        let suffix = UUID().uuidString.prefix(uniqueSuffixLength).lowercased()
+        return "\(prefix)-\(formatter.string(from: Date()))-\(suffix)"
     }
 
     public var isManual: Bool { id.split(separator: "-").first?.hasSuffix("m") ?? false }
 }
 
 extension BatchItem {
-    public init(_ proposal: Proposal) {
+    public init(_ proposal: Proposal, kind label: String? = nil) {
         id = proposal.id
         platform = proposal.source
-        kind = (proposal.fit ?? .strong).rawValue
+        kind = label ?? (proposal.fit ?? .strong).rawValue
         title = proposal.title
         url = proposal.target.displayText
         detail = [proposal.source, proposal.text].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")

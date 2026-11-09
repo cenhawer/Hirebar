@@ -4,22 +4,20 @@ import HirebarCore
 import HirebarDomain
 
 struct TelegramExecutionAlerts: ExecutionAlerts {
-    func executionNeedsReview(agent: AgentID, verification: ExecutionVerification) {
+    func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {
         let name = AgentKind(rawValue: agent.rawValue).map { AgentStore.load($0).name } ?? agent.rawValue
-        let text = Self.message(agentName: name, verification: verification)
+        let text = Self.message(agentName: name, alias: agent.rawValue, verification: verification, pauseSaved: pauseSaved)
         Log.write("Verificación: \(name) en pausa por la lista \(verification.batch)")
-        DispatchQueue.main.async {
-            guard Notifier.canUseTelegram else {
-                Notifier.tell(text)
-                return
-            }
-            Telegram.shared.send(
-                text, chatId: Config.load().chatId,
-                buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
+        guard Notifier.canUseTelegram else {
+            Notifier.tell(text)
+            return
         }
+        Telegram.shared.send(
+            text, chatId: Config.load().chatId,
+            buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
     }
 
-    static func message(agentName: String, verification: ExecutionVerification) -> String {
+    static func message(agentName: String, alias: String, verification: ExecutionVerification, pauseSaved: Bool) -> String {
         var lines = ["\(agentName) quedó en pausa: revisé la lista \(verification.batch) y algo no coincide con lo que aprobaste."]
         if let reason = verification.unverifiedReason {
             lines.append(unverifiedText(reason))
@@ -28,8 +26,10 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
             let target = verdict.record.map { $0.target.displayText } ?? ""
             lines.append("• \(verdict.record?.action.rawValue ?? "") en \(target): \(violationText(verdict.reason))")
         }
-        lines.append(
-            "No ejecuto más listas de \(agentName) hasta que respondas. Escribe \"reanudar \(agentName.lowercased())\" o usa los botones.")
+        if !pauseSaved {
+            lines.append("No pude guardar la pausa en el disco: sigue en pausa mientras Hirebar esté abierto.")
+        }
+        lines.append("No ejecuto más listas de \(agentName) hasta que respondas. Escribe \"reanudar \(alias)\" o usa los botones.")
         return lines.joined(separator: "\n")
     }
 

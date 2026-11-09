@@ -20,7 +20,6 @@ enum ExecutionApprovals {
         switch mode {
         case .jobs: action = .apply
         case .freelance: action = .sendProposal
-        case .followUpSend: action = .sendFollowUp
         default: return nil
         }
         return Proposal(
@@ -28,32 +27,45 @@ enum ExecutionApprovals {
             fit: FitLevel(rawValue: item.kind))
     }
 
-    static func emailProposals(
-        pending: URL = Paths.prospecting.appendingPathComponent("pendientes.json"),
-        approved: URL = Paths.prospecting.appendingPathComponent("aprobados.json")
-    ) -> [Proposal] {
-        guard let pendingData = try? Data(contentsOf: pending),
-            let pendingObject = try? JSONSerialization.jsonObject(with: pendingData) as? [String: Any],
-            let emails = pendingObject["correos"] as? [[String: Any]],
-            let approvedData = try? Data(contentsOf: approved),
-            let approvedObject = try? JSONSerialization.jsonObject(with: approvedData) as? [String: Any]
-        else { return [] }
-        let selection = approvedObject["aprobados"]
-        let numbers = (selection as? [NSNumber]).map { Set($0.map(\.intValue)) }
-        guard numbers != nil || (selection as? String) == "todos" else { return [] }
-        return emails.compactMap { email in
-            guard let number = (email["n"] as? NSNumber)?.intValue, numbers?.contains(number) ?? true,
-                let address = email["correo"] as? String, let body = email["cuerpo"] as? String
-            else { return nil }
-            return Proposal(
-                id: String(number),
-                action: action(forEmailType: email["tipo"] as? String),
-                target: .email(address),
-                title: (email["nombre"] as? String) ?? address,
-                source: (email["web"] as? String) ?? "",
-                text: body
+    struct EmailDraft {
+        let proposal: Proposal
+        let kind: String
+    }
+
+    enum EmailDraftsReading {
+        case none
+        case invalid([String])
+        case found([EmailDraft])
+    }
+
+    static func emailDrafts(
+        rules: TargetRules,
+        pending: URL = Paths.prospecting.appendingPathComponent("pendientes.json")
+    ) -> EmailDraftsReading {
+        guard let data = try? Data(contentsOf: pending),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let emails = object["correos"] as? [[String: Any]], !emails.isEmpty
+        else { return .none }
+        let drafts = emails.map { email -> EmailDraft in
+            let number = (email["n"] as? NSNumber).map { String($0.intValue) } ?? ""
+            let kind = ((email["tipo"] as? String) ?? "").uppercased()
+            let name = (email["nombre"] as? String) ?? ""
+            let web = (email["web"] as? String) ?? ""
+            let proposal = Proposal(
+                id: number,
+                action: action(forEmailType: kind),
+                target: .email((email["correo"] as? String) ?? ""),
+                title: (email["asunto"] as? String) ?? "",
+                source: web.isEmpty ? name : "\(name) (\(web))",
+                text: (email["cuerpo"] as? String) ?? ""
             )
+            return EmailDraft(proposal: proposal, kind: kind)
         }
+        let ids = drafts.map(\.proposal.id)
+        let invalid = drafts.filter { !$0.proposal.isComplete(using: rules) || $0.proposal.title.isEmpty }.map(\.proposal.id)
+        let repeated = Dictionary(grouping: ids, by: { $0 }).filter { $0.value.count > 1 }.keys.sorted()
+        guard invalid.isEmpty, repeated.isEmpty else { return .invalid(invalid + repeated) }
+        return .found(drafts)
     }
 
     static func action(forEmailType type: String?) -> ActionKind {

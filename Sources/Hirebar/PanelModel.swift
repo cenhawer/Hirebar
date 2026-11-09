@@ -68,7 +68,8 @@ final class PanelModel: ObservableObject {
 
     func refresh() {
         let running = Controller.shared.runningAgent
-        agents = AgentKind.allCases.map { card($0, running: running) }
+        let pauses = Controller.shared.pauseReasons()
+        agents = AgentKind.allCases.map { card($0, running: running, pauseReason: pauses[$0]) }
         claude = Controller.shared.status
         aiName = AI.capitalizedName
         claudeBusy = !Controller.shared.isIdle
@@ -86,7 +87,7 @@ final class PanelModel: ObservableObject {
         opensAtLogin = SMAppService.mainApp.status == .enabled
     }
 
-    private func card(_ kind: AgentKind, running: AgentKind?) -> AgentCardData {
+    private func card(_ kind: AgentKind, running: AgentKind?, pauseReason: String?) -> AgentCardData {
         let agent = AgentStore.load(kind)
         let config = Config.load()
         let working = running == kind
@@ -98,19 +99,7 @@ final class PanelModel: ObservableObject {
         case .clients, .content, .analyst: status = agent.tasks.first.map { "Corre \($0.scheduleText)" } ?? "Sin horario"
         }
         if working { status = Self.capitalized(Controller.shared.status) }
-        let pauseReason = Controller.shared.pauseReason(of: kind)
-        let next: String
-        if pauseReason != nil {
-            next = "en pausa"
-        } else if !agent.enabled {
-            next = "apagado"
-        } else if working {
-            next = "trabajando"
-        } else if let date = Scheduler.shared.nextRun(of: kind) {
-            next = TextTools.countdown(date)
-        } else {
-            next = "a pedido"
-        }
+        let next = nextText(kind, enabled: agent.enabled, working: working, paused: pauseReason != nil)
         var stats = WeeklyStats.lines(for: kind)
         if kind == .freelance {
             stats += ["Workana \(Quotas.describe("workana"))", "Freelancer \(Quotas.describe("freelancer"))"]
@@ -131,6 +120,13 @@ final class PanelModel: ObservableObject {
             schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" },
             pauseReason: pauseReason
         )
+    }
+
+    private func nextText(_ kind: AgentKind, enabled: Bool, working: Bool, paused: Bool) -> String {
+        if paused { return "en pausa" }
+        if !enabled { return "apagado" }
+        if working { return "trabajando" }
+        return Scheduler.shared.nextRun(of: kind).map(TextTools.countdown) ?? "a pedido"
     }
 
     static func capitalized(_ text: String) -> String {

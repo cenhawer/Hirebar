@@ -25,6 +25,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ### Cambiado
 - Se quitó el envío de avisos a ntfy.sh.
 - El video narrado usa el ffmpeg del sistema (`brew install ffmpeg`): Hirebar ya no instala Python ni ffmpeg por su cuenta y borra la copia vieja. Las notas de voz tienen un máximo de 5 minutos o 20 MB.
+- Modo práctica por agente: hace todo menos enviar y te cuenta lo que habría hecho (`practica empleo si`, casilla **Práctica** del panel, menú o Ajustes).
 - Prender el envío automático muestra qué hará cada agente sin esperarte y pide confirmar, en la Mac y en Telegram; apagarlo es inmediato.
 - Una instalación con el chat ya vinculado queda anclada a esa misma cuenta sin pedir nada.
 - La búsqueda en redes ya no postula sola y los seguimientos ya no se envían solos: necesitan tu aprobación o el envío automático del agente.

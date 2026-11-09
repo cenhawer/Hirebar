@@ -253,6 +253,7 @@ Contrato de entrada con la persona. Agregar, quitar o cambiar un comando se escr
 | `logro <texto>` · `trabajo <texto>` · `habilidad <nombre> <domino/conozco/evito>` · `habilidades` · `hv` | Perfil y hojas de vida |
 | Responder citando un aviso | Elige a qué lista aplica la respuesta |
 | `reanudar <agente>` · botones "Reanudar <agente>" y "Mantener en pausa" | Levanta o mantiene la pausa de un agente por una acción no autorizada |
+| `practica` · `practica <agente> si/no` | Modo práctica: el agente hace todo menos enviar y cuenta lo que habría hecho |
 
 El bot atiende solo a la cuenta anclada en Ajustes → Telegram y avisos (spec `012-canal-de-mensajes`,
 ADR-0005); mensajes y botones de otras cuentas o de grupos se ignoran.
@@ -298,6 +299,7 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `workspace/postulaciones.md` · `historial-propuestas.md` · `informes/` · `ejecuciones/` · `prospeccion/` | Registros de lo enviado, análisis y salidas de cada ejecución |
 | `workspace/contenido/cuentas.json` · `contenido/<cuenta>/` | Cuentas de contenido; borrador, láminas, guion, video, grabación y rendimiento |
 | `workspace/ejecuciones/<lote>.acciones.json` | Registro de acciones de una ejecución `act` |
+| `workspace/ejecuciones/<lote>.practica.json` | Lo que habría enviado un agente en modo práctica, en lugar de ejecutar |
 | `estado/propuestas/<lote>.json` · `estado/aprobados/<lote>.json` · `estado/verificaciones/<lote>.json` | Copia de cada lista tal como se mostró, de lo aprobado (con su agente) y verificación de cada acción; fuera del workspace, donde la IA no escribe |
 | `estado/pausas.json` · `estado/vistos.json` | Pausas de agentes y propuestas ya mostradas en los últimos 30 días |
 

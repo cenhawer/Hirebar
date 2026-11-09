@@ -1,7 +1,9 @@
 import Foundation
 
 public enum Notifier {
-    public static var canUseTelegram: Bool { Telegram.shared.isConfigured && Config.load().chatId != 0 }
+    public static var canUseTelegram: Bool {
+        Telegram.shared.isConfigured && !Telegram.shared.tokenRejected && Config.load().chatId != 0
+    }
 
     static let messageLimit = 3800
 

@@ -35,7 +35,7 @@ public struct Config: Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         ownerName = try c.decodeIfPresent(String.self, forKey: .ownerName) ?? "el usuario"
         sources = try c.decodeIfPresent([String: Bool].self, forKey: .sources) ?? [:]
-        channelOwner = try c.decodeIfPresent(ChannelOwner.self, forKey: .channelOwner)
+        channelOwner = (try? c.decodeIfPresent(ChannelOwner.self, forKey: .channelOwner)) ?? nil
         botUsername = try c.decodeIfPresent(String.self, forKey: .botUsername) ?? ""
         autoFreelance = try c.decodeIfPresent(Bool.self, forKey: .autoFreelance) ?? false
         autoJobs = try c.decodeIfPresent(Bool.self, forKey: .autoJobs) ?? false

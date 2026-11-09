@@ -23,10 +23,12 @@ public final class Controller {
     weak var freelanceRadar: FreelanceRadar?
 
     let clock: Clock
+    let aiRunner: AIRunner
     public let stores: Repositories
 
-    public init(telegram: Telegram, stores: Repositories, clock: Clock) {
+    public init(telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner) {
         self.clock = clock
+        self.aiRunner = aiRunner
         self.telegram = telegram
         self.stores = stores
         notifier = Notifier(telegram: telegram, config: stores.config, batches: stores.batches)
@@ -36,7 +38,6 @@ public final class Controller {
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }
     var prompts: AgentPrompts { AgentPrompts(stores: stores, ai: ai) }
     var commandParser = (try? CommandVocabularyFile.bundled()).map(CommandParser.init)
-    private var protectedSnapshot: ProtectedFiles.Snapshot?
     static let noNewsMarker = "SIN_NOVEDADES"
     static let maxRunSeconds: TimeInterval = 3600
     static let authAlertEvery: TimeInterval = 3600
@@ -44,7 +45,7 @@ public final class Controller {
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = "en espera"
     var queue: [(Batch, [BatchItem])] = []
-    private var running: Process?
+    private var running: AIRun?
     private var runningBatch: String?
     private var runningMode: Mode?
     private var runningAccount: String?
@@ -180,10 +181,10 @@ public final class Controller {
     }
 
     private func stopIfStuck() {
-        guard let process = running, process.isRunning, let started = runStarted,
+        guard let run = running, run.isRunning, let started = runStarted,
               Date().timeIntervalSince(started) > Self.maxRunSeconds else { return }
         log.write("IA: lote \(runningBatch ?? "?") lleva más de 1 hora, se detiene")
-        process.terminate()
+        run.stop()
     }
 
     private func recoverInterrupted() {
@@ -210,11 +211,6 @@ public final class Controller {
         guard running == nil, !queue.isEmpty else { return }
         let (pending, items) = queue.removeFirst()
         var batch = pending
-        Paths.ensure()
-        let outURL = Paths.runs.appendingPathComponent("\(batch.id).txt")
-        let errURL = Paths.runs.appendingPathComponent("\(batch.id).log")
-        FileManager.default.createFile(atPath: outURL.path, contents: nil)
-        FileManager.default.createFile(atPath: errURL.path, contents: nil)
         let owner = stores.config.load().ownerName
         if batch.mode == .linkedInDraft, let account = stores.contentAccounts.find(batch.account) {
             SlideRenderer.prepare(account)
@@ -245,17 +241,30 @@ public final class Controller {
                 return
             }
         }
-        let request = ClaudeCLI.LaunchRequest(
+        let batchId = batch.id
+        let mode = batch.mode
+        let request = AIRunRequest(
+            runId: batchId,
+            engine: ai.settings,
             prompt: prompts.prompt(for: batch, items: items, owner: owner),
             playbook: Paths.playbook(for: batch.mode),
             profile: profile,
             browser: TaskProfiles.needsBrowser(batch.mode, account: account)
         )
-        let launch = ClaudeCLI.makeProcess(engine: ai.settings, request: request, output: outURL, errors: errURL)
-        guard case .success(let process) = launch else {
-            if case .failure(let problem) = launch {
-                reply(problem.message)
-                setStatus(problem.status)
+        let started = aiRunner.start(request) { [weak self] result in
+            self?.finished(batchId, mode: mode, items: items, result: result)
+        }
+        let run: AIRun
+        switch started {
+        case .success(let launched):
+            run = launched
+        case .failure(let failure):
+            switch failure {
+            case .unavailable(let message, let status):
+                reply(message)
+                setStatus(status)
+            case .couldNotOpen(let detail):
+                reply("No pude abrir \(ai.name): \(detail)")
             }
             batch.status = .failed
             stores.batches.upsert(batch)
@@ -263,26 +272,7 @@ public final class Controller {
             runNext()
             return
         }
-        let batchId = batch.id
-        let mode = batch.mode
-        process.terminationHandler = { [weak self] finished in
-            let code = finished.terminationStatus
-            DispatchQueue.main.async {
-                self?.finished(batchId, mode: mode, items: items, code: code, outURL: outURL, errURL: errURL)
-            }
-        }
-        protectedSnapshot = profile.canAct ? Self.protectedFiles()?.snapshot() : nil
-        do {
-            try process.run()
-        } catch {
-            batch.status = .failed
-            stores.batches.upsert(batch)
-            if profile.canAct { releaseApproval(of: batch.id) }
-            reply("No pude abrir \(ai.name): \(error.localizedDescription)")
-            runNext()
-            return
-        }
-        running = process
+        running = run
         runningBatch = batchId
         runningMode = mode
         runningAccount = batch.account
@@ -293,24 +283,24 @@ public final class Controller {
         }
         Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
         clock.after(Self.maxRunSeconds) { [weak self] in
-            guard let self, self.runningBatch == batchId, let process = self.running, process.isRunning else { return }
+            guard let self, self.runningBatch == batchId, let run = self.running, run.isRunning else { return }
             log.write("IA: lote \(batchId) superó 1 hora, se detiene")
-            process.terminate()
+            run.stop()
         }
     }
 
-    private func finished(_ batchId: String, mode: Mode, items: [BatchItem], code: Int32, outURL: URL, errURL: URL) {
+    private func finished(_ batchId: String, mode: Mode, items: [BatchItem], result: AIRunResult) {
         running = nil
         runningBatch = nil
         runningMode = nil
         runningAccount = nil
-        let output = ((try? String(contentsOf: outURL, encoding: .utf8)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let errors = (try? String(contentsOf: errURL, encoding: .utf8)) ?? ""
+        let code = result.code
+        let output = result.output
         Log(agent: AgentKind.owner(of: mode)).write("IA: lote \(batchId) terminó con código \(code)")
 
         let acts = TaskProfiles.profile(for: mode, account: nil).canAct
-        if acts { restoreProtectedFiles(after: batchId) }
-        if code != 0 && ClaudeCLI.isAuthFailure(output + "\n" + errors) {
+        if acts { reportRestoredFiles(result.restoredFiles, after: batchId) }
+        if result.authFailed {
             handleAuthFailure(batchId, mode: mode, items: acts ? settleInterruptedExecution(batchId, mode: mode, items: items) : items)
         } else {
             if var batch = stores.batches.find(id: batchId) {
@@ -343,14 +333,7 @@ public final class Controller {
         }
     }
 
-    static func protectedFiles() -> ProtectedFiles? {
-        (try? EngineProfiles.bundled()).map { ProtectedFiles(folder: Paths.workspace, patterns: $0.restoredFiles) }
-    }
-
-    private func restoreProtectedFiles(after batchId: String) {
-        guard let before = protectedSnapshot, let files = Self.protectedFiles() else { return }
-        protectedSnapshot = nil
-        let restored = files.restoreChanges(since: before)
+    private func reportRestoredFiles(_ restored: [String], after batchId: String) {
         guard !restored.isEmpty else { return }
         log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
         reply("\(ai.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")

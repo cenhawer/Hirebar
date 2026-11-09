@@ -41,7 +41,8 @@
 ## R3. Codex y Gemini CLI
 
 - **Decision**: lectura sin navegador: Codex con `--sandbox read-only` y Gemini con
-  `--approval-mode default` y las herramientas de escritura y de shell excluidas. Las tareas que
+  `--approval-mode plan`, su modo de solo lectura (lee archivos y busca; no escribe en la carpeta de
+  trabajo ni ejecuta comandos). Las tareas que
   necesitan el navegador para leer (redes, portales propios, revisión de rendimiento, seguimientos,
   búsqueda de clientes en Gmail) solo corren con Claude Code; con Codex o Gemini se avisa al
   configurarlas y no corren. La ejecución usa los comandos de hoy, con la verificación posterior.
@@ -125,8 +126,21 @@
   daría por buena.
 - **Alternatives considered**: validar el archivo al ejecutar (la persona igual no vio el
   destinatario); limitar la cantidad de propuestas (no evita aprobar algo oculto).
-- **Riesgo residual**: con el envío automático de Clientes prendido, un correo en frío nuevo sale sin
-  que la persona lo vea. Su texto puede llevar lo que la fase de redacción leyó en la web y en Gmail,
-  aunque no `perfil.*` ni `hv/`; por eso el envío automático de Clientes viene apagado y la guía lo
-  advierte.
+- **Envío automático**: solo aprueba seguimientos y correos a destinos que ya recibieron una acción
+  verificada del agente. Un correo en frío o un seguimiento a alguien nuevo siempre espera a la
+  persona, porque su destino y su texto salen de contenido externo.
+
+## R10. Archivos que la ejecución no toca
+
+- **Decision**: la fase `act` no puede escribir las reglas de la IA, el perfil, el perfil de búsqueda,
+  las hojas de vida ni las cuentas de contenido (`protectedFiles` de `Resources/perfiles-ia.json`).
+  Con Claude Code se niegan `Write` y `Edit` sobre esas rutas. Con cualquier motor, la app toma una
+  copia de `restoredFiles` (reglas, `perfil.md`, `search-profile.json`, `hv/plantilla.html`) antes de
+  ejecutar y, al terminar, restaura lo que haya cambiado y avisa.
+- **Rationale**: las reglas son el prompt de sistema de la fase de lectura; si una ejecución inyectada
+  pudiera reescribirlas, envenenaría las corridas siguientes. La restauración no depende de que el
+  motor respete los permisos.
+- **Alternatives considered**: limitar la escritura de `act` a una lista de carpetas (cada regla
+  escribe registros distintos y Codex o Gemini no la respetarían); restaurar también `perfil.json` y
+  las cuentas (la app los edita mientras una ejecución corre y se perderían esos cambios).
 

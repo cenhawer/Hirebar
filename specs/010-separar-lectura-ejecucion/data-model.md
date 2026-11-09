@@ -11,8 +11,8 @@ Catálogo cerrado (FR-005): `apply` (postular), `sendProposal`, `sendFollowUp`, 
   cuyo texto la persona ve antes de aprobar. En `apply` y `sendProposal` la IA redacta al ejecutar, y
   en `publish` el texto es el del borrador: se compara solo si la propuesta lo trae.
 - `alwaysNeedsApproval`: verdadero para `replyToClient` y `publish` (FR-015).
-- `requiresPriorContact`: verdadero para `sendFollowUp`; el envío automático solo lo aprueba si el
-  destino ya recibió una acción verificada del agente (FR-016a).
+- `requiresPriorContact`: verdadero para `sendFollowUp` y `sendEmail`; el envío automático solo lo
+  aprueba si el destino ya recibió una acción verificada del agente (FR-016a).
 
 ## Proposal
 

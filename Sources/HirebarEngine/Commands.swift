@@ -152,13 +152,25 @@ extension Controller {
     }
 
     public func pauseReason(of kind: AgentKind) -> String? {
-        executionGuard.pause(of: AgentID(rawValue: kind.rawValue)).map { "lista \($0.batch) (\($0.reason))" }
+        pauseReason(of: kind, among: executionGuard.pauses())
+    }
+
+    public func pauseReasons() -> [AgentKind: String] {
+        let pauses = executionGuard.pauses()
+        let reasons = AgentKind.allCases.compactMap { kind in pauseReason(of: kind, among: pauses).map { (kind, $0) } }
+        return Dictionary(uniqueKeysWithValues: reasons)
+    }
+
+    func pauseReason(of kind: AgentKind, among pauses: [AgentPause]) -> String? {
+        let agent = AgentID(rawValue: kind.rawValue)
+        return (pauses.first { $0.agent == agent } ?? unsavedPauses[agent]).map { "lista \($0.batch) (\($0.reason))" }
     }
 
     @discardableResult
     public func resumeAgent(_ kind: AgentKind) -> Bool {
         let agent = AgentID(rawValue: kind.rawValue)
-        guard executionGuard.pause(of: agent) != nil else { return false }
+        guard activePause(of: agent) != nil else { return false }
+        unsavedPauses[agent] = nil
         do {
             try executionGuard.resume(agent)
             Log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
@@ -169,22 +181,31 @@ extension Controller {
         }
     }
 
-    private func resumeAgent(named name: String) {
+    func resumeAgent(named name: String) {
         guard let kind = AgentKind.parse(name) else {
             reply("Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>")
             return
         }
         let agentName = AgentStore.load(kind).name
         if resumeAgent(kind) {
-            reply("\(agentName) reanudado: las listas aprobadas se vuelven a ejecutar.")
+            let since = Date().addingTimeInterval(-24 * 3600)
+            let waiting = BatchStore.load().filter {
+                $0.status == .pending && $0.created > since && AgentKind.owner(of: $0.mode) == kind && $0.mode.hasItems
+            }
+            let lists = waiting.map(\.id).joined(separator: ", ")
+            let pending = "Estas listas siguen pendientes y no se ejecutan solas: \(lists). Responde \"si\" a cada una para ejecutarla."
+            reply(waiting.isEmpty ? "\(agentName) reanudado." : "\(agentName) reanudado. \(pending)")
         } else {
             reply("\(agentName) no estaba en pausa.")
         }
     }
 
-    private func keepPaused(named name: String) {
-        let agentName = AgentKind.parse(name).map { AgentStore.load($0).name } ?? "El agente"
-        reply("\(agentName) sigue en pausa. Escribe \"reanudar \(agentName.lowercased())\" cuando quieras.")
+    func keepPaused(named name: String) {
+        guard let kind = AgentKind.parse(name) else {
+            reply("El agente sigue en pausa.")
+            return
+        }
+        reply("\(AgentStore.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando quieras.")
     }
 
     private func rest(of raw: String) -> String {
@@ -238,21 +259,18 @@ extension Controller {
     }
 
     private func handleEmails(verb: String, numbers: [Int]) {
-        let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
-        guard let pendingText = try? String(contentsOf: pending, encoding: .utf8), pendingText.contains("\"correo\"") else {
+        let since = Date().addingTimeInterval(-24 * 3600)
+        let emails = BatchStore.load().filter { $0.mode == .prospectingSend && $0.status == .pending && $0.created > since }
+            .max { $0.created < $1.created }
+        guard let emails else {
             reply("No tengo correos pendientes de aprobar.")
             return
         }
         if verb == "no" {
-            try? "{\"aprobados\": [], \"descartada\": true}".write(to: Paths.prospecting.appendingPathComponent("aprobados.json"),
-                                                                   atomically: true, encoding: .utf8)
-            let stamp = Int(Date().timeIntervalSince1970)
-            try? FileManager.default.moveItem(at: pending, to: Paths.prospecting.appendingPathComponent("descartados-\(stamp).json"))
-            reply("Listo, no envío los correos de hoy.")
+            discard(emails, chatId: Config.load().chatId)
             return
         }
-        writeApproved(numbers.isEmpty ? nil : numbers.map(String.init).joined(separator: ","))
-        runScheduled(.prospectingSend, manual: true)
+        approve(emails, picks: numbers)
     }
 
     private func handleAuto(_ rest: [String]) {

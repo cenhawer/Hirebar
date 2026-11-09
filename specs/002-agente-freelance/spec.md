@@ -79,8 +79,8 @@ con los proyectos elegidos, el cupo diario y las reglas de propuestas, y publica
 ### User Story 3 - Seguimientos y respuestas de clientes (Priority: P2)
 
 Dos veces al día, la IA revisa las propuestas activas: si un cliente respondió, se lo muestra a la
-persona primero con un borrador de respuesta; si a las 48 horas no hay respuesta, envía un
-seguimiento.
+persona con una respuesta propuesta; si a las 48 horas no hay respuesta, propone un seguimiento con su
+texto. Nada se envía sin aprobación.
 
 **Why this priority**: una propuesta sin seguimiento pierde contra la competencia; una respuesta de
 cliente sin atender pierde el proyecto.
@@ -92,11 +92,11 @@ respuesta llega a Telegram salvo que empiece con `SIN_NOVEDADES`.
 
 1. **Given** el agente prendido, **When** llega una hora de la tarea "Seguimientos de propuestas"
    (10 y 16 h por defecto, con 3 horas de tolerancia), **Then** la IA revisa `seguimiento.json`.
-2. **Given** un cliente que respondió, **When** la IA lo detecta, **Then** lo pone primero en la
-   respuesta con un borrador, y no le responde.
+2. **Given** un cliente que respondió, **When** la IA lo detecta, **Then** propone una respuesta con
+   su texto que nunca se aprueba sola, aunque el envío automático esté prendido.
 3. **Given** una propuesta enviada hace 48 horas, sin respuesta, con el proyecto abierto y algo nuevo
-   que aportar, **When** la IA la revisa, **Then** envía un único seguimiento **sin pedir
-   aprobación**.
+   que aportar, **When** la IA la revisa, **Then** propone un único seguimiento con su texto; se envía
+   con exactamente ese texto al aprobarlo o con el envío automático de Freelance.
 4. **Given** que es después de las 15 h, **When** corre la tarea, **Then** la IA también revisa el
    estado de las postulaciones de empleo de los últimos 21 días.
 5. **Given** que no hubo nada, **When** la IA responde `SIN_NOVEDADES`, **Then** no se envía nada
@@ -214,10 +214,11 @@ un `cupos.json` de prueba, el panel muestra los cupos y su renovación.
 
 - **FR-017**: La tarea "Seguimientos de propuestas" MUST correr a las horas configuradas (10 y 16 h
   por defecto, con 3 horas de tolerancia) y seguir `instrucciones-seguimiento.md`.
-- **FR-018**: La IA MUST enviar como máximo un seguimiento por propuesta, a las 48 horas, solo si
-  aporta algo nuevo y el proyecto sigue abierto.
-- **FR-019**: Las respuestas de clientes MUST llegar a Telegram primero, con un borrador, y nunca se
-  responden solas.
+- **FR-018**: La IA MUST proponer como máximo un seguimiento por propuesta, a las 48 horas, solo si
+  aporta algo nuevo y el proyecto sigue abierto; la tarea "Enviar seguimientos aprobados" MUST enviar
+  solo los aprobados, con el texto aprobado.
+- **FR-019**: Las respuestas de clientes MUST llegar a Telegram como propuestas con su texto y nunca se
+  aprueban ni se envían solas.
 
 **Portales propios, configuración y estado**
 
@@ -268,8 +269,6 @@ un `cupos.json` de prueba, el panel muestra los cupos y su renovación.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| Los seguimientos se envían a los clientes sin aprobación (US3, escenario 3) | II | `010-separar-lectura-ejecucion` · `011-confirmar-envio-automatico` |
-| La IA lee proyectos y mensajes de clientes con permisos para actuar | III | `010-separar-lectura-ejecucion` |
 | El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
 | Los proyectos vistos se guardan en `UserDefaults` | IV | `022-version-datos` |

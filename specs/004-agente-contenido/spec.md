@@ -246,7 +246,6 @@ red, firma, paleta, días y video.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| La IA navega la red de la cuenta para revisar rendimiento, y publica, con permisos para actuar | III | `010-separar-lectura-ejecucion` |
 | ffmpeg se instala con `pip` mientras la app corre | V | `016-herramientas-en-ejecucion` |
 | El permiso de Reconocimiento de voz se pide al llegar la primera nota de voz | V | `025-asistente-primer-uso` |
 | La cuenta que espera voz se guarda en `UserDefaults` | IV | `022-version-datos` |

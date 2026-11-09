@@ -155,6 +155,8 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 - **FR-013**: Con el envío automático prendido, la app MUST aprobar sola todos los correos que no
   son RESPUESTA y lanzar el envío.
 - **FR-014**: Los correos de tipo RESPUESTA MUST esperar siempre la aprobación de la persona.
+- **FR-014a**: El envío MUST incluir solo los correos aprobados que caben en el cupo diario de Clientes
+  (10 por defecto); los demás quedan sin enviar.
 
 **Configuración**
 
@@ -195,7 +197,6 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| La IA lee páginas de empresas y respuestas en Gmail con permisos para actuar | III | `010-separar-lectura-ejecucion` |
 | La aprobación de correos no queda como lista con historia: `pendientes.json` y `aprobados.json` se sobrescriben y se vacían | II | `028-vista-actividad` |
 | El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
@@ -206,6 +207,3 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 
 - `si`, `ok` y `no` se usan tanto para listas de avisos como para correos (anti-patrón de
   `AGENTS.md`). Se resuelve en `013-parser-comandos`.
-- Ajustes permite fijar un cupo diario para Clientes (10 por defecto), pero el pedido a la IA no lo
-  incluye: hoy no tiene efecto. Se resuelve en `010-separar-lectura-ejecucion`, donde la app valida
-  cada acción y puede hacer cumplir el cupo diario de todos los agentes que envían.

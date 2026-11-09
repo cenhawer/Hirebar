@@ -158,7 +158,8 @@ identificador del archivo y extensión `oga`.
 - **FR-008**: Una respuesta que cita un mensaje MUST aplicar a la lista de ese mensaje.
 - **FR-009**: Hirebar MUST reconocer los comandos de `ARCHITECTURE.md` §4.2: aprobar y descartar
   listas, `estado`, `agentes`, `agente <nombre> on/off`, `corre <nombre>`, `auto [<nombre>] si/no`,
-  `buscar`, `seguimientos`, `informe`, `anota`, los de correos, contenido, video y perfil.
+  `buscar`, `seguimientos`, `informe`, `anota`, `reanudar <nombre>`, los de correos, contenido, video y
+  perfil, y los botones "Reanudar <agente>" y "Mantener en pausa".
 - **FR-010**: Los nombres de agente MUST aceptar sinónimos (por ejemplo, `trabajo` para Empleo,
   `correos` para Clientes, `hv` para Perfil).
 - **FR-011**: Un texto que no es comando MUST responderse con la lista de comandos.

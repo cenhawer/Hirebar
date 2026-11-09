@@ -37,30 +37,43 @@ final class ChannelGuardTests: XCTestCase {
 final class ChannelPairingTests: XCTestCase {
     let moment = Date(timeIntervalSince1970: 1_800_000_000)
 
-    func sender(user: Int64 = 7, privateChat: Bool = true, sentAt: Date) -> ChannelSender {
-        ChannelSender(userId: user, chatId: user, name: "Ana", username: "ana", isPrivateChat: privateChat, sentAt: sentAt)
+    func sender(
+        user: Int64 = 7,
+        privateChat: Bool = true,
+        sentAt: Date,
+        viaButton: Bool = false,
+        username: String? = "ana"
+    ) -> ChannelSender {
+        ChannelSender(
+            userId: user, chatId: user, name: "Ana", username: username, isPrivateChat: privateChat, sentAt: sentAt, viaButton: viaButton)
     }
 
-    func testAPrivateMessageSentAfterStartingIsProposed() {
-        let pairing = ChannelPairing(startedAt: moment, window: 600)
-        let proposed = pairing.candidate(from: sender(sentAt: moment.addingTimeInterval(5)), at: moment.addingTimeInterval(6))
-        XCTAssertEqual(proposed, ChannelOwner(userId: 7, chatId: 7, name: "Ana", username: "ana"))
-    }
-
-    func testOldGroupAndLateMessagesAreNotProposed() {
-        let pairing = ChannelPairing(startedAt: moment, window: 600)
-        XCTAssertNil(pairing.candidate(from: sender(sentAt: moment.addingTimeInterval(-120)), at: moment.addingTimeInterval(1)))
-        XCTAssertNil(pairing.candidate(from: sender(privateChat: false, sentAt: moment), at: moment))
-        XCTAssertNil(pairing.candidate(from: sender(sentAt: moment.addingTimeInterval(601)), at: moment.addingTimeInterval(601)))
-        XCTAssertTrue(pairing.isExpired(at: moment.addingTimeInterval(601)))
-    }
-
-    func testADeclinedAccountIsNotProposedAgain() {
+    func testAPrivateMessageSentAfterStartingIsProposedWithItsText() {
         var pairing = ChannelPairing(startedAt: moment, window: 600)
-        let first = sender(sentAt: moment)
-        guard let proposed = pairing.candidate(from: first, at: moment) else { return XCTFail("debía proponerla") }
-        pairing.decline(proposed)
-        XCTAssertNil(pairing.candidate(from: first, at: moment))
-        XCTAssertNotNil(pairing.candidate(from: sender(user: 9, sentAt: moment), at: moment))
+        XCTAssertTrue(pairing.receive(sender(sentAt: moment.addingTimeInterval(5)), text: "hola", at: moment.addingTimeInterval(6)))
+        XCTAssertEqual(pairing.current?.owner, ChannelOwner(userId: 7, chatId: 7, name: "Ana", username: "ana"))
+        XCTAssertEqual(pairing.current?.text, "hola")
+        XCTAssertEqual(pairing.current?.hasUsername, true)
+    }
+
+    func testOldGroupLateAndButtonMessagesAreNotProposed() {
+        var pairing = ChannelPairing(startedAt: moment, window: 600)
+        XCTAssertFalse(pairing.receive(sender(sentAt: moment.addingTimeInterval(-120)), text: "hola", at: moment.addingTimeInterval(1)))
+        XCTAssertFalse(pairing.receive(sender(privateChat: false, sentAt: moment), text: "hola", at: moment))
+        XCTAssertFalse(pairing.receive(sender(sentAt: moment, viaButton: true), text: "si:b1", at: moment))
+        XCTAssertFalse(pairing.receive(sender(sentAt: moment.addingTimeInterval(601)), text: "hola", at: moment.addingTimeInterval(601)))
+        XCTAssertTrue(pairing.isExpired(at: moment.addingTimeInterval(601)))
+        XCTAssertNil(pairing.current)
+    }
+
+    func testDecliningShowsTheNextCandidateAndNeverTheDeclinedOneAgain() {
+        var pairing = ChannelPairing(startedAt: moment, window: 600)
+        XCTAssertTrue(pairing.receive(sender(user: 8, sentAt: moment, username: nil), text: "hola", at: moment))
+        XCTAssertTrue(pairing.receive(sender(user: 7, sentAt: moment), text: "soy yo", at: moment))
+        XCTAssertFalse(pairing.receive(sender(user: 7, sentAt: moment), text: "otra vez", at: moment))
+        XCTAssertEqual(pairing.current?.hasUsername, false)
+        pairing.declineCurrent()
+        XCTAssertEqual(pairing.current?.owner.userId, 7)
+        XCTAssertFalse(pairing.receive(sender(user: 8, sentAt: moment), text: "hola", at: moment))
     }
 }

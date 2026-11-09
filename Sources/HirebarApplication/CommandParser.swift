@@ -25,6 +25,7 @@ public enum CommandKind: String, CaseIterable, Codable, Sendable {
     case skills
     case regenerateCV
     case search
+    case practice
     case voiceNote
     case help
 }

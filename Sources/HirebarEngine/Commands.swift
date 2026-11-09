@@ -69,7 +69,7 @@ extension Controller {
         switch command.kind {
         case .approve, .discard, .status, .agents, .resume, .keepPaused, .autoSend, .autoSendConfirm, .autoSendCancel:
             performControl(command)
-        case .followUps, .weeklyReport, .regenerateCV, .note, .agentSwitch, .runAgent, .search:
+        case .followUps, .weeklyReport, .regenerateCV, .note, .agentSwitch, .runAgent, .search, .practice:
             performRoutine(command)
         case .publish, .post, .video, .remake: performContent(command)
         case .achievement, .jobChange, .skill, .skills: performProfile(command)
@@ -101,6 +101,7 @@ extension Controller {
         case .agentSwitch: handleAgentSwitch(command.words)
         case .runAgent: handleRunNow(command.rest)
         case .search: searchNow(command.words.first ?? "")
+        case .practice: handlePractice(command.words)
         default: reply(Self.help)
         }
     }
@@ -129,6 +130,17 @@ extension Controller {
         case .skills: reply(Profile.load().summary)
         default: reply(Self.help)
         }
+    }
+
+    static let practiceOrigin = "Telegram"
+
+    func handlePractice(_ words: [String]) {
+        let named = words.count > 1 ? AgentKind.parse(words.dropLast().joined(separator: " ")) : nil
+        if let named, let value = words.last, ["si", "on", "no", "off"].contains(value) {
+            Practice.set(named, on: value == "si" || value == "on", from: Self.practiceOrigin)
+        }
+        let lines = AgentKind.allCases.map { "\(AgentStore.load($0).name): \(AgentStore.load($0).practice ? "en práctica" : "real")" }
+        reply("Modo práctica · " + lines.joined(separator: " · ") + "\nCambiar: \"practica empleo si\", \"practica empleo no\".")
     }
 
     private func takeNote(_ note: String) {
@@ -387,6 +399,7 @@ extension Controller {
             var line = "\(agent.name): \(agent.enabled ? "prendido" : "apagado")"
             if agent.enabled {
                 if [.jobs, .freelance, .clients].contains(agent.id) { line += " · auto \(agent.autoApprove ? "sí" : "no")" }
+                if agent.practice { line += " · en práctica (no envía)" }
                 if let next = Scheduler.shared.nextRun(of: agent.id) { line += " · próxima \(TextTools.countdown(next))" }
                 if let reason = pauseReason(of: agent.id) { line += " · en pausa: \(reason)" }
             }

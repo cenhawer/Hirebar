@@ -10,6 +10,7 @@ que lo reemplaza y el anterior pasa a "Reemplazado por ADR-NNNN".
 | [ADR-0002](0002-arquitectura-hexagonal.md) | Arquitectura hexagonal con límites por targets de SwiftPM | Aceptado |
 | [ADR-0003](0003-ffmpeg-prerrequisito-del-sistema.md) | ffmpeg como prerrequisito del sistema | Aceptado |
 | [ADR-0004](0004-macos-26-y-swift-6.md) | macOS 26 y Swift 6 como base | Aceptado |
+| [ADR-0005](0005-anclar-el-bot-por-id-de-usuario.md) | Anclar el bot por ID de usuario | Aceptado |
 
 ## Plantilla
 

@@ -17,6 +17,7 @@ public enum BotCheck: Equatable, Sendable {
     case valid(username: String)
     case rejected
     case unreachable
+    case notSaved
 }
 
 public final class Telegram: @unchecked Sendable {
@@ -25,12 +26,14 @@ public final class Telegram: @unchecked Sendable {
     static let offsetKey = "telegram.offset"
     static let tokenPattern = "^\\d{5,}:[A-Za-z0-9_-]{30,}$"
     static let unauthorizedCode = 401
+    static let notFoundCode = 404
 
     public var onMessage: ((TelegramMessage) -> Void)?
     private var polling = false
     private let lock = NSLock()
     private var cachedToken: String?
     private var rejected = false
+    public var onTokenStateChange: (() -> Void)?
 
     public var tokenRejected: Bool {
         lock.lock()
@@ -47,22 +50,45 @@ public final class Telegram: @unchecked Sendable {
         guard let (data, _) = try? await URLSession.shared.data(from: url),
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return .unreachable }
-        guard (json["ok"] as? Bool) == true, let username = (json["result"] as? [String: Any])?["username"] as? String else {
-            return .rejected
+        if let username = (json["result"] as? [String: Any])?["username"] as? String, (json["ok"] as? Bool) == true {
+            return .valid(username: username)
         }
-        return .valid(username: username)
+        let code = (json["error_code"] as? NSNumber)?.intValue
+        return code == unauthorizedCode || code == notFoundCode ? .rejected : .unreachable
     }
 
-    public func removeToken() {
-        Keychain.delete(account: Self.keychainAccount)
+    public func botUsername() async -> String? {
+        guard let token = currentToken() else { return nil }
+        guard case .valid(let username) = await Self.check(token: token) else { return nil }
+        return username
+    }
+
+    public func chatName(_ chatId: Int64) async -> String? {
+        guard let token = currentToken(), let url = URL(string: "https://api.telegram.org/bot\(token)/getChat?chat_id=\(chatId)"),
+            let (data, _) = try? await URLSession.shared.data(from: url),
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let chat = json["result"] as? [String: Any]
+        else { return nil }
+        let name = [chat["first_name"] as? String, chat["last_name"] as? String].compactMap { $0 }.joined(separator: " ")
+        return name.isEmpty ? nil : name
+    }
+
+    @discardableResult
+    public func removeToken() -> Bool {
+        guard Keychain.delete(account: Self.keychainAccount) else { return false }
         UserDefaults.standard.set(0, forKey: Self.offsetKey)
+        markRejected(false)
         reloadToken()
+        return true
     }
 
     private func markRejected(_ value: Bool) {
         lock.lock()
+        let changed = rejected != value
         rejected = value
         lock.unlock()
+        guard changed else { return }
+        DispatchQueue.main.async { [weak self] in self?.onTokenStateChange?() }
     }
 
     public var isConfigured: Bool { currentToken() != nil }
@@ -82,11 +108,11 @@ public final class Telegram: @unchecked Sendable {
 
     @discardableResult
     public func saveToken(_ token: String) -> Bool {
-        let ok = Keychain.save(token, account: Self.keychainAccount)
+        guard Keychain.save(token, account: Self.keychainAccount) else { return false }
         UserDefaults.standard.set(0, forKey: Self.offsetKey)
         markRejected(false)
         reloadToken()
-        return ok
+        return true
     }
 
     public func start() {
@@ -116,6 +142,7 @@ public final class Telegram: @unchecked Sendable {
             }
             let params: [String: Any] = ["offset": offset, "timeout": 50, "allowed_updates": ["message", "callback_query"]]
             let response = call("getUpdates", params, timeout: 70)
+            guard currentToken() == token else { continue }
             guard let json = response, (json["ok"] as? Bool) == true, let updates = json["result"] as? [[String: Any]] else {
                 if (response?["error_code"] as? NSNumber)?.intValue == Self.unauthorizedCode { markRejected(true) }
                 Thread.sleep(forTimeInterval: 15)
@@ -142,7 +169,7 @@ public final class Telegram: @unchecked Sendable {
                 text: callback["data"] as? String ?? "",
                 replyTo: (message?["message_id"] as? NSNumber)?.intValue,
                 callbackId: callback["id"] as? String)
-            result.sender = sender(from: callback["from"] as? [String: Any], chat: chat, sentAt: Date())
+            result.sender = sender(from: callback["from"] as? [String: Any], chat: chat, sentAt: Date(), viaButton: true)
             return result
         }
         guard let message = update["message"] as? [String: Any], let chat = message["chat"] as? [String: Any] else { return nil }
@@ -170,14 +197,14 @@ public final class Telegram: @unchecked Sendable {
 
     static let privateChatType = "private"
 
-    static func sender(from user: [String: Any]?, chat: [String: Any]?, sentAt: Date) -> ChannelSender? {
+    static func sender(from user: [String: Any]?, chat: [String: Any]?, sentAt: Date, viaButton: Bool = false) -> ChannelSender? {
         guard let user, let userId = (user["id"] as? NSNumber)?.int64Value,
             let chatId = (chat?["id"] as? NSNumber)?.int64Value
         else { return nil }
         let name = [user["first_name"] as? String, user["last_name"] as? String].compactMap { $0 }.joined(separator: " ")
         return ChannelSender(
             userId: userId, chatId: chatId, name: name, username: user["username"] as? String,
-            isPrivateChat: (chat?["type"] as? String) == privateChatType, sentAt: sentAt)
+            isPrivateChat: (chat?["type"] as? String) == privateChatType, sentAt: sentAt, viaButton: viaButton)
     }
 
     public func send(_ text: String, chatId: Int64, buttons: [[(String, String)]] = [], completion: ((Int?) -> Void)? = nil) {

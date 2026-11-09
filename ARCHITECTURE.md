@@ -301,7 +301,7 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `estado/pausas.json` · `estado/vistos.json` | Pausas de agentes y propuestas ya mostradas en los últimos 30 días |
 
 **Estado actual:** los archivos no tienen `schemaVersion` y parte del estado vive en `UserDefaults`
-(`telegram.offset`, `video.esperandoVoz`, `portals.seen`, `radar.seen`, `jobradar.seen` y las
+(`telegram.offset`, `video.esperandoVoz`, `radar.seen`, `jobradar.seen` y las
 marcas del programador). La spec `022-version-datos` lleva todo al workspace con versión, migración
 y respaldo previo.
 

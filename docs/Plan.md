@@ -130,7 +130,7 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | 3 | `019-tests-engine` | Scheduler, Commands y Controller con tests sin red ni IA, incluido el flujo de nota de voz |
 | 3 | `020-partir-archivos` | Ningún archivo de más de 300 líneas (`Settings`, `ContentSettings`, `ReelRenderer`, `Controller`, `Commands`); ningún `///` en código interno |
 | 3 | `021-fixtures-portales` | Un HTML guardado por portal; cada scraper se testea contra su fixture |
-| 3 | `022-version-datos` | `schemaVersion` en config, perfil, agentes y cuentas; el estado que hoy vive en `UserDefaults` (`video.esperandoVoz`, `portals.seen`) pasa al workspace versionado; migración con respaldo previo; borrado de las claves huérfanas del Llavero (`elevenlabs`, `azure-speech`, `azure-speech-region`) y "Desinstalar" del README completo |
+| 3 | `022-version-datos` | `schemaVersion` en config, perfil, agentes y cuentas; el estado que hoy vive en `UserDefaults` (`video.esperandoVoz`, `radar.seen`, `jobradar.seen`) pasa al workspace versionado; migración con respaldo previo; borrado de las claves huérfanas del Llavero (`elevenlabs`, `azure-speech`, `azure-speech-region`) y "Desinstalar" del README completo |
 | 3 | `023-logs-oslog` | `OSLog` con categoría por agente; sin datos personales en los registros |
 | 3 | `024-textos-y-valores-fuera-del-codigo` | Ningún texto de usuario en el código, incluida la ayuda y las respuestas de Telegram (String Catalog); palabras de búsqueda, plazos y timeouts en configuración |
 | 4 | `025-asistente-primer-uso` | Instalar y configurar sin editar JSON; checklist visible en el panel, con los permisos de macOS (Reconocimiento de voz) pedidos en el asistente y no a mitad de un flujo |

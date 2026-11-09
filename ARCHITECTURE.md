@@ -186,9 +186,9 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 ### 3.3 Estado actual y destino de cada archivo
 
 Dominio, aplicación y adaptadores ya son targets propios (`HirebarStorage`, `HirebarTelegram`,
-`HirebarNotifications`, `HirebarPortals`). `HirebarEngine` todavía mezcla casos de uso con los
-adaptadores de IA y medios y usa singletons; el paso 3 de la spec `017-arquitectura-hexagonal` lo
-reparte.
+`HirebarNotifications`, `HirebarPortals`, `HirebarMedia`, `HirebarAI`). `HirebarEngine` reúne los
+casos de uso de lotes, comandos, programación y radares, todavía con singletons; el paso 3 de la spec
+`017-arquitectura-hexagonal` los pasa a `HirebarApplication` con una raíz de composición.
 
 | Archivo actual | Destino | Nota |
 |---|---|---|
@@ -197,15 +197,15 @@ reparte.
 | `HirebarDomain/ContentAccounts.swift` · `HirebarStorage/ContentAccountStore.swift` | Domain · Storage | Entidades en el dominio; carpetas, archivos y `ContentAccountStore` en el almacén |
 | `HirebarDomain/Portals.swift` · `HirebarStorage/PortalStore.swift` | Domain · Storage | `CustomPortal` en el dominio; `PortalStore` en el almacén |
 | `HirebarDomain/PlatformQuota.swift` · `HirebarStorage/Quotas.swift` | Domain · Storage | Cupo en el dominio; conteo persistido en el almacén |
-| `HirebarStorage/AIEngine.swift` | Domain + AI | Elección del motor al dominio; comandos y variables al adaptador |
+| `HirebarApplication/AIEngine.swift` · `HirebarAI/AIEngineEnvironment.swift` | Application · AI | Elección del motor y comandos en la aplicación; variables `HIREBAR_*` en el adaptador |
 | `HirebarDomain/TextTools.swift`, `Models.swift`, `Agents.swift` · `HirebarStorage/AgentStore.swift` | Domain · Storage | Normalización, lotes, agentes y tareas en el dominio; `AgentStore` y la búsqueda por nombre en el almacén |
 | `HirebarStorage/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
-| `HirebarStorage/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
+| `HirebarApplication/Paths.swift` · `HirebarStorage/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Application · Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarStorage/Keychain.swift` | Storage | `KeychainSecretStore` con `Security.framework`, puerto `SecretStore` |
 | `HirebarApplication/Log.swift` · `Hirebar/LogExport.swift` | Application · Hirebar | `os.Logger` por área y por agente; el botón "Registro" exporta los últimos días |
 | `HirebarTelegram/Telegram.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarEngine/Notifier.swift` | Telegram · Notifications · Application | `Messenger` y `CommandSource`; `Notifier` elige el canal y pasa a caso de uso en el paso 3 |
 | `HirebarPortals/Net.swift` | Portals | `WebPageFetcher` |
-| `HirebarEngine/Shell.swift` | AI | Lanzamiento de procesos |
+| `HirebarAI/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
 | `HirebarPortals/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
 | `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
@@ -214,11 +214,11 @@ reparte.
 | `HirebarEngine/Scheduler.swift` | Application | Programar tareas, con `Clock` |
 | `HirebarEngine/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
 | `HirebarEngine/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |
-| `HirebarEngine/EngineCheck.swift` | Application | Verificar prerrequisitos |
-| `HirebarEngine/AI.swift`, `ClaudeCLI.swift` | AI | `AIRunner` |
-| `HirebarEngine/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
-| `HirebarEngine/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
-| `HirebarEngine/VoiceListener.swift` · `HirebarDomain/ScriptAligner.swift` | Media · Domain | `VoiceListener` a `SpeechRecognizer`; alineación de la voz en el dominio |
+| `HirebarAI/EngineCheck.swift` | AI | Probar el motor elegido |
+| `HirebarEngine/AI.swift` · `HirebarAI/ClaudeCLI.swift`, `EngineProfiles.swift`, `ProtectedFiles.swift` | Application · AI | `AIRunner`: argumentos por perfil, comandos de Codex y Gemini, archivos protegidos |
+| `HirebarMedia/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
+| `HirebarMedia/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
+| `HirebarMedia/VoiceListener.swift` · `HirebarDomain/ScriptAligner.swift` | Media · Domain | `VoiceListener` a `SpeechRecognizer`; alineación de la voz en el dominio |
 | `HirebarEngine/Engine.swift` | Hirebar | Arranque en la raíz de composición |
 | `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `018`) |
 

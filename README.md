@@ -104,6 +104,7 @@ export HIREBAR_SIGN_IDENTITY="<hash de tu identidad>"
 | `Sources/HirebarApplication` | Casos de uso y puertos: lectura de comandos, verificación de acciones, canal. |
 | `Sources/HirebarStorage` | Configuración, datos del workspace y Llavero. |
 | `Sources/HirebarTelegram` · `HirebarNotifications` · `HirebarPortals` | Telegram, notificaciones de macOS y un archivo por portal. |
+| `Sources/HirebarAI` · `HirebarMedia` | Lanzador de la IA con sus perfiles; carrusel, video, voz y hojas de vida. |
 | `Resources/inicial` | Archivos con los que arranca una instalación nueva. |
 | `scripts/` | Compilar y empaquetar, tests con cobertura, lint, convenciones y hooks de git. |
 

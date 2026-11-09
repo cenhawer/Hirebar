@@ -24,7 +24,8 @@
     "skill": ["habilidad", "skill"],
     "skills": ["habilidades", "skills"],
     "regenerateCV": ["hv"],
-    "search": ["buscar"]
+    "search": ["buscar"],
+    "practice": ["practica", "practicar"]
   },
   "emailNouns": ["correos", "correo"]
 }

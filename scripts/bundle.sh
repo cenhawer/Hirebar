@@ -22,6 +22,7 @@ cp Resources/perfiles-ia.json "$APP/Contents/Resources/"
 cp Resources/destinos.json "$APP/Contents/Resources/"
 cp Resources/canal.json "$APP/Contents/Resources/"
 cp Resources/herramientas.json "$APP/Contents/Resources/"
+cp Resources/comandos.json "$APP/Contents/Resources/"
 codesign --force --deep --sign "$SIGN_IDENTITY" "$APP"
 echo "Built $APP"
 

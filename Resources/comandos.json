@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "verbs": {
+    "approve": ["si", "dale", "ok", "listo", "envia", "enviar", "envialos", "postula", "aplica", "aprueba", "aprobado"],
+    "discard": ["no", "descarta", "nada"],
+    "status": ["estado"],
+    "resume": ["reanudar", "resume"],
+    "keepPaused": ["keep"],
+    "followUps": ["seguimientos", "seguimiento"],
+    "weeklyReport": ["informe"],
+    "note": ["anota", "anotar", "nota"],
+    "autoSendConfirm": ["autoon"],
+    "autoSendCancel": ["autocancel"],
+    "autoSend": ["auto", "automatico"],
+    "agents": ["agentes"],
+    "agentSwitch": ["agente"],
+    "runAgent": ["corre", "correr"],
+    "publish": ["publica", "publicar"],
+    "post": ["post"],
+    "video": ["video"],
+    "remake": ["rearmar", "rehacer"],
+    "achievement": ["logro", "logros"],
+    "jobChange": ["trabajo"],
+    "skill": ["habilidad", "skill"],
+    "skills": ["habilidades", "skills"],
+    "regenerateCV": ["hv"],
+    "search": ["buscar"]
+  },
+  "emailNouns": ["correos", "correo"]
+}

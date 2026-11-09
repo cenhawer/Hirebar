@@ -1,7 +1,7 @@
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarStorage
 
 final class ConfigTests: XCTestCase {
     func testReadsLegacyRadarConfig() throws {

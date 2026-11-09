@@ -1,10 +1,14 @@
 import Foundation
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 public enum Engine {
     public static func start(resources: URL?) {
+        Telegram.shared = Telegram(secrets: KeychainSecretStore())
         Paths.ensure()
         Paths.installTemplates(from: resources)
         AudioTools.removeLegacyCopy()

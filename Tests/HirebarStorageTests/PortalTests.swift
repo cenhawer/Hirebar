@@ -1,7 +1,7 @@
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarStorage
 
 final class PortalTests: XCTestCase {
     override func setUp() {

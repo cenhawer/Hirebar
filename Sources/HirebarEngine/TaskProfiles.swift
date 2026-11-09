@@ -1,6 +1,9 @@
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 enum TaskProfiles {
     static func profile(for mode: Mode, account: ContentAccount?) -> RunProfile {

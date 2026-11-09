@@ -1,5 +1,9 @@
 import AppKit
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 enum StatusIcon {
     static let symbol = "briefcase"

@@ -1,8 +1,10 @@
 import Foundation
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
-import HirebarSources
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 private let log = Log(.portals)
 

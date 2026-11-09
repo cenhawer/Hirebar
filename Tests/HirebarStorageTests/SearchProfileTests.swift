@@ -1,7 +1,7 @@
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarStorage
 
 final class SearchProfileTests: XCTestCase {
     func testMissingFieldsUseDefaults() throws {

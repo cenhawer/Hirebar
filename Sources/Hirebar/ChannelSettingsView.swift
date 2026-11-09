@@ -1,8 +1,11 @@
 import AppKit
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
 import HirebarEngine
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import SwiftUI
 
 final class ChannelSettingsModel: ObservableObject {

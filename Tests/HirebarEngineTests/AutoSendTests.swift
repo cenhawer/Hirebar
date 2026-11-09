@@ -1,6 +1,9 @@
 import Foundation
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import XCTest
 
 @testable import HirebarEngine

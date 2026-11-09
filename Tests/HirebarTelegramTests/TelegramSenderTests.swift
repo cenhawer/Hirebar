@@ -1,7 +1,7 @@
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarTelegram
 
 final class TelegramSenderTests: XCTestCase {
     func testMessagesCarryWhoSentThemFromWhichChatAndWhen() {

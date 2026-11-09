@@ -6,7 +6,7 @@ final class DomainPurityTests: XCTestCase {
         .deletingLastPathComponent().appendingPathComponent("Sources/HirebarDomain")
     static let forbidden = [
         "FileManager", "Process(", "URLSession", "UserDefaults", "Data(contentsOf", ".write(to:", "Log.write", "import AppKit",
-        "import SwiftUI", "import HirebarCore", "import HirebarApplication",
+        "import SwiftUI", "import HirebarStorage", "import HirebarApplication",
     ]
 
     func testTheDomainDoesNoInputOrOutput() throws {

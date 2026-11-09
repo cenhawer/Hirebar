@@ -1,5 +1,9 @@
 import Foundation
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 public enum Shell {
     @discardableResult

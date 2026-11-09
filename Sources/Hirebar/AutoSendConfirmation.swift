@@ -1,7 +1,10 @@
 import AppKit
-import HirebarCore
 import HirebarDomain
 import HirebarEngine
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 enum AutoSendConfirmation {
     static let origin = "la Mac"

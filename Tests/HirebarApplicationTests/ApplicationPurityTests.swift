@@ -9,7 +9,7 @@ final class ApplicationPurityTests: XCTestCase {
         .deletingLastPathComponent().appendingPathComponent("Sources/HirebarApplication")
     static let forbidden = [
         "FileManager", "Process(", "URLSession", "UserDefaults", "Data(contentsOf", ".write(to:", "import AppKit", "import SwiftUI",
-        "import HirebarCore",
+        "import HirebarStorage",
     ]
 
     func testTheApplicationLayerDoesNoInputOrOutput() throws {

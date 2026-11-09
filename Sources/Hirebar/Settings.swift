@@ -104,7 +104,10 @@ final class SettingsModel: ObservableObject {
             }
             accounts.append(account)
         }
+        let turnedOn = AutoSend.newlyEnabled(saved: AgentKind.allCases.map(AgentStore.load), edited: agents)
+        let confirmed = turnedOn.isEmpty || AutoSendConfirmation.ask(turnedOn)
         for var agent in agents {
+            if !confirmed && turnedOn.contains(agent.id) { agent.autoApprove = false }
             if !portals.filter({ $0.agent == agent.id && $0.enabled }).isEmpty { agent.ensurePortalScanTask() }
             agent.name = agent.name.trimmingCharacters(in: .whitespaces).isEmpty ? AgentSettings.defaults(for: agent.id).name : agent.name
             if let minutes = agent.searchEveryMinutes { agent.searchEveryMinutes = max(15, minutes) }
@@ -116,6 +119,9 @@ final class SettingsModel: ObservableObject {
                 return task
             }
             AgentStore.save(agent)
+        }
+        if confirmed {
+            for kind in turnedOn { AutoSend.turnOn(kind, from: AutoSendConfirmation.settingsOrigin) }
         }
         var config = Config.load()
         for (source, on) in sources { config.setEnabled(source, on) }

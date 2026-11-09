@@ -8,10 +8,16 @@ MINIMUM=$(tr -d '[:space:]' <.coverage-minimum)
 REPORT_DIR=coverage
 
 swift test --enable-code-coverage --scratch-path "$BUILD_PATH"
-CODECOV_JSON=$(swift test --scratch-path "$BUILD_PATH" --show-codecov-path)
+PROFILE="$(dirname "$(swift test --scratch-path "$BUILD_PATH" --show-codecov-path)")/default.profdata"
+
+set --
+for BUNDLE in "$BUILD_PATH"/debug/*.xctest; do
+	set -- "$@" -object "$BUNDLE/Contents/MacOS/$(basename "$BUNDLE" .xctest)"
+done
 
 mkdir -p "$REPORT_DIR"
-cp "$CODECOV_JSON" "$REPORT_DIR/codecov.json"
+CODECOV_JSON="$REPORT_DIR/codecov.json"
+xcrun llvm-cov export -summary-only -instr-profile="$PROFILE" "$@" >"$CODECOV_JSON"
 
 python3 -I - "$CODECOV_JSON" "$PWD/Sources/" "$MINIMUM" <<'PYTHON'
 import json
@@ -19,7 +25,7 @@ import pathlib
 import sys
 
 codecov_path, sources_prefix, minimum = sys.argv[1], sys.argv[2], float(sys.argv[3])
-files = json.load(open(codecov_path))["data"][0]["files"]
+files = {file["filename"]: file for entry in json.load(open(codecov_path))["data"] for file in entry["files"]}.values()
 source_files = [file for file in files if file["filename"].startswith(sources_prefix)]
 covered = sum(file["summary"]["lines"]["covered"] for file in source_files)
 total = sum(file["summary"]["lines"]["count"] for file in source_files)

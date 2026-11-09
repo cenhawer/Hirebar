@@ -24,7 +24,7 @@ final class PracticeTests: XCTestCase {
     }
 
     override func setUp() {
-        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
+        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files)
         store = FileExecutionStateStore(
             stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"), runsFolder: Paths.runs)
         controller.executionGuard = ExecutionGuard(store: store, alerts: SilentAlerts())
@@ -42,7 +42,7 @@ final class PracticeTests: XCTestCase {
     }
 
     func testAnAgentInPracticeSendsNothingAndRecordsWhatItWouldHaveDone() throws {
-        Practice.set(.jobs, on: true, from: "test")
+        Practice.set(.jobs, on: true, from: "test", agents: FileAgentRepository())
         let batch = Batch(mode: .jobs, items: [BatchItem(vacancy)], status: .running)
         _ = try controller.executionGuard.approve(
             [vacancy], batch: batch.id, approvedBy: .person, agent: AgentID(rawValue: "empleo"), dailyLimit: 1)

@@ -39,7 +39,7 @@ final class ChannelSetupTests: XCTestCase {
             removeToken: { [unowned self] in self.tokenSaved },
             start: {}
         )
-        return ChannelSetup(settings: settings, telegram: telegram, now: { [unowned self] in self.moment })
+        return ChannelSetup(settings: settings, telegram: telegram, configs: FileConfigRepository(), now: { [unowned self] in self.moment })
     }
 
     override func setUpWithError() throws {
@@ -132,7 +132,7 @@ final class ChannelSetupTests: XCTestCase {
         var config = Config.load()
         config.channelOwner = ChannelOwner(userId: 7, chatId: 7, name: "Ana")
         config.save()
-        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
+        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files)
         controller.channel = setup
         let chat: [String: Any] = ["id": 7, "type": "private"]
         let button: [String: Any] = [

@@ -3,7 +3,7 @@ import XCTest
 
 final class AdapterBoundaryTests: XCTestCase {
     static let sources = EngineProfileTests.repositoryRoot.appendingPathComponent("Sources")
-    static let adapters = ["HirebarStorage", "HirebarTelegram", "HirebarNotifications", "HirebarPortals"]
+    static let adapters = ["HirebarStorage", "HirebarTelegram", "HirebarNotifications", "HirebarPortals", "HirebarMedia", "HirebarAI"]
 
     func testNoAdapterImportsAnotherAdapterOrTheEngine() throws {
         for adapter in Self.adapters {

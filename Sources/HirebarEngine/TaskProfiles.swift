@@ -17,7 +17,7 @@ enum TaskProfiles {
             return .draft(writablePaths: ["perfil.json", "perfil.md", "hv/"])
         case .weeklyReport:
             return .draft(writablePaths: ["informes/"])
-        case .jobs, .freelance, .prospectingSend, .linkedInPublish:
+        case .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInPublish:
             return .act
         }
     }
@@ -29,15 +29,16 @@ enum TaskProfiles {
         case .social: return [.apply, .draftEmail]
         case .followUp: return [.sendFollowUp, .replyToClient]
         case .prospecting: return [.sendEmail, .sendFollowUp, .replyToClient]
-        case .jobs, .freelance, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate, .weeklyReport: return []
+        case .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate, .weeklyReport: return []
         }
     }
 
     static func executionMode(for mode: Mode) -> Mode? {
         switch mode {
-        case .portalScanJobs: return .jobs
+        case .portalScanJobs, .social: return .jobs
         case .portalScanFreelance: return .freelance
-        case .social, .followUp, .prospecting, .jobs, .freelance, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate,
+        case .followUp: return .followUpSend
+        case .prospecting, .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate,
             .weeklyReport:
             return nil
         }
@@ -49,8 +50,8 @@ enum TaskProfiles {
             return account?.needsPerformanceCheck ?? false
         case .profileUpdate, .weeklyReport:
             return false
-        case .social, .portalScanJobs, .portalScanFreelance, .followUp, .prospecting, .jobs, .freelance, .prospectingSend,
-            .linkedInPublish:
+        case .social, .portalScanJobs, .portalScanFreelance, .followUp, .prospecting, .jobs, .freelance, .followUpSend,
+            .prospectingSend, .linkedInPublish:
             return true
         }
     }

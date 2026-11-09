@@ -10,6 +10,26 @@ enum AgentPrompts {
         return base + "\n\n" + actionLogSection(for: batch)
     }
 
+    static func pastEmployers(from url: URL = Profile.url) -> [String] {
+        guard let data = try? Data(contentsOf: url),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let experience = root["experience"] as? [[String: Any]]
+        else { return [] }
+        return Array(Set(experience.compactMap { $0["company"] as? String }.filter { !$0.isEmpty })).sorted()
+    }
+
+    static func achievements(from url: URL = Profile.url) -> [String] {
+        guard let data = try? Data(contentsOf: url),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let experience = root["experience"] as? [[String: Any]]
+        else { return [] }
+        return experience.flatMap { job -> [String] in
+            let place = [job["role"] as? String, job["company"] as? String].compactMap { $0 }.joined(separator: " en ")
+            let items = (job["achievements"] as? [[String: Any]]) ?? []
+            return items.compactMap { $0["text"] as? String }.map { "- \($0) (\(place))" }
+        }
+    }
+
     static func actionLogSection(for batch: Batch) -> String {
         let approved = ExecutionApprovals.store.approvedItems(batch: batch.id).map { item in
             "- itemId: \(item.proposal.id) · action: \(item.proposal.action.rawValue) · target: \(ExecutionApprovals.targetJSON(item.proposal.target))"
@@ -42,9 +62,18 @@ enum AgentPrompts {
         switch batch.mode {
         case .followUp:
             return """
-            Revisión de seguimientos \(batch.id) (\(now), semana \(week)). Revisa seguimiento.json y haz los seguimientos \
-            que tocan según tus instrucciones, sin pedir confirmación. \(browser)
-            """
+                Revisión de seguimientos \(batch.id) (\(now), semana \(week)). Revisa seguimiento.json según tus \
+                instrucciones. NO envíes nada: propone cada seguimiento y cada respuesta a clientes con su texto en la lista \
+                entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker) al final de tu respuesta; \(owner) los \
+                aprueba desde Telegram. Si no hay nada que proponer ni novedades, responde solo \(Controller.noNewsMarker). \(browser)
+                """
+        case .followUpSend:
+            return """
+                Envío de seguimientos \(batch.id) (\(now)). \(owner) aprobó desde Telegram estos seguimientos: envíalos YA, \
+                cada uno con exactamente el texto aprobado, según tus instrucciones. \(browser)
+
+                \(list)
+                """
         case .weeklyReport:
             return """
             Informe semanal \(batch.id) (\(now)). Cierra la semana \(week): analiza las métricas y los registros \
@@ -68,10 +97,15 @@ enum AgentPrompts {
             """
         case .prospecting:
             return """
-            Prospección \(batch.id) (\(now), semana \(week)). Busca empresas y negocios según tus instrucciones, revisa \
-            respuestas y seguimientos pendientes, y deja la lista del día en prospeccion/pendientes.json. NO envíes \
-            ningún correo: \(owner) aprueba la lista desde Telegram. \(browser)
-            """
+                Prospección \(batch.id) (\(now), semana \(week)). Busca empresas y negocios según tus instrucciones, revisa \
+                respuestas y seguimientos pendientes, y deja la lista del día en prospeccion/pendientes.json. NO envíes \
+                ningún correo: \(owner) aprueba la lista desde Telegram. \(browser)
+
+                Empresas donde \(owner) ya trabajó (no las incluyas): \(pastEmployers().joined(separator: ", "))
+
+                Resultados reales de \(owner) para los correos (usa solo estos, sin inventar cifras):
+                \(achievements().joined(separator: "\n"))
+                """
         case .prospectingSend:
             return """
             Envío de prospección \(batch.id) (\(now)). \(owner) aprobó desde Telegram los correos indicados en \
@@ -80,10 +114,15 @@ enum AgentPrompts {
             """
         case .social:
             return """
-            Búsqueda en redes \(batch.id) (\(now), semana \(week)). Busca publicaciones de las últimas horas que ofrezcan \
-            vacantes o proyectos para \(owner) y actúa según tus instrucciones, sin pedir confirmación. \
-            \(browser) Si no hay nada nuevo, responde solo \(Controller.noNewsMarker).
-            """
+                Búsqueda en redes \(batch.id) (\(now), semana \(week)). Busca publicaciones de las últimas horas que ofrezcan \
+                vacantes o proyectos que encajen con las habilidades de \(owner), según tus instrucciones. NO postules ni \
+                escribas a nadie: propone cada hallazgo en la lista entre \(ProposalParser.beginMarker) y \
+                \(ProposalParser.endMarker) al final de tu respuesta; \(owner) la aprueba desde Telegram. \(browser) Si no \
+                hay nada nuevo, responde solo \(Controller.noNewsMarker).
+
+                Habilidades de \(owner):
+                \(Profile.load().summary)
+                """
         case .linkedInPublish:
             let account = ContentAccountStore.find(batch.account) ?? ContentAccountStore.defaultAccount()
             return """
@@ -158,6 +197,7 @@ enum AgentPrompts {
     static func statusText(for mode: Mode, count: Int, since hour: String) -> String {
         switch mode {
         case .followUp: return "revisando seguimientos (desde \(hour))"
+        case .followUpSend: return "enviando \(count) seguimientos aprobados (desde \(hour))"
         case .weeklyReport: return "armando el informe semanal (desde \(hour))"
         case .prospecting: return "buscando empresas y negocios (desde \(hour))"
         case .prospectingSend: return "enviando correos aprobados (desde \(hour))"

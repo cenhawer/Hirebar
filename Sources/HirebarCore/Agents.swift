@@ -23,7 +23,7 @@ public enum AgentKind: String, Codable, CaseIterable, Sendable {
     public static func owner(of mode: Mode) -> AgentKind {
         switch mode {
         case .jobs, .social, .portalScanJobs: return .jobs
-        case .freelance, .followUp, .portalScanFreelance: return .freelance
+        case .freelance, .followUp, .followUpSend, .portalScanFreelance: return .freelance
         case .prospecting, .prospectingSend: return .clients
         case .linkedInDraft, .linkedInPublish: return .content
         case .profileUpdate: return .profile

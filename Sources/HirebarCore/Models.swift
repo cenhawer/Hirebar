@@ -21,6 +21,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
     case profileUpdate = "perfil"
     case portalScanJobs = "portales-empleo"
     case portalScanFreelance = "portales-freelance"
+    case followUpSend = "seguimiento-envio"
 
     public var batchPrefix: String {
         switch self {
@@ -34,10 +35,11 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .profileUpdate: return "h"
         case .portalScanJobs: return "pe"
         case .portalScanFreelance: return "pf"
+        case .followUpSend: return "gs"
         }
     }
 
-    public var hasItems: Bool { self == .freelance || self == .jobs }
+    public var hasItems: Bool { self == .freelance || self == .jobs || self == .followUpSend }
 
     public var title: String {
         switch self {
@@ -53,6 +55,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .profileUpdate: return "Actualizar perfil y hojas de vida"
         case .portalScanJobs: return "Revisar tus portales de empleo"
         case .portalScanFreelance: return "Revisar tus portales freelance"
+        case .followUpSend: return "Enviar seguimientos aprobados"
         }
     }
 }

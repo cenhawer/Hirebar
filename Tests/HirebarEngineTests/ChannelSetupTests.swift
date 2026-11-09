@@ -12,7 +12,7 @@ import XCTest
 final class ChannelSetupTests: XCTestCase {
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-channel-\(UUID().uuidString)")
     let started = Date(timeIntervalSince1970: 1_800_000_000)
-    var moment = Date(timeIntervalSince1970: 1_800_000_000)
+    let clock = TestClock()
     var sent: [(String, Int64)] = []
     var tokenRejected = false
     var tokenSaved = true
@@ -39,14 +39,14 @@ final class ChannelSetupTests: XCTestCase {
             removeToken: { [unowned self] in self.tokenSaved },
             start: {}
         )
-        return ChannelSetup(settings: settings, telegram: telegram, configs: FileConfigRepository(), now: { [unowned self] in self.moment })
+        return ChannelSetup(settings: settings, telegram: telegram, configs: FileConfigRepository(), clock: clock)
     }
 
     override func setUpWithError() throws {
         var config = Config()
         config.botUsername = "hirebar_bot"
         config.save()
-        moment = started
+        clock.moment = started
         sent = []
         tokenRejected = false
         tokenSaved = true
@@ -92,7 +92,7 @@ final class ChannelSetupTests: XCTestCase {
 
     func testPairingExpiresAfterItsWindow() throws {
         setup.startPairing()
-        moment = started.addingTimeInterval(try settings.pairingWindow + 1)
+        clock.moment = started.addingTimeInterval(try settings.pairingWindow + 1)
         XCTAssertEqual(setup.state, .expired(bot: "hirebar_bot"))
         XCTAssertFalse(setup.offer(sender(user: 7), text: "hola"))
     }
@@ -132,7 +132,7 @@ final class ChannelSetupTests: XCTestCase {
         var config = Config.load()
         config.channelOwner = ChannelOwner(userId: 7, chatId: 7, name: "Ana")
         config.save()
-        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files)
+        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock())
         controller.channel = setup
         let chat: [String: Any] = ["id": 7, "type": "private"]
         let button: [String: Any] = [

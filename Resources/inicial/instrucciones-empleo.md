@@ -14,6 +14,9 @@ Lee primero `perfil.md` y `postulaciones.md` (para no repetir empresas ni vacant
 - Pretensión salarial: dentro del rango publicado; si no hay rango, usa la de `perfil.md`.
 - Nunca escribas contraseñas, nunca crees cuentas y nunca resuelvas CAPTCHAs: marca la vacante PENDIENTE.
 
+## 2b. Borradores de correo
+- Si un elemento de la lista tiene la acción `draftEmail`, deja en el Gmail de la persona un BORRADOR para ese correo con exactamente el texto aprobado y la hoja de vida que más se parezca a la vacante adjunta. No lo envíes.
+
 ## 3. Registro (obligatorio)
 - `postulaciones.md`: arriba, por cada vacante: fecha, empresa, cargo, canal y enlace, estado (ENVIADA / PENDIENTE + motivo / DESCARTADA + motivo).
 - `metricas-claude.json`, semana ISO actual, sección "empleo": suma `enviadas`, `descartadas`, `pendientes`.

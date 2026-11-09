@@ -1,5 +1,7 @@
 {
   "schemaVersion": 1,
+  "protectedFiles": ["instrucciones-*.md", "perfil.json", "perfil.md", "search-profile.json", "hv/**", "contenido/cuentas.json"],
+  "restoredFiles": ["instrucciones-*.md", "perfil.md", "search-profile.json", "hv/plantilla.html"],
   "claude": {
     "personalFiles": ["perfil.json", "perfil.md", "hv/**"],
     "read": {
@@ -47,7 +49,7 @@
     "browserInRead": false
   },
   "gemini": {
-    "read": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode default -p \"$HIREBAR_FULL_PROMPT\"",
+    "read": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode plan -p \"$HIREBAR_FULL_PROMPT\"",
     "draft": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode auto_edit -p \"$HIREBAR_FULL_PROMPT\"",
     "act": "GEMINI_CLI_TRUST_WORKSPACE=true gemini --approval-mode yolo -p \"$HIREBAR_FULL_PROMPT\"",
     "browserInRead": false

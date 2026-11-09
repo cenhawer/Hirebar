@@ -20,7 +20,14 @@ enum ClaudeCLI {
         return (out?.hasPrefix("/") ?? false) ? out : nil
     }
 
-    static func arguments(prompt: String, playbook: URL, profile: RunProfile, browser: Bool, settings: EngineProfiles.Claude) -> [String] {
+    static func arguments(
+        prompt: String,
+        playbook: URL,
+        profile: RunProfile,
+        browser: Bool,
+        settings: EngineProfiles.Claude,
+        protectedFiles: [String] = []
+    ) -> [String] {
         let phase = settings.phase(profile)
         let useBrowser = browser && !phase.browserTools.isEmpty
         var arguments = ["-p", prompt]
@@ -33,7 +40,7 @@ enum ClaudeCLI {
             "--output-format", "text",
             "--allowedTools", allowedTools(phase, profile: profile, browser: useBrowser).joined(separator: ","),
         ]
-        let denied = deniedReads(settings.personalFiles, phase: phase, profile: profile)
+        let denied = deniedReads(settings.personalFiles, phase: phase, profile: profile) + deniedWrites(protectedFiles, profile: profile)
         if !denied.isEmpty { arguments += ["--disallowedTools", denied.joined(separator: ",")] }
         return arguments
     }
@@ -53,6 +60,11 @@ enum ClaudeCLI {
         if case .draft(let paths) = profile { writable = paths }
         let writableNames = Set(writable.map(baseName))
         return personalFiles.filter { !writableNames.contains(baseName($0)) }.map { "Read(./\($0))" }
+    }
+
+    static func deniedWrites(_ protectedFiles: [String], profile: RunProfile) -> [String] {
+        guard profile.canAct else { return [] }
+        return protectedFiles.flatMap { path in writeTools.map { "\($0)(./\(path))" } }
     }
 
     static func rule(for path: String) -> String {
@@ -144,7 +156,7 @@ enum ClaudeCLI {
                     claude,
                     arguments(
                         prompt: prompt, playbook: playbook, profile: profile, browser: browser,
-                        settings: profiles.claude)))
+                        settings: profiles.claude, protectedFiles: profiles.protectedFiles)))
         case .codex, .gemini:
             let commands = engine.kind == .codex ? profiles.codex : profiles.gemini
             if browser && !profile.canAct && !commands.browserInRead {

@@ -45,6 +45,8 @@ struct EngineProfiles: Decodable, Sendable {
     static let supportedSchemaVersion = 1
 
     let schemaVersion: Int
+    let protectedFiles: [String]
+    let restoredFiles: [String]
     let claude: Claude
     let codex: CommandEngine
     let gemini: CommandEngine

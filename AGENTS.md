@@ -21,9 +21,9 @@ publicaciones. La usa una persona por instalación.
 - Hexagonal con límites impuestos por targets de SwiftPM. Detalle, puertos, contratos y el destino
   de cada archivo actual en `ARCHITECTURE.md`.
 - Principios no negociables en `.specify/memory/constitution.md`.
-- El código actual todavía tiene cuatro targets en cadena (`Hirebar` → `HirebarEngine` →
-  `HirebarSources` → `HirebarCore`); lo nuevo se escribe ya en la capa de destino que indica
-  `ARCHITECTURE.md` §3.3.
+- Targets: `HirebarDomain`, `HirebarApplication`, los adaptadores `HirebarStorage`,
+  `HirebarTelegram`, `HirebarNotifications` y `HirebarPortals`, `HirebarEngine` (motor que pasa a
+  casos de uso en la spec `017`) y la app `Hirebar`. Un adaptador nunca importa a otro.
 
 ## Convenciones
 

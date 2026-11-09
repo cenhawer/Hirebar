@@ -99,9 +99,11 @@ export HIREBAR_SIGN_IDENTITY="<hash de tu identidad>"
 | Carpeta | Qué tiene |
 |---|---|
 | `Sources/Hirebar` | La app: panel, menú y Ajustes. |
-| `Sources/HirebarEngine` | Agentes, horarios, comandos de Telegram y lanzador de Claude. |
-| `Sources/HirebarSources` | Un archivo por portal y los filtros. |
-| `Sources/HirebarCore` | Configuración, perfil, datos y Telegram. |
+| `Sources/HirebarEngine` | Agentes, horarios, comandos de Telegram y lanzador de la IA. |
+| `Sources/HirebarDomain` | Reglas y entidades sin E/S: agentes, perfil, avisos, cuentas, encaje. |
+| `Sources/HirebarApplication` | Casos de uso y puertos: lectura de comandos, verificación de acciones, canal. |
+| `Sources/HirebarStorage` | Configuración, datos del workspace y Llavero. |
+| `Sources/HirebarTelegram` · `HirebarNotifications` · `HirebarPortals` | Telegram, notificaciones de macOS y un archivo por portal. |
 | `Resources/inicial` | Archivos con los que arranca una instalación nueva. |
 | `scripts/` | Compilar y empaquetar, tests con cobertura, lint, convenciones y hooks de git. |
 

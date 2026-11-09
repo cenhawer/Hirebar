@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.storage)
 
 public enum Housekeeping {
     static let keepRunsDays = 30.0
@@ -7,8 +10,6 @@ public enum Housekeeping {
     static let keepWeeks = 26
     static let keepEventsDays = 180.0
     static let keepReportsDays = 365.0
-    static let logMaxBytes = 5_000_000
-    static let logKeepBytes = 1_000_000
     static let textMaxBytes = 3_000_000
     static let textKeepBytes = 1_500_000
     static let growingFiles = ["historial-propuestas.md", "postulaciones.md", "informes/cambios.md"]
@@ -72,12 +73,11 @@ public enum Housekeeping {
             notes.append("métricas de Claude")
         }
 
-        if trim(Paths.log, max: logMaxBytes, keep: logKeepBytes, newestAtTop: false) { notes.append("registro") }
         for name in growingFiles where trim(Paths.workspaceFile(name), max: textMaxBytes, keep: textKeepBytes, newestAtTop: true) {
             notes.append(name)
         }
 
-        Log.write("Limpieza semanal: " + (notes.isEmpty ? "nada que borrar" : notes.joined(separator: ", ")))
+        log.write("Limpieza semanal: " + (notes.isEmpty ? "nada que borrar" : notes.joined(separator: ", ")))
     }
 
     private static func removeOlder(than days: Double, in folder: URL, now: Date, except: Set<String> = []) -> Int {

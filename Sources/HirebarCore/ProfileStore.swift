@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.storage)
 
 extension Profile {
     public static var url: URL { Paths.workspaceFile("perfil.json") }
@@ -9,7 +12,7 @@ extension Profile {
         do {
             return try JSONDecoder().decode(Profile.self, from: data)
         } catch {
-            Log.write("perfil.json tiene un error (\(error.localizedDescription)); se ignoran las habilidades")
+            log.write("perfil.json tiene un error (\(error.localizedDescription)); se ignoran las habilidades")
             return Profile()
         }
     }

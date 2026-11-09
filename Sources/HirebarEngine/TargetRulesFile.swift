@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.ai)
 
 struct TargetRulesFile: Decodable, Sendable {
     static let fileName = "destinos"
@@ -33,7 +36,7 @@ struct TargetRulesFile: Decodable, Sendable {
 
     static func bundled(in bundle: Bundle = .main) -> TargetRules {
         guard let url = bundle.url(forResource: fileName, withExtension: "json"), let rules = try? load(from: url) else {
-            Log.write("Destinos: no encontré \(fileName).json en la app; comparo los enlaces completos")
+            log.write("Destinos: no encontré \(fileName).json en la app; comparo los enlaces completos")
             return TargetRules(
                 ignoredQueryParameters: [], ignoredQueryParameterPrefixes: [], networks: Set(ContentNetwork.allCases.map(\.rawValue)),
                 webSchemes: TargetRules.strict.webSchemes)

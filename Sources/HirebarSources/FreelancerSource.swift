@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct FreelancerSource: ListingSource {
     public let id = "freelancer"
@@ -83,7 +86,8 @@ public struct FreelancerSource: ListingSource {
                 outcome.backup.append(hit.with(fit: .stretch, score: bids + (verified ? 0 : 10)))
             }
         }
-        Log.write("Freelance · Freelancer: \(projects.count) proyectos leídos, \(recent) de menos de 24 h y no vistos, \(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo")
+        let found = "\(projects.count) proyectos leídos, \(recent) de menos de 24 h y no vistos, \(matching) de tu perfil"
+        log.write("Freelance · Freelancer: \(found), \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo")
         return outcome
     }
 }

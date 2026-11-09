@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.storage)
 
 extension SearchProfile {
     public static func load() -> SearchProfile {
@@ -7,7 +10,7 @@ extension SearchProfile {
         do {
             return try JSONDecoder().decode(SearchProfile.self, from: data)
         } catch {
-            Log.write("search-profile.json tiene un error (\(error.localizedDescription)); se usan los valores por defecto")
+            log.write("search-profile.json tiene un error (\(error.localizedDescription)); se usan los valores por defecto")
             return .defaults
         }
     }

@@ -3,6 +3,8 @@ import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
+private let log = Log(.ai)
+
 public final class Controller {
     public static let shared = Controller()
     let targetRules = TargetRulesFile.bundled()
@@ -148,7 +150,7 @@ public final class Controller {
     private func stopIfStuck() {
         guard let process = running, process.isRunning, let started = runStarted,
               Date().timeIntervalSince(started) > Self.maxRunSeconds else { return }
-        Log.write("IA: lote \(runningBatch ?? "?") lleva más de 1 hora, se detiene")
+        log.write("IA: lote \(runningBatch ?? "?") lleva más de 1 hora, se detiene")
         process.terminate()
     }
 
@@ -256,10 +258,10 @@ public final class Controller {
         if mode == .freelance || mode == .jobs {
             reply("\(AI.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
         }
-        Log.write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
+        Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.maxRunSeconds) { [weak self] in
             guard let self, self.runningBatch == batchId, let process = self.running, process.isRunning else { return }
-            Log.write("IA: lote \(batchId) superó 1 hora, se detiene")
+            log.write("IA: lote \(batchId) superó 1 hora, se detiene")
             process.terminate()
         }
     }
@@ -271,7 +273,7 @@ public final class Controller {
         runningAccount = nil
         let output = ((try? String(contentsOf: outURL, encoding: .utf8)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let errors = (try? String(contentsOf: errURL, encoding: .utf8)) ?? ""
-        Log.write("IA: lote \(batchId) terminó con código \(code)")
+        Log(agent: AgentKind.owner(of: mode)).write("IA: lote \(batchId) terminó con código \(code)")
 
         let acts = TaskProfiles.profile(for: mode, account: nil).canAct
         if acts { restoreProtectedFiles(after: batchId) }
@@ -297,13 +299,13 @@ public final class Controller {
             return try executionGuard.verify(batch: batchId, agent: agent)
         } catch ExecutionGuardFailure.pauseNotSaved(let pause, let verification) {
             unsavedPauses[agent] = pause
-            Log.write("Verificación: no pude guardar la pausa de \(agent.rawValue); queda en pausa mientras la app siga abierta")
+            log.write("Verificación: no pude guardar la pausa de \(agent.rawValue); queda en pausa mientras la app siga abierta")
             return verification
         } catch ExecutionGuardFailure.verificationNotSaved(let verification) {
-            Log.write("Verificación: no pude guardar la verificación de \(batchId); su cupo queda reservado")
+            log.write("Verificación: no pude guardar la verificación de \(batchId); su cupo queda reservado")
             return verification
         } catch {
-            Log.write("Verificación: \(batchId) falló: \(error.localizedDescription)")
+            log.write("Verificación: \(batchId) falló: \(error.localizedDescription)")
             return nil
         }
     }
@@ -317,7 +319,7 @@ public final class Controller {
         protectedSnapshot = nil
         let restored = files.restoreChanges(since: before)
         guard !restored.isEmpty else { return }
-        Log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
+        log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
         reply("\(AI.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
     }
 
@@ -331,7 +333,7 @@ public final class Controller {
         do {
             try PracticeLog(batch: batch.id, agent: kind.rawValue, at: Date(), wouldSend: items).save()
         } catch {
-            Log.write("Práctica: no pude guardar lo que habría enviado \(batch.id): \(error.localizedDescription)")
+            log.write("Práctica: no pude guardar lo que habría enviado \(batch.id): \(error.localizedDescription)")
         }
         releaseApproval(of: batch.id)
         var finished = batch
@@ -339,7 +341,7 @@ public final class Controller {
         finished.result = Self.practiceResult
         BatchStore.upsert(finished)
         Metrics.bump(batch.mode, Self.practiceMetric, items.count)
-        Log.write("Práctica: \(kind.rawValue) simuló \(items.count) acción(es) del lote \(batch.id)")
+        Log(agent: kind).write("Práctica: \(kind.rawValue) simuló \(items.count) acción(es) del lote \(batch.id)")
         reply(Self.practiceSummary(agentName: agent.name, items: items))
         return true
     }
@@ -362,7 +364,7 @@ public final class Controller {
         do {
             try executionGuard.release(batch: batchId)
         } catch {
-            Log.write("Verificación: no pude liberar lo aprobado de \(batchId); su cupo queda reservado hoy")
+            log.write("Verificación: no pude liberar lo aprobado de \(batchId); su cupo queda reservado hoy")
         }
     }
 
@@ -383,7 +385,7 @@ public final class Controller {
             if mode.hasItems { batch.items = items }
             BatchStore.upsert(batch)
         }
-        Log.write("IA: la sesión venció; lote \(batchId) queda para reintentar")
+        log.write("IA: la sesión venció; lote \(batchId) queda para reintentar")
         let now = Date()
         if lastAuthAlert.map({ now.timeIntervalSince($0) > Self.authAlertEvery }) ?? true {
             lastAuthAlert = now
@@ -398,7 +400,7 @@ public final class Controller {
         }
         if code == 0 && (mode == .followUp || mode == .social || mode == .portalScanJobs || mode == .portalScanFreelance)
             && output.contains(Self.noNewsMarker) {
-            Log.write("\(mode.rawValue): sin novedades")
+            Log(agent: AgentKind.owner(of: mode)).write("\(mode.rawValue): sin novedades")
             if batchId.hasPrefix("gm-") {
                 let summary = output.replacingOccurrences(of: Self.noNewsMarker, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 reply("Seguimientos: hoy no tocaba escribirle a nadie.\n\n" + (summary.isEmpty ? "Sin más detalle." : String(summary.suffix(3500))))
@@ -488,7 +490,7 @@ public final class Controller {
         case .failure(.blockMissing):
             return
         case .failure(let failure):
-            Log.write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
+            Log(agent: AgentKind.owner(of: mode)).write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
             reply("\(AI.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
             return
         }
@@ -499,7 +501,7 @@ public final class Controller {
             now: Date()
         )
         for proposal in intake.rejected {
-            Log.write("\(mode.rawValue): descartada una propuesta con acción no permitida para esta tarea (\(proposal.action.rawValue))")
+            log.write("\(mode.rawValue): descartada una propuesta con acción no permitida para esta tarea (\(proposal.action.rawValue))")
         }
         let fresh = intake.fresh
         guard !fresh.isEmpty else { return }
@@ -508,7 +510,7 @@ public final class Controller {
         do {
             try ExecutionApprovals.store.saveSeenProposals(intake.seen)
         } catch {
-            Log.write("\(mode.rawValue): no pude guardar qué propuestas ya mostré: \(error.localizedDescription)")
+            log.write("\(mode.rawValue): no pude guardar qué propuestas ya mostré: \(error.localizedDescription)")
         }
     }
 
@@ -517,7 +519,7 @@ public final class Controller {
         do {
             try ExecutionApprovals.store.saveProposals(proposals, batch: batch.id)
         } catch {
-            Log.write("\(batch.mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
+            log.write("\(batch.mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
             reply("No pude guardar la lista para aprobar, así que no te la muestro: \(error.localizedDescription)")
             return false
         }
@@ -557,7 +559,7 @@ public final class Controller {
             return
         case .invalid(let ids):
             let numbers = ids.joined(separator: ", ")
-            Log.write("Prospección: correos incompletos o repetidos en pendientes.json (\(numbers))")
+            Log(agent: .clients).write("Prospección: correos incompletos o repetidos en pendientes.json (\(numbers))")
             reply("\(AI.capitalizedName) dejó correos sin destinatario, asunto o texto válidos (\(numbers)); no te muestro la lista.")
         case .found(let drafts):
             let batch = Batch(mode: .prospectingSend, items: drafts.map { BatchItem($0.proposal, kind: $0.kind) }, status: .pending)
@@ -666,7 +668,7 @@ public final class Controller {
         guard batch.mode == .linkedInPublish,
             let proposal = ContentAccountStore.find(batch.account).flatMap(ExecutionApprovals.publishProposal)
         else {
-            Log.write("\(batch.mode.rawValue): no se ejecuta sin una lista aprobada")
+            log.write("\(batch.mode.rawValue): no se ejecuta sin una lista aprobada")
             if manual { reply("Eso solo se ejecuta sobre una lista que hayas aprobado; no ejecuto nada.") }
             return false
         }

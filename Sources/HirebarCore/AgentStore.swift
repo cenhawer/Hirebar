@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.storage)
 
 extension AgentKind {
     public static func parse(_ text: String) -> AgentKind? {
@@ -49,7 +52,7 @@ public enum AgentStore {
             }
             return settings
         } catch {
-            Log.write("agentes/\(kind.rawValue).json tiene un error (\(error.localizedDescription)); se usa la configuración por defecto")
+            log.write("agentes/\(kind.rawValue).json tiene un error (\(error.localizedDescription)); se usa la configuración por defecto")
             return AgentSettings.defaults(for: kind, legacy: Config.load().agentDefaults)
         }
     }

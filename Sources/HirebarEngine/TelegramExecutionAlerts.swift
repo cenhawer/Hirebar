@@ -3,11 +3,13 @@ import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
+private let log = Log(.telegram)
+
 struct TelegramExecutionAlerts: ExecutionAlerts {
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {
         let name = AgentKind(rawValue: agent.rawValue).map { AgentStore.load($0).name } ?? agent.rawValue
         let text = Self.message(agentName: name, alias: agent.rawValue, verification: verification, pauseSaved: pauseSaved)
-        Log.write("Verificación: \(name) en pausa por la lista \(verification.batch)")
+        log.write("Verificación: \(name) en pausa por la lista \(verification.batch)")
         guard Notifier.canUseTelegram else {
             Notifier.tell(text)
             return

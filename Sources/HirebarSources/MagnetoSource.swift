@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct MagnetoSource: JobSource {
     public let id = "magneto"
@@ -38,7 +41,7 @@ public struct MagnetoSource: JobSource {
             }
             await Net.pause(1)
         }
-        Log.write("Empleo · Magneto: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
+        log.write("Empleo · Magneto: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
         return SourceResult(hits: hits)
     }
 

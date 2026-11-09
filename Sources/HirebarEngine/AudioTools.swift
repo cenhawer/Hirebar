@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.media)
 
 enum AudioTools {
     static var legacyFolder: URL { Paths.root.appendingPathComponent("herramientas", isDirectory: true) }
@@ -23,7 +26,7 @@ enum AudioTools {
     static func removeLegacyCopy() {
         guard FileManager.default.fileExists(atPath: legacyFolder.path) else { return }
         try? FileManager.default.removeItem(at: legacyFolder)
-        Log.write("Contenido: borré la copia de ffmpeg que Hirebar instalaba con Python; ahora usa la del sistema")
+        log.write("Contenido: borré la copia de ffmpeg que Hirebar instalaba con Python; ahora usa la del sistema")
     }
 
     static func prepareVoice(_ input: URL, to output: URL) throws {

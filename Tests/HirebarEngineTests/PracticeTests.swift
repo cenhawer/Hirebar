@@ -1,0 +1,64 @@
+import Foundation
+import HirebarApplication
+import HirebarCore
+import HirebarDomain
+import XCTest
+
+@testable import HirebarEngine
+
+final class PracticeTests: XCTestCase {
+    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-practice-\(UUID().uuidString)")
+    var store: FileExecutionStateStore!
+    var replies: [String] = []
+
+    override static func setUp() {
+        setenv("HIREBAR_HOME", home.path, 1)
+    }
+
+    override static func tearDown() {
+        try? FileManager.default.removeItem(at: home)
+    }
+
+    override func setUp() {
+        store = FileExecutionStateStore(
+            stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"), runsFolder: Paths.runs)
+        Controller.shared.executionGuard = ExecutionGuard(store: store, alerts: SilentAlerts())
+        replies = []
+        Controller.shared.replies = { [weak self] text in self?.replies.append(text) }
+        AgentStore.update(.jobs) { $0.practice = false }
+    }
+
+    override func tearDown() {
+        Controller.shared.replies = Notifier.tell
+        AgentStore.update(.jobs) { $0.practice = false }
+    }
+
+    var vacancy: Proposal {
+        Proposal(id: "li:1", action: .apply, target: .url("https://linkedin.com/jobs/view/1"), title: "Backend", source: "LinkedIn")
+    }
+
+    func testAnAgentInPracticeSendsNothingAndRecordsWhatItWouldHaveDone() throws {
+        Practice.set(.jobs, on: true, from: "test")
+        let batch = Batch(mode: .jobs, items: [BatchItem(vacancy)], status: .running)
+        _ = try Controller.shared.executionGuard.approve(
+            [vacancy], batch: batch.id, approvedBy: .person, agent: AgentID(rawValue: "empleo"), dailyLimit: 1)
+        XCTAssertTrue(Controller.shared.simulateIfPracticing(batch))
+        XCTAssertEqual(PracticeLog.read(batch: batch.id)?.wouldSend, [vacancy])
+        XCTAssertTrue(store.approvedItems(batch: batch.id).isEmpty)
+        XCTAssertEqual(Controller.shared.executionGuard.remainingQuota(of: AgentID(rawValue: "empleo"), dailyLimit: 1), 1)
+        XCTAssertTrue(replies.last?.contains("no envió nada") ?? false)
+        XCTAssertEqual(BatchStore.find(id: batch.id)?.status, .done)
+    }
+
+    func testAnAgentOutOfPracticeRunsForReal() {
+        let batch = Batch(mode: .jobs, items: [BatchItem(vacancy)], status: .running)
+        XCTAssertFalse(Controller.shared.simulateIfPracticing(batch))
+        XCTAssertNil(PracticeLog.read(batch: batch.id))
+    }
+
+    func testTheSummaryListsWhatWouldHaveBeenSent() {
+        let summary = Controller.practiceSummary(agentName: "Empleo", items: [vacancy])
+        XCTAssertTrue(summary.contains("Habría hecho 1"))
+        XCTAssertTrue(summary.contains("linkedin.com/jobs/view/1"))
+    }
+}

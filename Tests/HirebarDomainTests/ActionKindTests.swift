@@ -11,4 +11,8 @@ final class ActionKindTests: XCTestCase {
     func testPublishingAndClientRepliesAlwaysNeedApproval() {
         XCTAssertEqual(Set(ActionKind.allCases.filter(\.alwaysNeedsApproval)), [.publish, .replyToClient])
     }
+
+    func testAutomaticSendingOnlyCoversMessagesToPreviousContacts() {
+        XCTAssertEqual(Set(ActionKind.allCases.filter(\.requiresPriorContact)), [.sendFollowUp, .sendEmail])
+    }
 }

@@ -19,13 +19,13 @@ public enum ProposalParser {
         let proposals: [Proposal]
     }
 
-    public static func parse(_ output: String) -> Result<[Proposal], ProposalParseFailure> {
+    public static func parse(_ output: String, rules: TargetRules) -> Result<[Proposal], ProposalParseFailure> {
         guard let block = lastBlock(in: output) else { return .failure(.blockMissing) }
         guard let data = block.data(using: .utf8), let list = try? JSONDecoder().decode(ProposalList.self, from: data) else {
             return .failure(.invalidJSON)
         }
         guard list.schemaVersion == currentSchemaVersion else { return .failure(.unsupportedVersion(list.schemaVersion)) }
-        let incomplete = list.proposals.filter { !$0.isComplete }.map(\.id)
+        let incomplete = list.proposals.filter { !$0.isComplete(using: rules) }.map(\.id)
         guard incomplete.isEmpty else { return .failure(.incomplete(incomplete)) }
         let duplicates = Dictionary(grouping: list.proposals, by: \.id).filter { $0.value.count > 1 }.keys.sorted()
         guard duplicates.isEmpty else { return .failure(.duplicateIds(duplicates)) }

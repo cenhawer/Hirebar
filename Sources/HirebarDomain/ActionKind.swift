@@ -17,4 +17,8 @@ public enum ActionKind: String, Codable, CaseIterable, Sendable {
     public var alwaysNeedsApproval: Bool {
         self == .publish || self == .replyToClient
     }
+
+    public var requiresPriorContact: Bool {
+        self == .sendFollowUp
+    }
 }

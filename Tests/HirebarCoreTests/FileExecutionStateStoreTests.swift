@@ -10,9 +10,11 @@ final class FileExecutionStateStoreTests: XCTestCase {
 
     override func setUpWithError() throws {
         folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let moment = self.moment
         store = FileExecutionStateStore(
             stateFolder: folder.appendingPathComponent("estado"),
-            runsFolder: folder.appendingPathComponent("workspace/ejecuciones")
+            runsFolder: folder.appendingPathComponent("workspace/ejecuciones"),
+            now: { moment }
         )
     }
 
@@ -30,7 +32,7 @@ final class FileExecutionStateStoreTests: XCTestCase {
     }
 
     func testApprovedItemsRoundTripOutsideTheWorkspace() throws {
-        try store.saveApproved([item], batch: "b1")
+        try store.saveApproved([item], batch: "b1", agent: AgentID(rawValue: "empleo"))
         XCTAssertEqual(store.approvedItems(batch: "b1"), [item])
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appendingPathComponent("estado/aprobados/b1.json").path))
         XCTAssertEqual(store.approvedItems(batch: "otro"), [])
@@ -55,17 +57,61 @@ final class FileExecutionStateStoreTests: XCTestCase {
         XCTAssertEqual(found.actions.count, 1)
     }
 
-    func testCompletedActionsCountOnlyAuthorizedDoneActionsOfTheAgentSinceTheGivenMoment() throws {
+    func testConsumedActionsCountEverySentActionOfTheAgentByVerificationTime() throws {
         let jobs = AgentID(rawValue: "empleo")
-        let done = ActionRecord(itemId: "li:1", action: .apply, target: item.proposal.target, outcome: .done, at: moment)
+        let done = ActionRecord(itemId: "li:1", action: .apply, target: item.proposal.target, outcome: .done, at: .distantPast)
         let pending = ActionRecord(itemId: "li:2", action: .apply, target: item.proposal.target, outcome: .pending, at: moment)
+        let stranger = ActionRecord(itemId: "li:9", action: .apply, target: .url("https://otro.co/x"), outcome: .done, at: moment)
         let verification = ExecutionVerification(
-            batch: "b1", unverifiedReason: nil, verdicts: [.authorized(done), .authorized(pending)])
+            batch: "b1", unverifiedReason: nil, verdicts: [.authorized(done), .authorized(pending), .unauthorized(stranger, .notApproved)])
         try store.save(verification, agent: jobs)
         try store.save(
             ExecutionVerification(batch: "b2", unverifiedReason: nil, verdicts: [.authorized(done)]), agent: AgentID(rawValue: "freelance"))
-        XCTAssertEqual(store.completedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 1)
-        XCTAssertEqual(store.completedActions(agent: jobs, since: moment.addingTimeInterval(60)), 0)
+        XCTAssertEqual(store.consumedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 2)
+        XCTAssertEqual(store.consumedActions(agent: jobs, since: moment.addingTimeInterval(60)), 0)
+    }
+
+    func testApprovedButUnverifiedItemsReserveQuotaUntilVerifiedOrReleased() throws {
+        let jobs = AgentID(rawValue: "empleo")
+        try store.saveApproved([item], batch: "b1", agent: jobs)
+        XCTAssertEqual(store.consumedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 1)
+        XCTAssertEqual(store.consumedActions(agent: AgentID(rawValue: "freelance"), since: moment.addingTimeInterval(-60)), 0)
+        try store.save(ExecutionVerification(batch: "b1", unverifiedReason: nil, verdicts: [.missing("li:1")]), agent: jobs)
+        XCTAssertEqual(store.consumedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 0)
+        try store.saveApproved([item], batch: "b3", agent: jobs)
+        try store.releaseApproval(batch: "b3")
+        XCTAssertEqual(store.consumedActions(agent: jobs, since: moment.addingTimeInterval(-60)), 0)
+    }
+
+    func testContactedTargetsAreOnlyAuthorizedSentActions() throws {
+        let jobs = AgentID(rawValue: "empleo")
+        let done = ActionRecord(itemId: "li:1", action: .apply, target: item.proposal.target, outcome: .done, at: moment)
+        let stranger = ActionRecord(itemId: "li:9", action: .apply, target: .url("https://otro.co/x"), outcome: .done, at: moment)
+        try store.save(
+            ExecutionVerification(
+                batch: "b1", unverifiedReason: nil, verdicts: [.authorized(done), .unauthorized(stranger, .notApproved)]),
+            agent: jobs)
+        XCTAssertEqual(store.contactedTargets(agent: jobs), [item.proposal.target])
+    }
+
+    func testDiscardingTheActionLogRemovesThePreviousRun() throws {
+        let file = FileExecutionStateStore.actionLogFile(batch: "b1", in: folder.appendingPathComponent("workspace/ejecuciones"))
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: file)
+        try store.discardActionLog(batch: "b1")
+        XCTAssertEqual(store.actionLog(batch: "b1").isMissing, true)
+        try store.discardActionLog(batch: "b1")
+    }
+
+    func testSeenProposalsRoundTripOutsideTheWorkspace() throws {
+        try store.saveSeenProposals(["apply linkedin.com/jobs/view/1": moment])
+        XCTAssertEqual(store.seenProposals(), ["apply linkedin.com/jobs/view/1": moment])
+    }
+
+    func testOldRecordsAreRemoved() throws {
+        try store.saveProposals([item.proposal], batch: "b1")
+        try store.removeRecords(before: Date().addingTimeInterval(60))
+        XCTAssertEqual(store.proposals(batch: "b1"), [])
     }
 
     func testPauseReplacesThePreviousPauseOfTheSameAgentAndResumeRemovesIt() throws {

@@ -19,6 +19,12 @@ public enum Housekeeping {
         let removedRuns = removeOlder(than: keepRunsDays, in: Paths.runs, now: now)
         if removedRuns > 0 { notes.append("\(removedRuns) archivos de ejecuciones") }
 
+        do {
+            try FileExecutionStateStore.standard.removeRecords(before: now.addingTimeInterval(-keepRunsDays * 86400))
+        } catch {
+            notes.append("no pude limpiar el estado de ejecución (\(error.localizedDescription))")
+        }
+
         let removedReports = removeOlder(than: keepReportsDays, in: Paths.reports, now: now, except: ["cambios.md"])
         if removedReports > 0 { notes.append("\(removedReports) informes de hace más de un año") }
 

@@ -3,6 +3,7 @@ import HirebarCore
 import HirebarEngine
 import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -13,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var activity: NSObjectProtocol?
     private var panelTimer: Timer?
     private let settings = SettingsWindowController()
+    private let notificationRouter = NotificationRouter()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiatedAllowingIdleSystemSleep],
@@ -26,9 +28,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         quit.target = self
         menu.addItem(quit)
 
-        panel.onConfigureTelegram = { [weak self] in self?.closePanel { StatusMenu.shared.configureTelegram() } }
-        panel.onSendTest = { StatusMenu.shared.sendTest() }
-        panel.onForgetChat = { [weak self] in self?.closePanel { StatusMenu.shared.forgetChat() } }
+        notificationRouter.onOpen = { [weak self] in self?.showPanel() }
+        UNUserNotificationCenter.current().delegate = notificationRouter
+        StatusMenu.shared.onOpenChannel = { [weak self] in self?.settings.show(.channel) }
+        settings.channel.onStateChange = { [weak self] in
+            self?.panel.refresh()
+            StatusMenu.shared.refresh()
+        }
         panel.onQuit = { NSApp.terminate(nil) }
         panel.onOpenSettings = { [weak self] page in self?.closePanel { self?.settings.show(page) } }
         StatusMenu.shared.onOpenSettings = { [weak self] kind in self?.settings.show(.agent(kind)) }
@@ -75,7 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             closePanel()
             return
         }
-        guard let button = statusItem.button else { return }
+        showPanel()
+    }
+
+    private func showPanel() {
+        guard !popover.isShown, let button = statusItem.button else { return }
         panel.refresh()
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
@@ -118,5 +128,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     @objc private func quit() {
         NSApp.terminate(nil)
+    }
+}
+
+final class NotificationRouter: NSObject, UNUserNotificationCenterDelegate {
+    var onOpen: (() -> Void)?
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        DispatchQueue.main.async { [weak self] in self?.onOpen?() }
+        completionHandler()
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
     }
 }

@@ -22,8 +22,9 @@ publicaciones. La usa una persona por instalación.
   de cada archivo actual en `ARCHITECTURE.md`.
 - Principios no negociables en `.specify/memory/constitution.md`.
 - Targets: `HirebarDomain`, `HirebarApplication`, los adaptadores `HirebarStorage`,
-  `HirebarTelegram`, `HirebarNotifications` y `HirebarPortals`, `HirebarEngine` (motor que pasa a
-  casos de uso en la spec `017`) y la app `Hirebar`. Un adaptador nunca importa a otro.
+  `HirebarTelegram`, `HirebarNotifications`, `HirebarPortals`, `HirebarMedia` y `HirebarAI`,
+  `HirebarEngine` (casos de uso que pasan a la aplicación en la spec `017`) y la app `Hirebar`. Un
+  adaptador nunca importa a otro.
 
 ## Convenciones
 

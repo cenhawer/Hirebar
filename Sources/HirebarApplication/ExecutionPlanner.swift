@@ -3,10 +3,12 @@ import HirebarDomain
 public struct ExecutionPlan: Equatable, Sendable {
     public let now: [ApprovedItem]
     public let deferred: [ApprovedItem]
+    public let held: [ApprovedItem]
 
-    public init(now: [ApprovedItem], deferred: [ApprovedItem]) {
+    public init(now: [ApprovedItem], deferred: [ApprovedItem], held: [ApprovedItem] = []) {
         self.now = now
         self.deferred = deferred
+        self.held = held
     }
 }
 

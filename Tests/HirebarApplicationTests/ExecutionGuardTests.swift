@@ -75,7 +75,8 @@ final class ExecutionGuardTests: XCTestCase {
             id: "empresa", action: .publish, target: .account(network: "instagram", handle: "empresa"), title: "Post", source: "IG")
         let plan = try executionGuard.approve([vacancy, reply, post], batch: "b1", approvedBy: .autoSend, agent: jobs, dailyLimit: nil)
         XCTAssertEqual(plan.now.map(\.proposal.id), ["li:1"])
-        XCTAssertEqual(Set(plan.deferred.map(\.proposal.id)), ["r1", "empresa"])
+        XCTAssertEqual(Set(plan.held.map(\.proposal.id)), ["r1", "empresa"])
+        XCTAssertTrue(plan.deferred.isEmpty)
         let byPerson = try executionGuard.approve([reply, post], batch: "b2", approvedBy: .person, agent: jobs, dailyLimit: nil)
         XCTAssertEqual(byPerson.now.count, 2)
     }

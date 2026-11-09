@@ -1,5 +1,6 @@
 import AppKit
 import HirebarCore
+import HirebarEngine
 import SwiftUI
 
 /// Ajustes → Cuentas de contenido: una sección por cuenta (empresa, personal…), cada una con su red, nombre, días y paleta.
@@ -48,6 +49,7 @@ struct ContentAccountSection: View {
             LabeledContent("Días") { DaysPicker(days: $account.days) }
             Toggle("También un video corto (Reel o Short) narrado con tu voz", isOn: $account.video)
             if account.video {
+                FfmpegRequirement()
                 Toggle("Subtítulos palabra por palabra", isOn: $account.captions)
                 Text("Te llega una vista previa sin voz y el guion. Respondes en Telegram con una nota de voz leyéndolo y Hirebar te devuelve el video con tu voz, cuadrado escena por escena. Música de fondo (opcional): pon un archivo musica.mp3 en la carpeta de la cuenta (workspace/contenido/\(account.id)/).")
                     .font(.caption)
@@ -197,5 +199,29 @@ extension Color {
         let g = Int((rgb.greenComponent * 255).rounded())
         let b = Int((rgb.blueComponent * 255).rounded())
         return String(format: "#%02X%02X%02X", max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)))
+    }
+}
+
+struct FfmpegRequirement: View {
+    @State private var status = ToolCheck.status()
+
+    var body: some View {
+        if let status, !status.ffmpegFound {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Para el video con tu voz falta ffmpeg en el Mac.", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                HStack {
+                    Text(status.installCommand).font(.system(.callout, design: .monospaced)).textSelection(.enabled)
+                    Button("Copiar") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(status.installCommand, forType: .string)
+                    }
+                    Button("Comprobar de nuevo") { self.status = ToolCheck.status() }
+                }
+            }
+        } else if status == nil {
+            Label("Falta herramientas.json dentro de la app; vuelve a instalarla.", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+        }
     }
 }

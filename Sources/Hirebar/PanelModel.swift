@@ -128,7 +128,7 @@ final class PanelModel: ObservableObject {
     }
 
     func toggleAutoApprove(_ kind: AgentKind) {
-        AgentStore.update(kind) { $0.autoApprove.toggle() }
+        AutoSendConfirmation.toggle(kind)
         refresh()
     }
 

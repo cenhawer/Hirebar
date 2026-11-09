@@ -90,6 +90,7 @@ final class ExecutionApprovalsTests: XCTestCase {
 
     func testPausedNoticeSuggestsTheCommandThatWorksEvenWithARenamedAgent() {
         let pause = AgentPause(agent: AgentID(rawValue: "clientes"), batch: "b1", reason: "notApproved", since: Date())
-        XCTAssertTrue(Controller.pausedNotice(.prospectingSend, pause).contains("reanudar clientes"))
+        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files)
+        XCTAssertTrue(controller.pausedNotice(.prospectingSend, pause).contains("reanudar clientes"))
     }
 }

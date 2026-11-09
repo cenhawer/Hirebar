@@ -178,8 +178,8 @@ final class EngineProfileTests: XCTestCase {
             """
         try profile.write(to: file, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: file) }
-        XCTAssertEqual(AgentPrompts.pastEmployers(from: file), ["Acme", "Beta"])
-        let achievements = AgentPrompts.achievements(from: file)
+        XCTAssertEqual(ProfileExperience.pastEmployers(from: file), ["Acme", "Beta"])
+        let achievements = ProfileExperience.achievements(from: file)
         XCTAssertEqual(achievements, ["- Bajé el despliegue de 30 a 10 minutos (Backend en Acme)"])
         XCTAssertFalse(achievements.joined().contains("yo@ejemplo.com"))
     }

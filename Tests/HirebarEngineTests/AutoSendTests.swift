@@ -23,7 +23,7 @@ final class AutoSendTests: XCTestCase {
     }
 
     override func setUp() {
-        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
+        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files)
         for kind in AutoSend.agents { AgentStore.update(kind) { $0.autoApprove = false } }
         replies = []
         questions = []
@@ -58,8 +58,8 @@ final class AutoSendTests: XCTestCase {
     }
 
     func testTurningOffNeedsNoConfirmation() {
-        AutoSend.turnOn(.clients, from: "test")
-        AutoSend.turnOff(.clients, from: "test")
+        AutoSend.turnOn(.clients, from: "test", agents: FileAgentRepository())
+        AutoSend.turnOff(.clients, from: "test", agents: FileAgentRepository())
         XCTAssertFalse(AgentStore.load(.clients).autoApprove)
     }
 }

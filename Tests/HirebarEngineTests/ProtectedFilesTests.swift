@@ -6,6 +6,7 @@ import HirebarStorage
 import HirebarTelegram
 import XCTest
 
+@testable import HirebarAI
 @testable import HirebarEngine
 
 final class ProtectedFilesTests: XCTestCase {

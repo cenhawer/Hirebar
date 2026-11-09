@@ -4,44 +4,47 @@ import CoreGraphics
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 import ImageIO
 
 private let log = Log(.media)
 
 public enum ReelRenderer {
-    static let width = 1080
-    static let height = 1920
-    static let fps: Int32 = 30
-    static let captionCenterFromTop = 1300.0
-    static let wordsPerCaption = 3
-    static let musicVolume: Float = 0.10
-    /// Palabras por segundo al leer en voz alta con energía (para la vista previa).
-    static let wordsPerSecond = 2.7
+    public static let musicExtensions = ["mp3", "m4a", "wav", "aiff"]
 
-    struct Scene: Decodable {
+    public static func music(for account: ContentAccount) -> URL? {
+        musicExtensions.map { account.folder.appendingPathComponent("musica.\($0)") }
+            .first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    public static let width = 1080
+    public static let height = 1920
+    public static let fps: Int32 = 30
+    public static let captionCenterFromTop = 1300.0
+    public static let wordsPerCaption = 3
+    public static let musicVolume: Float = 0.10
+    /// Palabras por segundo al leer en voz alta con energía (para la vista previa).
+    public static let wordsPerSecond = 2.7
+
+    public struct Scene: Decodable {
         let archivo: String
         let texto: String?
         let segundos: Double?
     }
 
-    struct Script: Decodable {
+    public struct Script: Decodable {
         let escenas: [Scene]
         let tono: String?
     }
 
-    struct Clip {
+    public struct Clip {
         let page: URL
         let seconds: Double
         let words: [WordTiming]
     }
 
-    struct Problem: LocalizedError {
+    public struct Problem: LocalizedError {
         let message: String
-        var errorDescription: String? { message }
+        public var errorDescription: String? { message }
     }
 
     /// Video final, narrado con la voz de la persona.
@@ -54,11 +57,11 @@ public enum ReelRenderer {
         account.videoFolder.appendingPathComponent("vista-previa.mp4")
     }
 
-    static func loadScript(_ account: ContentAccount) throws -> (scenes: [Scene], tone: String?) {
+    public static func loadScript(_ account: ContentAccount) throws -> (scenes: [Scene], tone: String?) {
         let folder = account.videoFolder
         guard let data = try? Data(contentsOf: folder.appendingPathComponent("guion.json")),
               let script = try? JSONDecoder().decode(Script.self, from: data) else {
-            throw Problem(message: "\(AI.name) no dejó el guion del video (video/guion.json)")
+            throw Problem(message: "La IA no dejó el guion del video (video/guion.json)")
         }
         let scenes = script.escenas.filter { FileManager.default.fileExists(atPath: folder.appendingPathComponent($0.archivo).path) }
         guard !scenes.isEmpty else { throw Problem(message: "no encontré las escenas del video") }
@@ -131,14 +134,14 @@ public enum ReelRenderer {
     }
 
     /// Graba las escenas y les pone la voz (si hay) y la música (si hay).
-    static func finish(_ account: ContentAccount, clips: [Clip], voice: URL?, to target: URL) throws -> URL {
+    public static func finish(_ account: ContentAccount, clips: [Clip], voice: URL?, to target: URL) throws -> URL {
         let folder = account.videoFolder
         let silent = folder.appendingPathComponent("grabando.mp4")
         try? FileManager.default.removeItem(at: silent)
         try? FileManager.default.removeItem(at: target)
         log.write("Contenido (\(account.id)): grabando \(clips.count) escenas" + (voice == nil ? " (vista previa sin voz)" : " con tu voz"))
         let animated = try writeVideo(clips, accent: color(account.palette.accent), to: silent)
-        let music = account.music
+        let music = Self.music(for: account)
         if voice != nil || music != nil {
             try mix(video: silent, voice: voice, music: music, to: target)
             try? FileManager.default.removeItem(at: silent)
@@ -235,7 +238,7 @@ public enum ReelRenderer {
         return animated
     }
 
-    static func stillImage(_ page: URL, chrome: String, scratch: URL) -> CGImage? {
+    public static func stillImage(_ page: URL, chrome: String, scratch: URL) -> CGImage? {
         let png = page.deletingPathExtension().appendingPathExtension("png")
         guard SlideRenderer.shoot(page, to: png, chrome: chrome, scratch: scratch, width: width, height: height),
               let source = CGImageSourceCreateWithURL(png as CFURL, nil) else { return nil }
@@ -243,7 +246,7 @@ public enum ReelRenderer {
     }
 
     /// Grupo de palabras que se ve en pantalla en ese momento y cuál de ellas está sonando.
-    static func captionWords(_ words: [WordTiming], at elapsed: Double) -> (words: [String], active: Int)? {
+    public static func captionWords(_ words: [WordTiming], at elapsed: Double) -> (words: [String], active: Int)? {
         guard let first = words.first, elapsed >= first.start - 0.05 else { return nil }
         var active = words.count - 1
         for (index, word) in words.enumerated() where elapsed < word.end {
@@ -278,7 +281,7 @@ public enum ReelRenderer {
         return buffer
     }
 
-    static func drawCaption(_ words: [String], active: Int, accent: NSColor, in context: CGContext) {
+    public static func drawCaption(_ words: [String], active: Int, accent: NSColor, in context: CGContext) {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         paragraph.lineBreakMode = .byWordWrapping
@@ -309,7 +312,7 @@ public enum ReelRenderer {
         NSGraphicsContext.restoreGraphicsState()
     }
 
-    static func color(_ hex: String) -> NSColor {
+    public static func color(_ hex: String) -> NSColor {
         let clean = hex.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "#", with: "")
         guard clean.count == 6, let value = UInt32(clean, radix: 16) else { return .systemYellow }
         return NSColor(srgbRed: CGFloat((value >> 16) & 0xFF) / 255, green: CGFloat((value >> 8) & 0xFF) / 255,
@@ -318,7 +321,7 @@ public enum ReelRenderer {
 
     // MARK: - Sonido
 
-    static func mix(video: URL, voice: URL?, music: URL?, to target: URL) throws {
+    public static func mix(video: URL, voice: URL?, music: URL?, to target: URL) throws {
         let composition = AVMutableComposition()
         let videoAsset = AVURLAsset(url: video)
         guard let source = videoAsset.tracks(withMediaType: .video).first,

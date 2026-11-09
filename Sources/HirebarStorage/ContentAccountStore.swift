@@ -5,17 +5,7 @@ import HirebarDomain
 private let log = Log(.storage)
 
 extension ContentAccount {
-    public var folder: URL { Paths.content.appendingPathComponent(id, isDirectory: true) }
-    public var slides: URL { folder.appendingPathComponent("laminas", isDirectory: true) }
-    public var draft: URL { folder.appendingPathComponent("borrador.md") }
-    public var videoFolder: URL { folder.appendingPathComponent("video", isDirectory: true) }
 
-    public var music: URL? {
-        ["mp3", "m4a", "wav", "aiff"].map { folder.appendingPathComponent("musica.\($0)") }
-            .first { FileManager.default.fileExists(atPath: $0.path) }
-    }
-    public var changes: URL { folder.appendingPathComponent("cambios.txt") }
-    public var performance: URL { folder.appendingPathComponent("rendimiento.md") }
 
     public var needsPerformanceCheck: Bool {
         guard let date = (try? FileManager.default.attributesOfItem(atPath: performance.path))?[.modificationDate] as? Date else {
@@ -23,8 +13,6 @@ extension ContentAccount {
         }
         return Date().timeIntervalSince(date) > 7 * 86400
     }
-
-    public var relativeFolder: String { "contenido/\(id)" }
 
     public var hasDraft: Bool {
         let text = (try? String(contentsOf: draft, encoding: .utf8)) ?? ""

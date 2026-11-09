@@ -1,48 +1,44 @@
 import Foundation
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
-struct SystemTools: Decodable, Equatable, Sendable {
-    struct Tool: Decodable, Equatable, Sendable {
-        let paths: [String]
-        let install: String
+public struct SystemTools: Decodable, Equatable, Sendable {
+    public struct Tool: Decodable, Equatable, Sendable {
+        public let paths: [String]
+        public let install: String
     }
 
-    static let fileName = "herramientas"
-    static let supportedSchemaVersion = 1
-    static let bytesPerMegabyte = 1_048_576
+    public static let fileName = "herramientas"
+    public static let supportedSchemaVersion = 1
+    public static let bytesPerMegabyte = 1_048_576
 
-    let schemaVersion: Int
-    let ffmpeg: Tool
-    let maxAudioMegabytes: Int
-    let maxAudioSeconds: Int
+    public let schemaVersion: Int
+    public let ffmpeg: Tool
+    public let maxAudioMegabytes: Int
+    public let maxAudioSeconds: Int
 
-    var maxAudioBytes: Int { maxAudioMegabytes * Self.bytesPerMegabyte }
+    public var maxAudioBytes: Int { maxAudioMegabytes * Self.bytesPerMegabyte }
 
-    enum LoadFailure: Error {
+    public enum LoadFailure: Error {
         case missing
         case unsupportedVersion(Int)
     }
 
-    static func load(from url: URL) throws -> SystemTools {
+    public static func load(from url: URL) throws -> SystemTools {
         let tools = try JSONDecoder().decode(SystemTools.self, from: Data(contentsOf: url))
         guard tools.schemaVersion == supportedSchemaVersion else { throw LoadFailure.unsupportedVersion(tools.schemaVersion) }
         return tools
     }
 
-    static func bundled(in bundle: Bundle = .main) throws -> SystemTools {
+    public static func bundled(in bundle: Bundle = .main) throws -> SystemTools {
         guard let url = bundle.url(forResource: fileName, withExtension: "json") else { throw LoadFailure.missing }
         return try load(from: url)
     }
 
-    func ffmpegPath(isExecutable: (String) -> Bool = FileManager.default.isExecutableFile(atPath:)) -> String? {
+    public func ffmpegPath(isExecutable: (String) -> Bool = FileManager.default.isExecutableFile(atPath:)) -> String? {
         ffmpeg.paths.first(where: isExecutable)
     }
 
-    func acceptsAudio(bytes: Int?, seconds: Int?) -> Bool {
+    public func acceptsAudio(bytes: Int?, seconds: Int?) -> Bool {
         (bytes ?? 0) <= maxAudioBytes && (seconds ?? 0) <= maxAudioSeconds
     }
 }

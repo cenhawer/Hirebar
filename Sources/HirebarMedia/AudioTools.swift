@@ -1,22 +1,18 @@
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 private let log = Log(.media)
 
-enum AudioTools {
-    static var legacyFolder: URL { Paths.root.appendingPathComponent("herramientas", isDirectory: true) }
+public enum AudioTools {
+    public static var legacyFolder: URL { Paths.root.appendingPathComponent("herramientas", isDirectory: true) }
 
-    struct Problem: LocalizedError {
+    public struct Problem: LocalizedError {
         let message: String
-        var errorDescription: String? { message }
+        public var errorDescription: String? { message }
     }
 
-    static func ffmpeg() throws -> String {
+    public static func ffmpeg() throws -> String {
         guard let tools = try? SystemTools.bundled() else {
             throw Problem(message: "falta herramientas.json dentro de la app; vuelve a instalarla con scripts/bundle.sh --install")
         }
@@ -26,13 +22,13 @@ enum AudioTools {
         return path
     }
 
-    static func removeLegacyCopy() {
+    public static func removeLegacyCopy() {
         guard FileManager.default.fileExists(atPath: legacyFolder.path) else { return }
         try? FileManager.default.removeItem(at: legacyFolder)
         log.write("Contenido: borré la copia de ffmpeg que Hirebar instalaba con Python; ahora usa la del sistema")
     }
 
-    static func prepareVoice(_ input: URL, to output: URL) throws {
+    public static func prepareVoice(_ input: URL, to output: URL) throws {
         let tool = try ffmpeg()
         try? FileManager.default.removeItem(at: output)
         let trim = "silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.08,"
@@ -51,7 +47,7 @@ enum AudioTools {
         }
     }
 
-    static func pauses(in audio: URL) -> [VoicePause] {
+    public static func pauses(in audio: URL) -> [VoicePause] {
         guard let tool = try? ffmpeg() else { return [] }
         let result = run(tool, ["-hide_banner", "-i", audio.path, "-af", "silencedetect=noise=-35dB:d=0.18", "-f", "null", "-"], timeout: 60)
         var found: [(Double, Double)] = []
@@ -68,7 +64,7 @@ enum AudioTools {
         return found.map { VoicePause(start: $0.0, end: $0.1) }
     }
 
-    static func run(_ path: String, _ arguments: [String], timeout: TimeInterval) -> (ok: Bool, output: String) {
+    public static func run(_ path: String, _ arguments: [String], timeout: TimeInterval) -> (ok: Bool, output: String) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
         process.arguments = arguments

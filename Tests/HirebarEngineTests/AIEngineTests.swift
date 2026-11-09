@@ -1,3 +1,4 @@
+import HirebarAI
 import HirebarApplication
 import HirebarDomain
 import XCTest

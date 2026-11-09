@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals

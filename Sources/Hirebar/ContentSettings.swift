@@ -1,6 +1,7 @@
 import AppKit
 import HirebarDomain
 import HirebarEngine
+import HirebarMedia
 import HirebarNotifications
 import HirebarPortals
 import HirebarStorage

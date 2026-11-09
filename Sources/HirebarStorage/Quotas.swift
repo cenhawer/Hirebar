@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
 
 public enum Quotas {

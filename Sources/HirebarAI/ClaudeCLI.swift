@@ -1,19 +1,15 @@
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
-enum ClaudeCLI {
-    static let authFailureHints = [
+public enum ClaudeCLI {
+    public static let authFailureHints = [
         "failed to authenticate", "oauth session expired", "please run /login", "invalid api key",
         "not logged in", "please log in", "codex login", "login required", "unauthenticated",
     ]
-    static let writeTools = ["Edit", "Write"]
+    public static let writeTools = ["Edit", "Write"]
 
-    static func path() -> String? {
+    public static func path() -> String? {
         let home = Paths.home.path
         let candidates = [
             "\(home)/.local/bin/claude", "\(home)/.claude/local/claude",
@@ -24,7 +20,7 @@ enum ClaudeCLI {
         return (out?.hasPrefix("/") ?? false) ? out : nil
     }
 
-    static func arguments(
+    public static func arguments(
         prompt: String,
         playbook: URL,
         profile: RunProfile,
@@ -49,7 +45,7 @@ enum ClaudeCLI {
         return arguments
     }
 
-    static func allowedTools(_ phase: EngineProfiles.ClaudePhase, profile: RunProfile, browser: Bool) -> [String] {
+    public static func allowedTools(_ phase: EngineProfiles.ClaudePhase, profile: RunProfile, browser: Bool) -> [String] {
         var allowed = phase.tools.filter { profile.canAct || !writeTools.contains($0) }
         if case .draft(let paths) = profile {
             allowed += paths.flatMap { path in writeTools.map { "\($0)(\(rule(for: path)))" } }
@@ -58,7 +54,7 @@ enum ClaudeCLI {
         return allowed
     }
 
-    static func deniedReads(_ personalFiles: [String], phase: EngineProfiles.ClaudePhase, profile: RunProfile) -> [String] {
+    public static func deniedReads(_ personalFiles: [String], phase: EngineProfiles.ClaudePhase, profile: RunProfile) -> [String] {
         guard phase.denyPersonalFiles else { return [] }
         var writable: [String] = []
         if case .draft(let paths) = profile { writable = paths }
@@ -66,20 +62,20 @@ enum ClaudeCLI {
         return personalFiles.filter { !writableNames.contains(baseName($0)) }.map { "Read(./\($0))" }
     }
 
-    static func deniedWrites(_ protectedFiles: [String], profile: RunProfile) -> [String] {
+    public static func deniedWrites(_ protectedFiles: [String], profile: RunProfile) -> [String] {
         guard profile.canAct else { return [] }
         return protectedFiles.flatMap { path in writeTools.map { "\($0)(./\(path))" } }
     }
 
-    static func rule(for path: String) -> String {
+    public static func rule(for path: String) -> String {
         path.hasSuffix("/") ? "./\(path)**" : "./\(path)"
     }
 
-    static func baseName(_ path: String) -> String {
+    public static func baseName(_ path: String) -> String {
         path.replacingOccurrences(of: "/**", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 
-    static func process(executable: String, arguments: [String], output: URL, errors: URL) -> Process {
+    public static func process(executable: String, arguments: [String], output: URL, errors: URL) -> Process {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.currentDirectoryURL = Paths.workspace
@@ -93,11 +89,11 @@ enum ClaudeCLI {
         return process
     }
 
-    static var searchPath: String {
+    public static var searchPath: String {
         "\(Paths.home.path)/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
-    static func shellProcess(command: String, environment extra: [String: String], output: URL, errors: URL) -> Process {
+    public static func shellProcess(command: String, environment extra: [String: String], output: URL, errors: URL) -> Process {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
         process.arguments = ["-lc", command]
@@ -112,35 +108,42 @@ enum ClaudeCLI {
         return process
     }
 
-    struct LaunchProblem: Error {
-        let message: String
-        let status: String
+    public struct LaunchProblem: Error {
+        public let message: String
+        public let status: String
     }
 
-    enum Launch {
+    public enum Launch {
         case executable(String, [String])
         case shell(String, [String: String])
     }
 
-    struct LaunchRequest {
+    public struct LaunchRequest {
         let prompt: String
         let playbook: URL
         let profile: RunProfile
         let browser: Bool
+
+        public init(prompt: String, playbook: URL, profile: RunProfile, browser: Bool) {
+            self.prompt = prompt
+            self.playbook = playbook
+            self.profile = profile
+            self.browser = browser
+        }
     }
 
-    static let missingClaudeMessage =
+    public static let missingClaudeMessage =
         "No encontré Claude Code en el Mac. Instálalo con: curl -fsSL https://claude.ai/install.sh | bash, "
         + "inicia sesión con 'claude' y vuelve a responder si. O elige otra IA en Ajustes → Motor de IA."
-    static let missingProfilesMessage =
+    public static let missingProfilesMessage =
         "No encontré los perfiles de permisos de la IA dentro de la app. Vuelve a instalarla con scripts/bundle.sh --install."
 
-    static func browserReadingMessage(_ kind: AIEngineKind) -> String {
+    public static func browserReadingMessage(_ kind: AIEngineKind) -> String {
         "Esta tarea lee con el navegador y con \(kind.title) no puede hacerlo sin poder actuar. "
             + "Corre solo con Claude Code: elígelo en Ajustes → Motor de IA."
     }
 
-    static func launch(
+    public static func launch(
         engine: AIEngineSettings,
         request: LaunchRequest,
         profiles: EngineProfiles,
@@ -183,7 +186,12 @@ enum ClaudeCLI {
         }
     }
 
-    static func makeProcess(engine: AIEngineSettings, request: LaunchRequest, output: URL, errors: URL) -> Result<Process, LaunchProblem> {
+    public static func makeProcess(
+        engine: AIEngineSettings,
+        request: LaunchRequest,
+        output: URL,
+        errors: URL
+    ) -> Result<Process, LaunchProblem> {
         let profiles: EngineProfiles
         do {
             profiles = try EngineProfiles.bundled()
@@ -200,7 +208,7 @@ enum ClaudeCLI {
         }
     }
 
-    static func loginHint(_ kind: AIEngineKind) -> String {
+    public static func loginHint(_ kind: AIEngineKind) -> String {
         switch kind {
         case .claude: return "Abre Terminal, escribe claude y luego /login."
         case .codex: return "Abre Terminal y escribe codex login."
@@ -209,7 +217,7 @@ enum ClaudeCLI {
         }
     }
 
-    static func isAuthFailure(_ text: String) -> Bool {
+    public static func isAuthFailure(_ text: String) -> Bool {
         let lower = text.lowercased()
         return authFailureHints.contains { lower.contains($0) }
     }

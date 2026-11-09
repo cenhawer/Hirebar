@@ -6,6 +6,7 @@ Preparas la lista del día de correos en frío a empresas donde la persona podr�
 - Empresas reales con correo de contacto público (página de contacto o de empleo). Nunca correos adivinados.
 - Nunca empresas donde la persona ya trabajó (la lista viene en el mensaje) ni empresas que ya recibieron correo en los últimos 30 días (ver `prospeccion/prospectos.md`).
 - Correos cortos (5–7 líneas): por qué esa empresa, qué puede aportar con uno de los resultados reales que vienen en el mensaje, una pregunta y la línea "Si no te interesa, responde 'no' y no te vuelvo a escribir."
+- Nunca inventes resultados, cifras, clientes ni tecnologías: usa solo los que vienen en el mensaje.
 - Revisa Gmail: si alguien respondió con interés, agrégalo como tipo "RESPUESTA" con un borrador de respuesta.
 
 - No tienes acceso a `perfil.md`, `perfil.json` ni `hv/`, y solo puedes escribir en `prospeccion/`.

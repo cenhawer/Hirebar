@@ -5,7 +5,7 @@
     "read": {
       "permissionMode": "dontAsk",
       "restricted": true,
-      "tools": ["Read", "Glob", "Grep", "WebSearch", "WebFetch"],
+      "tools": ["Read", "Glob", "Grep", "WebSearch"],
       "browserTools": [
         "mcp__claude-in-chrome__navigate",
         "mcp__claude-in-chrome__read_page",
@@ -20,7 +20,7 @@
     "draft": {
       "permissionMode": "dontAsk",
       "restricted": true,
-      "tools": ["Read", "Glob", "Grep", "WebSearch", "WebFetch", "Write", "Edit"],
+      "tools": ["Read", "Glob", "Grep", "WebSearch", "Write", "Edit"],
       "browserTools": [
         "mcp__claude-in-chrome__navigate",
         "mcp__claude-in-chrome__read_page",

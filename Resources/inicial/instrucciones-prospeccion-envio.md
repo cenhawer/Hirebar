@@ -1,9 +1,9 @@
 # Reglas: enviar los correos de prospección aprobados
 
-1. Lee `prospeccion/aprobados.json` ({"aprobados": "todos"} o una lista de números "n") y `prospeccion/pendientes.json`. Envía solo los aprobados, exactamente con el destinatario, asunto y cuerpo de la lista, desde el Gmail de la persona en Chrome.
+1. El mensaje trae los correos aprobados, cada uno con su `itemId`, destinatario, asunto y texto. Envía solo esos, exactamente con ese destinatario, asunto y texto, desde el Gmail de la persona en Chrome. No uses `prospeccion/pendientes.json` para decidir qué enviar.
 2. Nunca agregues destinatarios ni cambies el texto.
 3. Registra cada envío en `prospeccion/prospectos.md` (fecha, empresa, correo, tipo).
-4. Al terminar, deja `prospeccion/pendientes.json` como {} y `prospeccion/aprobados.json` vacío, para que no se envíe dos veces.
+4. Al terminar, deja `prospeccion/pendientes.json` como {}.
 5. Suma en `metricas-claude.json`, semana actual, sección "prospeccion": `enviados_empresas`, `enviados_negocios`, `seguimientos`.
 
 ## Registro de acciones (obligatorio)

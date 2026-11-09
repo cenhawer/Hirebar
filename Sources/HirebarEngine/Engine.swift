@@ -1,4 +1,5 @@
 import Foundation
+import HirebarAI
 import HirebarApplication
 import HirebarDomain
 import HirebarMedia
@@ -18,7 +19,7 @@ public final class Engine {
         let stores = Repositories.files
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore())
-        controller = Controller(telegram: telegram, stores: stores, clock: clock)
+        controller = Controller(telegram: telegram, stores: stores, clock: clock, aiRunner: ProcessAIRunner())
         jobRadar = JobRadar(stores: stores, clock: clock)
         freelanceRadar = FreelanceRadar(stores: stores, clock: clock)
         scheduler = Scheduler(stores: stores, clock: clock)

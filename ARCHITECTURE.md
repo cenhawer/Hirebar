@@ -112,7 +112,7 @@ flowchart TB
 | `HirebarPortals` | Un adaptador por portal incluido y el cliente HTTP | `HirebarApplication` | `PortalSource`, `WebPageFetcher` |
 | `HirebarStorage` | Archivos del workspace con `schemaVersion` y migraciones, Llavero, registro | `HirebarApplication` | Repositorios, `SecretStore`, `Logger` |
 | `HirebarMedia` | Render de carrusel, video y hojas de vida; preparar la voz con ffmpeg; reconocimiento de voz | `HirebarApplication` | `MediaRenderer`, `AudioProcessor`, `SpeechRecognizer` |
-| `HirebarNotifications` | Notificaciones de macOS cuando Telegram no está configurado o falla; abren la bandeja del panel | `HirebarApplication` | `Messenger` |
+| `HirebarNotifications` | Notificaciones de macOS cuando Telegram no está configurado o falla; abren el panel | `HirebarApplication` | `Messenger` |
 | `Hirebar` | Panel, menú, Ajustes; raíz de composición: instancia adaptadores, los conecta a los puertos y arranca | Todos | Ejecutable |
 
 **Reglas de dependencia:**
@@ -204,7 +204,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
 | `HirebarCore/Log.swift` | Storage | `Logger` sobre `OSLog` (spec `023`) |
-| `HirebarCore/Telegram.swift`, `Notifier.swift` | Telegram + Notifications | `Messenger` y `CommandSource`; el envío por ntfy.sh se elimina (spec `012`) |
+| `HirebarCore/Telegram.swift`, `Notifier.swift`, `MacNotifications.swift` | Telegram + Notifications | `Messenger` y `CommandSource` |
 | `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarSources/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
@@ -231,8 +231,7 @@ Hirebar no expone una API HTTP. Consume:
 
 | Servicio | Uso | Adaptador |
 |---|---|---|
-| Telegram Bot API | `getUpdates` (long polling), `sendMessage`, `sendPhoto`, `sendVideo`, `sendDocument`, `editMessageReplyMarkup`, `answerCallbackQuery`, `getFile` | `HirebarTelegram` |
-| ntfy.sh | Respaldo cuando Telegram no está configurado: publica el aviso completo en un tema público. Se elimina en la spec `012-canal-de-mensajes` | `Notifier` (actual) |
+| Telegram Bot API | `getMe` (validar el token), `getUpdates` (long polling), `sendMessage`, `sendPhoto`, `sendVideo`, `sendDocument`, `editMessageReplyMarkup`, `answerCallbackQuery`, `getFile` | `HirebarTelegram` |
 | Portales incluidos | Páginas de búsqueda y de cada aviso (LinkedIn, Get on Board, Computrabajo, elempleo, Magneto, Workana, Freelancer) | `HirebarPortals` |
 
 ### 4.2 Mensajería: comandos de Telegram
@@ -286,7 +285,7 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 
 | Archivo | Contenido |
 |---|---|
-| `config.json` | Portales activos, motor de IA, nombre y chat de Telegram |
+| `config.json` | Portales activos, motor de IA, nombre y dueño del canal de Telegram (ID de usuario, chat, nombre) |
 | `workspace/perfil.json` · `perfil.md` | Perfil: única fuente de experiencia, habilidades y variantes de hoja de vida |
 | `workspace/agentes/<agente>.json` | Horario, envío automático, frecuencia y cupo de cada agente |
 | `workspace/search-profile.json` | Palabras de búsqueda y descartes de los portales incluidos |
@@ -329,8 +328,8 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 
 | Tema | Regla | Estado actual |
 |---|---|---|
-| Identidad de la persona | Un solo chat de Telegram, vinculado con un código que muestra la app | Se vincula el primer chat que escribe (spec `012`) |
-| Canal de respaldo | Notificaciones de macOS, locales, que llevan a la bandeja del panel | Sin Telegram, las listas completas salen por un tema público de ntfy.sh (spec `012`) |
+| Identidad de la persona | El bot atiende a un solo ID de usuario de Telegram, en su chat privado, anclado desde Ajustes tras validar el token y confirmar el nombre; límite de mensajes por minuto en `Resources/canal.json` | Cumple: mensajes y botones de otras cuentas o de grupos se ignoran y se registran sin contenido |
+| Canal de respaldo | Notificaciones de macOS, locales, que abren el panel | Cumple: sin Telegram, sin dueño o cuando un envío falla; ningún aviso sale a un servicio público |
 | Secretos | Token de Telegram y claves en el Llavero; nunca en archivos ni en el registro | Cumple |
 | Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | Cumple: perfiles `read` y `draft`; en lectura la IA no puede leer el perfil ni las hojas de vida. Riesgo residual de navegación documentado en `specs/010-separar-lectura-ejecucion/research.md` (R8) |
 | Acciones de la IA | Lista cerrada de acciones validada por la app | Cumple: catálogo de acciones, copia de lo aprobado fuera del workspace, registro y verificación de cada ejecución; una acción que no coincide pausa el agente |

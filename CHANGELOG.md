@@ -25,6 +25,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ### Cambiado
 - Se quitó el envío de avisos a ntfy.sh.
 - El video narrado usa el ffmpeg del sistema (`brew install ffmpeg`): Hirebar ya no instala Python ni ffmpeg por su cuenta y borra la copia vieja. Las notas de voz tienen un máximo de 5 minutos o 20 MB.
+- El registro usa el del sistema (OSLog) con una categoría por agente y por área; el botón **Registro** exporta los últimos 3 días.
 - Evals de las reglas de la IA: casos fijos de inyección y de cifras inventadas que el CI corre sobre respuestas grabadas y que se pueden correr contra la IA real (`HIREBAR_LIVE_EVALS=1`).
 - Las reglas de contenido y de envío de seguimientos tratan como contenido lo que leen; la de prospección prohíbe inventar resultados.
 - Modo práctica por agente: hace todo menos enviar y te cuenta lo que habría hecho (`practica empleo si`, casilla **Práctica** del panel, menú o Ajustes).

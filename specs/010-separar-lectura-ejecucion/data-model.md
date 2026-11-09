@@ -11,6 +11,8 @@ Catálogo cerrado (FR-005): `apply` (postular), `sendProposal`, `sendFollowUp`, 
   cuyo texto la persona ve antes de aprobar. En `apply` y `sendProposal` la IA redacta al ejecutar, y
   en `publish` el texto es el del borrador: se compara solo si la propuesta lo trae.
 - `alwaysNeedsApproval`: verdadero para `replyToClient` y `publish` (FR-015).
+- `requiresPriorContact`: verdadero para `sendFollowUp`; el envío automático solo lo aprueba si el
+  destino ya recibió una acción verificada del agente (FR-016a).
 
 ## Proposal
 
@@ -29,13 +31,16 @@ Resultado de una fase de lectura.
 
 ## Target
 
-`url(String)` normalizado sin parámetros de seguimiento, `email(String)` en minúsculas, o
-`account(network, handle)`.
+`url(String)`, `email(String)` o `account(network, handle)`. Se normaliza y valida con `TargetRules`
+(`Resources/destinos.json`): el enlace conserva los parámetros que identifican el elemento y quita los
+de seguimiento; el correo va en minúsculas y con dominio; la red pertenece al catálogo de cuentas.
+Un JSON con más de una forma se rechaza.
 
 ## ApprovedItem
 
 `Proposal` aprobada, con `approvedAt`, `approvedBy` (`person` o `autoSend`) y el lote al que
-pertenece. Se guarda en `estado/aprobados/<lote>.json`, fuera del workspace.
+pertenece. Se guarda con el agente en `estado/aprobados/<lote>.json`, fuera del workspace. Mientras no
+tiene verificación reserva cupo; si el lote no llega a ejecutarse, se borra.
 
 ## ActionRecord
 
@@ -70,6 +75,12 @@ Por cada `ActionRecord`: `authorized`, `unauthorized(reason)` o `unverified(reas
 
 Se guarda en `estado/pausas.json`. Mientras existe, el agente no lanza ejecuciones (FR-010). Solo la
 persona la levanta (FR-011a).
+
+## Propuestas ya mostradas
+
+`estado/vistos.json`: clave por acción, destino normalizado y, si la acción envía texto, la huella
+del texto. Una propuesta igual no se vuelve a mostrar en 30 días; un mensaje nuevo a la misma
+conversación sí.
 
 ## RunProfile (HirebarApplication)
 

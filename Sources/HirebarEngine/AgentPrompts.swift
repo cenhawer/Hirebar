@@ -147,10 +147,7 @@ struct AgentPrompts {
         switch batch.mode {
         case .linkedInDraft:
             let account = stores.contentAccounts.find(batch.account) ?? stores.contentAccounts.defaultAccount()
-            let note =
-                (try? String(contentsOf: account.changes, encoding: .utf8))?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            try? FileManager.default.removeItem(at: account.changes)
+            let note = stores.contentAccounts.takeChangeRequest(account)
             let change = note.isEmpty ? "" : "\n\nCambio que pidió \(owner) sobre el borrador anterior: \(note)"
             let review =
                 stores.contentAccounts.needsPerformanceCheck(account)
@@ -228,9 +225,7 @@ struct AgentPrompts {
                 perfiles ni configuración, y no propongas cambios automáticos; \(owner) decide qué ajustar.
                 """
         case .profileUpdate:
-            let request =
-                (try? String(contentsOf: Paths.workspaceFile(ProfileRequests.fileName), encoding: .utf8))?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let request = stores.profile.changeRequests()
             let what =
                 request.isEmpty ? "No hay cambios nuevos: solo regenera las hojas de vida." : "Cambios que pidió \(owner):\n\(request)"
             return """

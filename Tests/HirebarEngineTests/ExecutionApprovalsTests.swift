@@ -36,7 +36,7 @@ final class ExecutionApprovalsTests: XCTestCase {
                 + #"{"n": 2, "tipo": "RESPUESTA", "nombre": "Beta", "correo": "ana@beta.co", "asunto": "Re: propuesta", "#
                 + #""cuerpo": "Gracias"}"#
         )
-        guard case .found(let drafts) = ExecutionApprovals.emailDrafts(rules: rules, pending: file) else {
+        guard case .found(let drafts) = ExecutionApprovals.emailDrafts(rules: rules, pending: try Data(contentsOf: file)) else {
             return XCTFail("debía leer los correos")
         }
         XCTAssertEqual(drafts.map(\.kind), ["EMPRESA", "RESPUESTA"])
@@ -53,21 +53,21 @@ final class ExecutionApprovalsTests: XCTestCase {
     func testEmailListWithAnInvalidRecipientOrRepeatedNumberIsNotOffered() throws {
         let broken = try pending(
             #"{"n": 1, "tipo": "EMPRESA", "nombre": "Acme", "correo": "sin-arroba", "asunto": "Hola", "cuerpo": "Texto"}"#)
-        guard case .invalid(let ids) = ExecutionApprovals.emailDrafts(rules: rules, pending: broken) else {
+        guard case .invalid(let ids) = ExecutionApprovals.emailDrafts(rules: rules, pending: try Data(contentsOf: broken)) else {
             return XCTFail("debía rechazarla")
         }
         XCTAssertEqual(ids, ["1"])
         let repeated = try pending(
             #"{"n": 3, "tipo": "EMPRESA", "nombre": "A", "correo": "a@a.co", "asunto": "x", "cuerpo": "y"}, "#
                 + #"{"n": 3, "tipo": "EMPRESA", "nombre": "B", "correo": "b@b.co", "asunto": "x", "cuerpo": "y"}"#)
-        guard case .invalid(let repeatedIds) = ExecutionApprovals.emailDrafts(rules: rules, pending: repeated) else {
+        guard case .invalid(let repeatedIds) = ExecutionApprovals.emailDrafts(rules: rules, pending: try Data(contentsOf: repeated)) else {
             return XCTFail("debía rechazarla")
         }
         XCTAssertEqual(repeatedIds, ["3"])
     }
 
     func testWithoutPendingEmailsThereIsNothingToOffer() {
-        guard case .none = ExecutionApprovals.emailDrafts(rules: rules, pending: folder.appendingPathComponent("nada.json")) else {
+        guard case .none = ExecutionApprovals.emailDrafts(rules: rules, pending: nil) else {
             return XCTFail("no debía haber correos")
         }
     }

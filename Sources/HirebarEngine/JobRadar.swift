@@ -18,7 +18,7 @@ public final class JobRadar: Radar {
 
     public init(stores: Repositories) {
         self.stores = stores
-        super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21)
+        super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21, runState: stores.runState)
     }
 
     override var intervalMinutes: Int { stores.agents.load(.jobs).searchEveryMinutes ?? stores.config.load().jobMinutes }

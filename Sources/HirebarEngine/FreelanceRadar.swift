@@ -16,7 +16,7 @@ public final class FreelanceRadar: Radar {
 
     public init(stores: Repositories) {
         self.stores = stores
-        super.init(firstDelay: 60, seenKey: "radar.seen", seenDays: 14)
+        super.init(firstDelay: 60, seenKey: "radar.seen", seenDays: 14, runState: stores.runState)
     }
 
     override var intervalMinutes: Int { stores.agents.load(.freelance).searchEveryMinutes ?? stores.config.load().freelanceMinutes }

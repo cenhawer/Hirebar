@@ -20,7 +20,6 @@ public final class Scheduler {
 
     public var onChange: (() -> Void)?
     private var timer: Timer?
-    private let defaults = UserDefaults.standard
 
     public func start() {
         timer?.invalidate()
@@ -44,8 +43,7 @@ public final class Scheduler {
     }
 
     private func once(_ key: String, _ action: () -> Void) {
-        guard !defaults.bool(forKey: key) else { return }
-        defaults.set(true, forKey: key)
+        guard stores.runState.claim(key) else { return }
         action()
     }
 

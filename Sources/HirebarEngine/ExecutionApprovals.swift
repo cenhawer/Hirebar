@@ -20,6 +20,7 @@ enum ExecutionApprovals {
         switch mode {
         case .jobs: action = .apply
         case .freelance: action = .sendProposal
+        case .followUpSend: action = .sendFollowUp
         default: return nil
         }
         return Proposal(

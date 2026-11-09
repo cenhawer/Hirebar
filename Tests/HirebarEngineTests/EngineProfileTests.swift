@@ -140,4 +140,31 @@ final class EngineProfileTests: XCTestCase {
         XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanJobs), .jobs)
         XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanFreelance), .freelance)
     }
+
+    func testSocialAndFollowUpsProposeAndRunThroughTheirOwnExecution() {
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .social), [.apply, .draftEmail])
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .followUp), [.sendFollowUp, .replyToClient])
+        XCTAssertEqual(TaskProfiles.executionMode(for: .social), .jobs)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .followUp), .followUpSend)
+        XCTAssertEqual(TaskProfiles.profile(for: .followUpSend, account: nil), .act)
+        XCTAssertEqual(AgentKind.owner(of: .followUpSend), .freelance)
+        XCTAssertTrue(Mode.followUpSend.hasItems)
+    }
+
+    func testProspectingGetsPastEmployersAndAchievementsWithoutContactData() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("perfil-\(UUID().uuidString).json")
+        let profile = """
+            {"person": {"email": "yo@ejemplo.com", "phone": "300"},
+             "experience": [
+               {"role": "Backend", "company": "Acme", "achievements": [{"text": "Bajé el despliegue de 30 a 10 minutos"}]},
+               {"role": "Dev", "company": "Beta", "achievements": []}
+             ]}
+            """
+        try profile.write(to: file, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: file) }
+        XCTAssertEqual(AgentPrompts.pastEmployers(from: file), ["Acme", "Beta"])
+        let achievements = AgentPrompts.achievements(from: file)
+        XCTAssertEqual(achievements, ["- Bajé el despliegue de 30 a 10 minutos (Backend en Acme)"])
+        XCTAssertFalse(achievements.joined().contains("yo@ejemplo.com"))
+    }
 }

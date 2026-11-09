@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptado · 2026-11-05
+Aceptado · 2026-11-05 · aplicado en la spec `016-herramientas-en-ejecucion`
 
 ## Contexto
 

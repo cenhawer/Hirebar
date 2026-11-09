@@ -11,6 +11,7 @@ Está dividida en agentes independientes, cada uno con su horario: **Empleo, Fre
 - Una IA de terminal con sesión iniciada. Por defecto, [Claude Code](https://claude.com/claude-code) (`claude` en la terminal) con la extensión Claude in Chrome. Para usar otra, mira "Motor de IA" en la [guía de uso](GUIA.md).
 - Google Chrome con tu sesión iniciada en los portales donde quieres que postule.
 - Un bot de Telegram (se crea con @BotFather en un minuto).
+- ffmpeg, solo si vas a usar el video narrado con tu voz: `brew install ffmpeg`. Hirebar no instala herramientas por su cuenta.
 
 ## Instalación
 

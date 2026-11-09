@@ -8,10 +8,12 @@ enum SettingsPage: Hashable {
     case skills
     case content
     case engine
+    case channel
 }
 
 final class SettingsWindowController {
     private let model = SettingsModel()
+    let channel = ChannelSettingsModel()
     private var window: NSWindow?
 
     var onSaved: (() -> Void)? {
@@ -23,7 +25,7 @@ final class SettingsWindowController {
         model.reload()
         if let page { model.selection = page }
         if window == nil {
-            let controller = NSHostingController(rootView: SettingsView(model: model))
+            let controller = NSHostingController(rootView: SettingsView(model: model, channel: channel))
             let window = NSWindow(contentViewController: controller)
             window.title = "Ajustes de Hirebar"
             window.setContentSize(NSSize(width: 820, height: 560))
@@ -177,7 +179,7 @@ final class SettingsModel: ObservableObject {
         switch selection {
         case .skills:
             NSWorkspace.shared.activateFileViewerSelecting([Profile.url])
-        case .engine:
+        case .engine, .channel:
             NSWorkspace.shared.activateFileViewerSelecting([Paths.config])
         case .content:
             if !FileManager.default.fileExists(atPath: ContentAccountStore.url.path) {
@@ -194,6 +196,7 @@ final class SettingsModel: ObservableObject {
 
 struct SettingsView: View {
     @ObservedObject var model: SettingsModel
+    @ObservedObject var channel: ChannelSettingsModel
 
     var body: some View {
         HStack(spacing: 0) {
@@ -216,6 +219,8 @@ struct SettingsView: View {
                 Section("General") {
                     Label("Motor de IA", systemImage: "cpu")
                         .tag(SettingsPage.engine)
+                    Label("Telegram y avisos", systemImage: "paperplane")
+                        .tag(SettingsPage.channel)
                 }
             }
             .listStyle(.sidebar)
@@ -244,6 +249,8 @@ struct SettingsView: View {
             ContentAccountsEditor(accounts: $model.contentAccounts)
         case .engine:
             EngineEditor(model: model)
+        case .channel:
+            ChannelSettingsView(model: channel)
         case nil:
             Text("Elige un agente a la izquierda.")
                 .foregroundStyle(.secondary)

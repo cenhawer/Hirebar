@@ -56,10 +56,18 @@ struct PanelView: View {
                 }
             }
             Spacer()
-            Image(systemName: "paperplane.fill")
-                .font(.system(size: 11))
-                .foregroundStyle(model.telegramReady ? Color.blue : Color.secondary)
-                .help(model.telegram)
+            Button {
+                model.editChannel()
+            } label: {
+                if model.telegramReady {
+                    Image(systemName: "paperplane.fill").foregroundStyle(Color.blue)
+                } else {
+                    Label(model.telegram, systemImage: "paperplane").foregroundStyle(Color.orange)
+                }
+            }
+            .buttonStyle(.borderless)
+            .font(.system(size: 11))
+            .help(model.telegram)
         }
     }
 
@@ -80,9 +88,7 @@ struct PanelView: View {
                 Button("Ajustes…") { model.editSettings(nil) }
                 Button("Cuentas de contenido…") { model.editContentAccounts() }
                 Divider()
-                Button("Configurar bot de Telegram…") { model.onConfigureTelegram?() }
-                Button("Enviar aviso de prueba") { model.onSendTest?() }
-                Button("Volver a vincular el chat") { model.onForgetChat?() }
+                Button("Telegram y avisos…") { model.editChannel() }
                 Divider()
                 Toggle("Abrir al iniciar sesión", isOn: Binding(get: { model.opensAtLogin }, set: { _ in model.toggleLogin() }))
                 Divider()

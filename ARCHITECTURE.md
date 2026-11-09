@@ -144,12 +144,13 @@ flowchart TB
 
 ### 3.1.1 Perfiles de ejecución de la IA
 
-Cada ejecución lleva un perfil. Los perfiles de cada motor viven en `Resources/perfiles-ia.json`,
-dentro del bundle de la app y fuera del alcance de la IA.
+Cada ejecución lleva un perfil. Los perfiles de cada motor viven en `Resources/perfiles-ia.json`, y
+las reglas para comparar destinos (parámetros de seguimiento que se ignoran) en
+`Resources/destinos.json`; los dos van dentro del bundle de la app, fuera del alcance de la IA.
 
 | Perfil | Puede | No puede | Tareas |
 |---|---|---|---|
-| `read` | Leer archivos de la carpeta de trabajo, buscar en la web, ver páginas en Chrome | Escribir archivos, hacer clic, escribir en formularios, ejecutar código, enviar | Redes, portales propios |
+| `read` | Leer archivos de la carpeta de trabajo, buscar en la web, ver páginas en Chrome | Escribir archivos, descargar direcciones con `WebFetch`, hacer clic, escribir en formularios, ejecutar código, enviar | Redes, portales propios |
 | `draft(rutas)` | Lo de `read`, más escribir solo en las rutas declaradas | Lo demás de `read` | Clientes, seguimientos, contenido, perfil, análisis |
 | `act` | Leer, escribir en la carpeta de trabajo y usar Chrome para actuar | Escribir fuera de la carpeta de trabajo | Postular, enviar propuestas, seguimientos, correos, publicar |
 
@@ -157,7 +158,9 @@ Las tareas `read` y `draft` que proponen envíos devuelven sus propuestas en el 
 `HIREBAR_PROPOSALS_BEGIN` … `HIREBAR_PROPOSALS_END` de su salida (esquema en
 `specs/010-separar-lectura-ejecucion/contracts/propuestas.schema.json`). Las ejecuciones `act` dejan
 `workspace/ejecuciones/<lote>.acciones.json` (esquema en `contracts/registro-acciones.schema.json`), y la
-app verifica cada acción contra la copia de lo aprobado. Codex y Gemini CLI no tienen perfil `read`
+app verifica cada acción contra la copia de lo aprobado. Toda lista para aprobar se arma desde la copia
+que la app guarda al mostrarla, con destino y texto completos, también los correos de prospección:
+la ejecución nunca relee un archivo que escribió la IA para decidir qué enviar. Codex y Gemini CLI no tienen perfil `read`
 con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 ### 3.2 Casos de uso
@@ -294,7 +297,8 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `workspace/postulaciones.md` · `historial-propuestas.md` · `informes/` · `ejecuciones/` · `prospeccion/` | Registros de lo enviado, análisis y salidas de cada ejecución |
 | `workspace/contenido/cuentas.json` · `contenido/<cuenta>/` | Cuentas de contenido; borrador, láminas, guion, video, grabación y rendimiento |
 | `workspace/ejecuciones/<lote>.acciones.json` | Registro de acciones de una ejecución `act` |
-| `estado/aprobados/<lote>.json` · `estado/verificaciones/<lote>.json` · `estado/pausas.json` | Copia de lo aprobado, verificación de cada acción y pausas de agentes; fuera del workspace, donde la IA no escribe |
+| `estado/propuestas/<lote>.json` · `estado/aprobados/<lote>.json` · `estado/verificaciones/<lote>.json` | Copia de cada lista tal como se mostró, de lo aprobado (con su agente) y verificación de cada acción; fuera del workspace, donde la IA no escribe |
+| `estado/pausas.json` · `estado/vistos.json` | Pausas de agentes y propuestas ya mostradas en los últimos 30 días |
 
 **Estado actual:** los archivos no tienen `schemaVersion` y parte del estado vive en `UserDefaults`
 (`telegram.offset`, `video.esperandoVoz`, `portals.seen`, `radar.seen`, `jobradar.seen` y las

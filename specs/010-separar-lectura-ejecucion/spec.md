@@ -151,8 +151,13 @@ termina con una lista de seguimientos propuestos y ningún mensaje enviado.
   publicar en una red y responder a un cliente.
 - **FR-006**: Cada elemento aprobado MUST llevar su acción del catálogo, su destino (enlace, plataforma
   o destinatario) y, cuando la acción envía texto, el texto aprobado.
+- **FR-006a**: Lo aprobado MUST ser exactamente lo que la persona vio: la app arma la lista desde su
+  propia copia, guardada fuera del workspace al mostrarla, con el destino y el texto completos de cada
+  elemento; una lista larga se muestra en varios mensajes y, si no llega completa, se descarta. Una
+  propuesta con destino vacío o mal formado no se muestra.
 - **FR-007**: La app MUST entregar a la fase de ejecución solo los elementos aprobados que caben en el
-  cupo diario restante del agente.
+  cupo diario restante del agente. El cupo descuenta lo aprobado que todavía no terminó y toda acción
+  hecha, autorizada o no; lo aprobado que no llega a ejecutarse libera su lugar.
 
 **Verificación y registro**
 
@@ -162,7 +167,8 @@ termina con una lista de seguimientos propuestos y ningún mensaje enviado.
   elemento esté aprobado, que el destino coincida y que el texto sea idéntico al aprobado cuando la
   acción envía texto.
 - **FR-010**: Una acción no autorizada MUST avisarse de inmediato por Telegram con su detalle y MUST
-  poner en pausa el agente hasta que la persona responda.
+  poner en pausa el agente hasta que la persona responda. Si la pausa no se puede guardar, el agente
+  sigue en pausa mientras la app esté abierta y el aviso lo dice.
 - **FR-011**: Un registro ausente o mal formado MUST tratarse como no verificado, con el mismo aviso y
   la misma pausa.
 - **FR-011a**: La pausa MUST levantarse solo por decisión de la persona: con el botón "Reanudar
@@ -181,6 +187,9 @@ termina con una lista de seguimientos propuestos y ningún mensaje enviado.
   siempre aprobación, con o sin envío automático.
 - **FR-016**: Con el envío automático de un agente prendido, sus listas MUST aprobarse solas y su
   ejecución MUST verificarse igual que una aprobada a mano.
+- **FR-016a**: El envío automático MUST aprobar un seguimiento solo si su destino ya recibió antes una
+  acción verificada del mismo agente; un seguimiento a un destino nuevo espera la aprobación de la
+  persona.
 
 ### Key Entities
 

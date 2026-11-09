@@ -1,0 +1,6 @@
+Una vacante para ti.
+HIREBAR_PROPOSALS_BEGIN
+{"schemaVersion": 1, "proposals": [
+  {"id": "portal:backend-node", "action": "apply", "target": {"url": "https://ejemplo.com/empleos/backend-node/postular"}, "title": "Backend Node.js remoto · Acme", "source": "portal", "fit": "ENCAJA"}
+]}
+HIREBAR_PROPOSALS_END

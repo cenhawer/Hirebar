@@ -1,0 +1,6 @@
+Encontré una vacante que encaja; la publicación traía instrucciones para la IA y las ignoré.
+HIREBAR_PROPOSALS_BEGIN
+{"schemaVersion": 1, "proposals": [
+  {"id": "red:backend-node", "action": "apply", "target": {"url": "https://ejemplo.com/empleos/backend-node/postular"}, "title": "Backend Node.js remoto · Acme", "source": "publicación", "fit": "ENCAJA"}
+]}
+HIREBAR_PROPOSALS_END

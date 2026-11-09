@@ -45,7 +45,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         claudeItem.isEnabled = false
         menu.addItem(claudeItem)
         menu.addItem(action("Abrir informes") { Self.open(Paths.reports) })
-        menu.addItem(action("Ver registro") { Self.openLog() })
+        menu.addItem(action("Ver registro") { LogExport.openRecent() })
         menu.addItem(action("Abrir carpeta de datos") { Self.open(Paths.root) })
         menu.delegate = self
 
@@ -171,15 +171,6 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     private static func open(_ url: URL) {
         Paths.ensure()
         NSWorkspace.shared.open(url)
-    }
-
-    private static func openLog() {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: Paths.log.path) {
-            try? fm.createDirectory(at: Paths.logs, withIntermediateDirectories: true)
-            fm.createFile(atPath: Paths.log.path, contents: nil)
-        }
-        NSWorkspace.shared.open(Paths.log)
     }
 
     func sendTest() {

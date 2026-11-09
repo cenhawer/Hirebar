@@ -146,7 +146,9 @@ red, firma, paleta, días y video.
   esa; si no, se responde que no hay ningún video esperando voz.
 - No se puede descargar el audio de Telegram: se pide que lo manden otra vez.
 - No sale la vista previa sin voz: se manda igual el guion y se avisa.
-- ffmpeg no está instalado: hoy la app lo instala con `pip` la primera vez.
+- ffmpeg no está instalado: la respuesta a la nota de voz y Ajustes de la cuenta dicen el comando
+  para instalarlo (`brew install ffmpeg`); la app no descarga nada.
+- El audio supera el máximo de `Resources/herramientas.json`: no se descarga y se dice el máximo.
 - Una publicación ya está en curso para la misma cuenta: un nuevo `post` responde que ya está en
   curso.
 - La sesión de la IA venció, una ejecución pasa de una hora o la app se reinicia: igual que en
@@ -246,7 +248,6 @@ red, firma, paleta, días y video.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| ffmpeg se instala con `pip` mientras la app corre | V | `016-herramientas-en-ejecucion` |
 | El permiso de Reconocimiento de voz se pide al llegar la primera nota de voz | V | `025-asistente-primer-uso` |
 | La cuenta que espera voz se guarda en `UserDefaults` | IV | `022-version-datos` |
 | Las grabaciones de voz, borradores descartados y publicaciones anteriores no tienen retención | IV | `029-politica-datos` |

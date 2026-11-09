@@ -14,7 +14,7 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 - **Nombre y descripción:** qué hace.
 - **"en 5 min", "en 19 h", "a pedido", "trabajando":** cuándo vuelve a correr solo.
 - **Interruptor:** lo prende o lo apaga. Apagar uno no afecta a los demás.
-- **Flecha ›:** abre el detalle: estado, números de la semana, casilla **Envío automático**, botón **Correr ahora** y menú **⋯** (portales, horario y ajustes del agente).
+- **Flecha ›:** abre el detalle: estado, números de la semana, casilla **Envío automático** (al prenderla te muestra qué hará el agente sin esperarte y pide confirmar), botón **Correr ahora** y menú **⋯** (portales, horario y ajustes del agente).
 
 ### Pie
 - **Informes:** análisis de cada semana.
@@ -195,7 +195,7 @@ Quedan guardadas en `workspace/contenido/cuentas.json`.
 | Buscar ya | `buscar` · `buscar empleo` · `buscar freelance` |
 | Correr un agente ya | `corre clientes` · `corre contenido` · `corre analista` |
 | Prender o apagar un agente | `agente clientes off` · `agente clientes on` |
-| Envío automático | `auto si` · `auto no` (Empleo y Freelance) · `auto empleo no` · `auto clientes si` |
+| Envío automático | `auto si` · `auto no` (Empleo y Freelance) · `auto empleo no` · `auto clientes si`. Para prenderlo te llega qué hará cada agente y se prende con el botón **Sí, prender**; apagarlo es inmediato |
 | Sacar un agente de la pausa | `reanudar empleo` (o el botón **Reanudar** del aviso) |
 | Aprobar o descartar una lista | `si` · `si 1 3` · `no` (o los botones del mensaje) |
 | Correos del día | `envia correos` · `envia correos 1 3` · `no correos` |

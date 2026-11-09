@@ -11,6 +11,8 @@ public struct TelegramMessage: Sendable {
     public var audioFileId: String? = nil
     /// Extensión del audio recibido (oga para notas de voz).
     public var audioExtension: String = "oga"
+    public var audioBytes: Int?
+    public var audioSeconds: Int?
 }
 
 public enum BotCheck: Equatable, Sendable {
@@ -159,6 +161,8 @@ public final class Telegram: @unchecked Sendable {
                 chatId: chatId, text: message["caption"] as? String ?? "", replyTo: reply?.intValue, callbackId: nil)
             result.audioFileId = fileId
             result.audioExtension = ext
+            result.audioBytes = (audio["file_size"] as? NSNumber)?.intValue
+            result.audioSeconds = (audio["duration"] as? NSNumber)?.intValue
             result.sender = from
             return result
         }
@@ -254,7 +258,7 @@ public final class Telegram: @unchecked Sendable {
     }
 
     /// Descarga un archivo que mandó la persona (por ejemplo, una nota de voz). Llamar desde un hilo de fondo.
-    public func download(fileId: String, to target: URL) -> Bool {
+    public func download(fileId: String, to target: URL, maxBytes: Int? = nil) -> Bool {
         guard let token = currentToken(),
               let info = call("getFile", ["file_id": fileId]),
               let path = (info["result"] as? [String: Any])?["file_path"] as? String,
@@ -267,7 +271,7 @@ public final class Telegram: @unchecked Sendable {
             done.signal()
         }.resume()
         done.wait()
-        guard let data = box.data, data.count > 500 else { return false }
+        guard let data = box.data, data.count > 500, data.count <= (maxBytes ?? Int.max) else { return false }
         return (try? data.write(to: target, options: .atomic)) != nil
     }
 

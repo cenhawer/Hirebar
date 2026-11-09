@@ -27,8 +27,10 @@ publicar.
 
 1. **Given** Ajustes → Motor de IA, **When** la persona elige una opción, **Then** ve cómo
    instalarla, cómo darle acceso al navegador y, para Codex y Gemini, el comando que se usará.
-2. **Given** la opción "Otra IA", **When** la persona escribe su comando, **Then** ve las variables
-   `HIREBAR_PROMPT`, `HIREBAR_INSTRUCTIONS`, `HIREBAR_FULL_PROMPT` y `HIREBAR_WORKSPACE` que recibe.
+2. **Given** la opción "Otra IA", **When** la persona escribe sus comandos de lectura y de ejecución,
+   **Then** ve las variables que reciben (`HIREBAR_PROMPT`, `HIREBAR_INSTRUCTIONS`,
+   `HIREBAR_FULL_PROMPT`, `HIREBAR_WORKSPACE`, `HIREBAR_PHASE`, `HIREBAR_WRITABLE_PATHS`) y una
+   advertencia de que Hirebar no puede verificar sus permisos.
 3. **Given** una IA elegida, **When** la persona pulsa Probar, **Then** Hirebar le pide responder
    "OK" sin navegador y, en máximo 180 segundos, dice si funcionó, si falta iniciar sesión (con el
    comando para entrar) o el error.
@@ -53,9 +55,9 @@ doble de `Messenger`.
 **Acceptance Scenarios**:
 
 1. **Given** Claude Code elegido, **When** se lanza una tarea, **Then** corre `claude -p` con el
-   pedido, las reglas de la tarea como instrucciones de sistema, las herramientas Read, Write, Edit,
-   Glob, Grep, WebFetch y WebSearch, y Claude in Chrome salvo en la preparación de contenido sin
-   revisión de rendimiento.
+   pedido, las reglas de la tarea como instrucciones de sistema y el perfil de la tarea
+   (`--permission-mode dontAsk --restricted` y las herramientas de lectura, redacción o ejecución de
+   `perfiles-ia.json`), con Claude in Chrome solo si la tarea lo necesita.
 2. **Given** Codex, Gemini u otra IA, **When** se lanza una tarea, **Then** corre su comando en una
    terminal con las cuatro variables `HIREBAR_*`, en la carpeta de trabajo.
 3. **Given** una tarea en curso, **When** se lanza otra, **Then** la segunda espera en la fila.
@@ -104,8 +106,8 @@ la lista queda pendiente y llega un único aviso por hora.
   sesión.
 - La IA no se puede abrir: la lista queda "error", se avisa y sigue la siguiente.
 - La salida está vacía con código 0: se trata como error.
-- Codex o Gemini necesitan un servidor MCP de Chrome para usar el navegador: Hirebar no verifica que
-  esté configurado, y qué pasa sin él depende de cada IA.
+- Con Codex o Gemini, una tarea que lee con el navegador no corre: se avisa que necesita Claude Code.
+  En ejecución usan su servidor MCP de Chrome, que Hirebar no verifica.
 
 ## Requirements *(mandatory)*
 
@@ -115,19 +117,20 @@ la lista queda pendiente y llega un único aviso por hora.
 
 - **FR-001**: La persona MUST poder elegir Claude Code (por defecto), Codex, Gemini CLI u Otra IA, y
   guardar la elección en `config.json`.
-- **FR-002**: Para Codex y Gemini, Hirebar MUST usar un comando fijo (`codex exec --sandbox
-  workspace-write …`, `gemini --approval-mode yolo …`) que se muestra en Ajustes; Otra IA usa el
-  comando de la persona.
+- **FR-002**: Para Codex y Gemini, Hirebar MUST usar los comandos de cada fase de `perfiles-ia.json`
+  (lectura con `--sandbox read-only` o `--approval-mode default`), que se muestran en Ajustes; Otra IA
+  usa el comando de lectura o el de ejecución de la persona.
 - **FR-003**: Probar MUST lanzar la IA sin navegador con la pregunta "Responde solo: OK", esperar
   hasta 180 segundos y clasificar el resultado en funciona, falta iniciar sesión o error.
 
 **Ejecución**
 
-- **FR-004**: Claude Code MUST lanzarse con `-p <pedido>`, `--permission-mode bypassPermissions`,
-  las herramientas Read, Write, Edit, Glob, Grep, WebFetch y WebSearch, `--append-system-prompt-file`
-  con las reglas de la tarea y, con navegador, `--chrome` y las herramientas de Claude in Chrome.
+- **FR-004**: Claude Code MUST lanzarse con `-p <pedido>`, `--permission-mode dontAsk`, `--restricted`,
+  las herramientas y reglas de permiso del perfil de la tarea (spec `010-separar-lectura-ejecucion`),
+  `--append-system-prompt-file` con las reglas de la tarea y, si la tarea lo necesita, `--chrome`.
 - **FR-005**: Las demás IA MUST lanzarse con `zsh -lc <comando>` y las variables `HIREBAR_PROMPT`,
-  `HIREBAR_INSTRUCTIONS`, `HIREBAR_FULL_PROMPT` (reglas y pedido juntos) y `HIREBAR_WORKSPACE`.
+  `HIREBAR_INSTRUCTIONS`, `HIREBAR_FULL_PROMPT` (reglas y pedido juntos), `HIREBAR_WORKSPACE`,
+  `HIREBAR_PHASE` y `HIREBAR_WRITABLE_PATHS`.
 - **FR-006**: Toda ejecución MUST correr en la carpeta de trabajo, sin entrada estándar, con su
   salida y sus errores en `workspace/ejecuciones/<lote>.txt` y `.log`.
 - **FR-007**: Las ejecuciones MUST ser de a una; una misma tarea MUST NOT encolarse dos veces para la
@@ -177,8 +180,6 @@ la lista queda pendiente y llega un único aviso por hora.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| Los tres motores corren sin pedir permisos (`bypassPermissions`, `--sandbox workspace-write`, `--approval-mode yolo`) en todas las tareas, incluidas las que leen contenido externo | III | `010-separar-lectura-ejecucion` |
-| Las acciones que hace la IA no pasan por una lista cerrada que valide la app | III | `010-separar-lectura-ejecucion` |
 | Los registros de cada ejecución en `workspace/ejecuciones/` pueden contener datos personales y no tienen retención definida | IV | `023-logs-oslog` · `029-politica-datos` |
 | Rutas de instalación, mensajes de sesión vencida, plazos (1 hora, 24 horas, 180 segundos) y comandos de cada motor escritos en el código | VI | `024-textos-y-valores-fuera-del-codigo` |
 | El lanzamiento usa `Process` desde el motor, sin puerto | VIII | `017-arquitectura-hexagonal` (`AIRunner`) |

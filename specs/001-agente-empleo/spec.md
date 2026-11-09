@@ -106,21 +106,22 @@ pendiente con esos hallazgos y no envía nada.
 ### User Story 4 - Vacantes publicadas en redes (Priority: P2)
 
 La IA busca cada dos horas, de 8 a 20 h, publicaciones recientes en LinkedIn y en la web donde alguien
-ofrece una vacante que encaja, y actúa sobre ellas.
+ofrece una vacante que encaja, y se las propone a la persona como lista para aprobar.
 
 **Why this priority**: esas vacantes se llenan rápido y no aparecen en los portales.
 
-**Independent Test**: con un doble de `AIRunner`, la tarea se lanza a las horas configuradas y su
-respuesta llega a Telegram salvo que sea `SIN_NOVEDADES`.
+**Independent Test**: con el motor de prueba y el fixture `social`, la tarea termina con una lista
+pendiente y ningún envío.
 
 **Acceptance Scenarios**:
 
 1. **Given** el agente prendido, **When** llega una de las horas de la tarea "Buscar vacantes en
    redes", **Then** la IA recibe la orden de buscar publicaciones de las últimas horas.
-2. **Given** una publicación con enlace para postular, **When** la IA la encuentra, **Then** postula
-   **sin pedir aprobación**, aunque el envío automático esté apagado.
+2. **Given** una publicación con enlace para postular, **When** la IA la encuentra, **Then** la propone
+   como postulación en la lista; se postula solo al aprobarla o con el envío automático de Empleo.
 3. **Given** una publicación que pide la hoja de vida por correo, **When** la IA la encuentra,
-   **Then** deja un borrador en Gmail sin enviarlo.
+   **Then** propone un borrador de correo con su texto; el borrador se deja en Gmail, sin enviarlo,
+   solo al aprobarlo.
 4. **Given** que no hubo nada nuevo, **When** la IA responde `SIN_NOVEDADES`, **Then** no se envía
    nada por Telegram.
 
@@ -212,6 +213,9 @@ defecto.
   vacante, y marcar PENDIENTE si hace falta contraseña, cuenta nueva o CAPTCHA.
 - **FR-016**: La IA MUST registrar cada vacante en `postulaciones.md` y sumar sus números en
   `metricas-claude.json`, y su respuesta MUST llegar a Telegram.
+- **FR-016a**: La ejecución MUST recibir solo lo aprobado que cabe en el cupo diario restante y dejar el
+  registro de acciones que la app verifica; una acción que no coincide pone el agente en pausa (spec
+  `010-separar-lectura-ejecucion`).
 
 **Portales propios**
 
@@ -223,7 +227,8 @@ defecto.
 **Redes**
 
 - **FR-019**: La tarea "Buscar vacantes en redes" MUST correr a las horas configuradas (8, 10, 12,
-  14, 16, 18 y 20 h por defecto) y actuar sobre lo que encuentra según `instrucciones-redes.md`.
+  14, 16, 18 y 20 h por defecto) con permisos de solo lectura y devolver lo que encuentra como lista
+  para aprobar (postular o borrador de correo), según `instrucciones-redes.md`.
 
 **Configuración y estado**
 
@@ -277,8 +282,6 @@ defecto.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| La tarea de redes postula sin aprobación aunque el envío automático esté apagado (US4, escenario 2) | II | `010-separar-lectura-ejecucion` · `011-confirmar-envio-automatico` |
-| La IA lee vacantes y publicaciones con permisos para actuar | III | `010-separar-lectura-ejecucion` |
 | El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
 | Sin Telegram, la lista completa sale por un tema público de ntfy.sh | IV | `012-canal-de-mensajes`: se elimina ntfy.sh y el respaldo pasa a notificaciones de macOS |

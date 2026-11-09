@@ -91,7 +91,8 @@ números con las etiquetas de su embudo.
 - **FR-001**: La tarea "Análisis semanal" MUST correr a las horas configuradas (domingo 18 h por
   defecto, con 30 horas de tolerancia) y con `informe`.
 - **FR-002**: La IA MUST recibir la orden explícita de solo analizar: no cambiar reglas, perfiles,
-  agentes ni configuración, y no proponer cambios automáticos.
+  agentes ni configuración, y no proponer cambios automáticos; sus permisos MUST limitarla a escribir en
+  `informes/`.
 - **FR-003**: La IA MUST leer `metricas-radar.json`, `metricas-claude.json`, `seguimiento.json`,
   `historial-propuestas.md`, `postulaciones.md`, `lotes.json`, `cupos.json`,
   `prospeccion/prospectos.md` y `agentes/*.json`.
@@ -138,7 +139,6 @@ números con las etiquetas de su embudo.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| Que el análisis no cambie nada depende solo de la instrucción a la IA: tiene permisos para escribir cualquier archivo | III | `010-separar-lectura-ejecucion` |
 | Las métricas de Clientes y Contenido solo existen si la IA las anota; la app no cuenta sus listas ni sus envíos | II | `028-vista-actividad` |
 | Las métricas no tienen `schemaVersion` | IV | `022-version-datos` |
 | Los eventos anotados y los informes no tienen retención | IV | `029-politica-datos` |

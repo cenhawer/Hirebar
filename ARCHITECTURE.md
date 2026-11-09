@@ -326,8 +326,8 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Identidad de la persona | Un solo chat de Telegram, vinculado con un código que muestra la app | Se vincula el primer chat que escribe (spec `012`) |
 | Canal de respaldo | Notificaciones de macOS, locales, que llevan a la bandeja del panel | Sin Telegram, las listas completas salen por un tema público de ntfy.sh (spec `012`) |
 | Secretos | Token de Telegram y claves en el Llavero; nunca en archivos ni en el registro | Cumple |
-| Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | La IA corre con `bypassPermissions` y lee contenido externo (spec `010`) |
-| Acciones de la IA | Lista cerrada de acciones validada por la app | No existe (spec `010`) |
+| Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | Cumple: perfiles `read` y `draft`; en lectura la IA no puede leer el perfil ni las hojas de vida. Riesgo residual de navegación documentado en `specs/010-separar-lectura-ejecucion/research.md` (R8) |
+| Acciones de la IA | Lista cerrada de acciones validada por la app | Cumple: catálogo de acciones, copia de lo aprobado fuera del workspace, registro y verificación de cada ejecución; una acción que no coincide pausa el agente |
 | Envío automático | Se prende por agente con confirmación explícita | Se prende con una casilla (spec `011`) |
 | Herramientas | Sin descargas en ejecución sin versión fija y hash | ffmpeg se instala con `pip` en ejecución (spec `016`) |
 | Repositorio | Sin datos personales ni secretos; gitleaks en CI y pre-commit | Cumple |

@@ -31,7 +31,7 @@ muestra cada agente con su estado, su próxima ejecución y su interruptor.
    esperando `/start`).
 3. **Given** el panel, **When** se miran los agentes, **Then** aparecen en tres grupos ("Buscar
    trabajo": Empleo y Freelance; "Conseguir clientes": Clientes y Contenido; "Tú": Perfil y Analista),
-   cada uno con ícono, nombre, descripción, próxima ejecución ("apagado", "trabajando", "en 5 min",
+   cada uno con ícono, nombre, descripción, próxima ejecución ("en pausa", "apagado", "trabajando", "en 5 min",
    "a pedido") e interruptor.
 4. **Given** un agente, **When** la persona abre su detalle, **Then** ve su estado, los números de la
    semana, la casilla "Envío automático" (Empleo, Freelance y Clientes), el botón "Correr ahora"

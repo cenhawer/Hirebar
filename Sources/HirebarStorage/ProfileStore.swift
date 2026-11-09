@@ -19,12 +19,7 @@ extension Profile {
 }
 
 public enum ProfileEditor {
-    public enum Outcome: Equatable, Sendable {
-        case added
-        case updated(from: SkillLevel)
-        case unchanged
-        case failed(String)
-    }
+    public typealias Outcome = SkillChange
 
     public static func saveSkills(_ skills: [Skill], at url: URL = Profile.url) throws {
         var root: [String: Any] = [:]
@@ -85,5 +80,27 @@ public enum ProfileEditor {
 extension SearchProfile {
     public static func loadEffective() -> SearchProfile {
         load().applying(Profile.load())
+    }
+}
+
+public enum ProfileExperience {
+    public static func pastEmployers(from url: URL = Profile.url) -> [String] {
+        guard let data = try? Data(contentsOf: url),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let experience = root["experience"] as? [[String: Any]]
+        else { return [] }
+        return Array(Set(experience.compactMap { $0["company"] as? String }.filter { !$0.isEmpty })).sorted()
+    }
+
+    public static func achievements(from url: URL = Profile.url) -> [String] {
+        guard let data = try? Data(contentsOf: url),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let experience = root["experience"] as? [[String: Any]]
+        else { return [] }
+        return experience.flatMap { job -> [String] in
+            let place = [job["role"] as? String, job["company"] as? String].compactMap { $0 }.joined(separator: " en ")
+            let items = (job["achievements"] as? [[String: Any]]) ?? []
+            return items.compactMap { $0["text"] as? String }.map { "- \($0) (\(place))" }
+        }
     }
 }

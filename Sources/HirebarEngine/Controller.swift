@@ -13,7 +13,7 @@ private let log = Log(.ai)
 public final class Controller {
     let targetRules = TargetRulesFile.bundled()
     lazy var executionGuard = ExecutionGuard(
-        store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(notifier: notifier), rules: targetRules)
+        store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(notifier: notifier, agents: stores.agents), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
     public let telegram: Telegram
     public let notifier: Notifier
@@ -22,11 +22,17 @@ public final class Controller {
     weak var jobRadar: JobRadar?
     weak var freelanceRadar: FreelanceRadar?
 
-    public init(telegram: Telegram) {
+    public let stores: Repositories
+
+    public init(telegram: Telegram, stores: Repositories) {
         self.telegram = telegram
-        notifier = Notifier(telegram: telegram)
-        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram))
+        self.stores = stores
+        notifier = Notifier(telegram: telegram, config: stores.config, batches: stores.batches)
+        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram), configs: stores.config)
     }
+
+    public var ai: AI { AI(settings: stores.config.load().aiEngine) }
+    var prompts: AgentPrompts { AgentPrompts(stores: stores, ai: ai) }
     var commandParser = (try? CommandVocabularyFile.bundled()).map(CommandParser.init)
     private var protectedSnapshot: ProtectedFiles.Snapshot?
     static let noNewsMarker = "SIN_NOVEDADES"
@@ -82,7 +88,7 @@ public final class Controller {
             notifier.tell(text)
             return
         }
-        telegram.send(text, chatId: Config.load().chatId, buttons: buttons)
+        telegram.send(text, chatId: stores.config.load().chatId, buttons: buttons)
     }
 
     public func autoApprove(_ batch: Batch) {
@@ -107,14 +113,14 @@ public final class Controller {
         guard let ready = approvedWithinQuota(chosen, from: batch, approvedBy: approvedBy) else { return }
         batch.status = .running
         batch.items = ready
-        BatchStore.upsert(batch)
-        Metrics.bump(batch.mode, "aprobados", ready.count)
-        if let id = batch.messageId { telegram.removeButtons(chatId: Config.load().chatId, messageId: id) }
+        stores.batches.upsert(batch)
+        stores.metrics.bump(batch.mode, "aprobados", ready.count)
+        if let id = batch.messageId { telegram.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
         queue.append((batch, ready))
         if running == nil {
             runNext()
         } else {
-            reply("Anotado: \(AI.capitalizedName) está terminando otra lista y sigue con esta.")
+            reply("Anotado: \(ai.capitalizedName) está terminando otra lista y sigue con esta.")
         }
     }
 
@@ -122,15 +128,16 @@ public final class Controller {
         if mode == .linkedInDraft && account == nil {
             // Una publicación por cuenta prendida; las programadas, solo en los días de cada cuenta.
             let today = Date()
-            let accounts = ContentAccountStore.enabled().filter { manual || $0.runs(on: today) }
+            let accounts = stores.contentAccounts.enabled().filter { manual || $0.runs(on: today) }
             if accounts.isEmpty && manual {
                 reply("No tienes cuentas de contenido prendidas. Agrégalas en Ajustes → Cuentas de contenido.")
             }
             for item in accounts { runScheduled(mode, manual: manual, account: item.id) }
             return
         }
-        if Scheduler.isIdlePortalScan(mode) {
-            if manual { reply("No tienes portales propios activos. Agrégalos en Ajustes → \(AgentStore.load(AgentKind.owner(of: mode)).name).") }
+        if Scheduler.isIdlePortalScan(mode, portals: stores.portals) {
+            let agentName = stores.agents.load(AgentKind.owner(of: mode)).name
+            if manual { reply("No tienes portales propios activos. Agrégalos en Ajustes → \(agentName).") }
             return
         }
         if (runningMode == mode && runningAccount == account)
@@ -139,10 +146,10 @@ public final class Controller {
             return
         }
         let batch = Batch(mode: mode, status: .running, manual: manual, account: account)
-        if TaskProfiles.profile(for: mode, account: ContentAccountStore.find(account)).canAct {
+        if TaskProfiles.profile(for: mode, account: stores.contentAccounts.find(account)).canAct {
             guard prepareScheduledExecution(batch, manual: manual) else { return }
         }
-        BatchStore.upsert(batch)
+        stores.batches.upsert(batch)
         // Una publicación pedida a mano no espera detrás de las búsquedas: va de primera en la fila.
         if manual && mode == .linkedInDraft {
             let ahead = queue.prefix { $0.0.mode == .linkedInDraft && $0.0.isManual }.count
@@ -150,7 +157,7 @@ public final class Controller {
         } else {
             queue.append((batch, []))
         }
-        let accountTitle = ContentAccountStore.find(account)?.title ?? "tu cuenta"
+        let accountTitle = stores.contentAccounts.find(account)?.title ?? "tu cuenta"
         if manual {
             switch mode {
             case .weeklyReport: reply("Preparando el informe semanal; te lo mando al terminar.")
@@ -178,16 +185,16 @@ public final class Controller {
 
     private func recoverInterrupted() {
         let since = Date().addingTimeInterval(-24 * 3600)
-        for var batch in BatchStore.load() where batch.status == .running {
+        for var batch in stores.batches.load() where batch.status == .running {
             if !batch.items.isEmpty && batch.created > since && batch.mode.hasItems {
                 batch.status = .pending
-                BatchStore.upsert(batch)
+                stores.batches.upsert(batch)
                 let title = "Quedaron sin terminar estas \(Self.noun(for: batch.mode)) (la Mac se durmió o se cerró la app)"
                 let footer = "Responde \"si\" para reintentar, \"si 1 3\" para elegir o \"no\" para descartar."
                 notifier.announce(batch, title: title, footer: footer)
             } else {
                 batch.status = .interrupted
-                BatchStore.upsert(batch)
+                stores.batches.upsert(batch)
             }
         }
     }
@@ -205,17 +212,17 @@ public final class Controller {
         let errURL = Paths.runs.appendingPathComponent("\(batch.id).log")
         FileManager.default.createFile(atPath: outURL.path, contents: nil)
         FileManager.default.createFile(atPath: errURL.path, contents: nil)
-        let owner = Config.load().ownerName
-        if batch.mode == .linkedInDraft, let account = ContentAccountStore.find(batch.account) {
+        let owner = stores.config.load().ownerName
+        if batch.mode == .linkedInDraft, let account = stores.contentAccounts.find(batch.account) {
             SlideRenderer.prepare(account)
         }
-        let account = ContentAccountStore.find(batch.account)
+        let account = stores.contentAccounts.find(batch.account)
         let profile = TaskProfiles.profile(for: batch.mode, account: account)
         if profile.canAct, let pause = activePause(of: ExecutionApprovals.agent(of: batch.mode)) {
             batch.status = batch.mode.hasItems ? .pending : .interrupted
-            BatchStore.upsert(batch)
+            stores.batches.upsert(batch)
             releaseApproval(of: batch.id)
-            reply(Self.pausedNotice(batch.mode, pause))
+            reply(pausedNotice(batch.mode, pause))
             runNext()
             return
         }
@@ -228,7 +235,7 @@ public final class Controller {
                 try executionGuard.prepareRun(batch: batch.id)
             } catch {
                 batch.status = .failed
-                BatchStore.upsert(batch)
+                stores.batches.upsert(batch)
                 releaseApproval(of: batch.id)
                 reply("No pude limpiar el registro anterior de la lista \(batch.id), así que no la ejecuto: \(error.localizedDescription)")
                 runNext()
@@ -236,19 +243,19 @@ public final class Controller {
             }
         }
         let request = ClaudeCLI.LaunchRequest(
-            prompt: AgentPrompts.prompt(for: batch, items: items, owner: owner),
+            prompt: prompts.prompt(for: batch, items: items, owner: owner),
             playbook: Paths.playbook(for: batch.mode),
             profile: profile,
             browser: TaskProfiles.needsBrowser(batch.mode, account: account)
         )
-        let launch = ClaudeCLI.makeProcess(engine: AI.settings, request: request, output: outURL, errors: errURL)
+        let launch = ClaudeCLI.makeProcess(engine: ai.settings, request: request, output: outURL, errors: errURL)
         guard case .success(let process) = launch else {
             if case .failure(let problem) = launch {
                 reply(problem.message)
                 setStatus(problem.status)
             }
             batch.status = .failed
-            BatchStore.upsert(batch)
+            stores.batches.upsert(batch)
             if profile.canAct { releaseApproval(of: batch.id) }
             runNext()
             return
@@ -266,9 +273,9 @@ public final class Controller {
             try process.run()
         } catch {
             batch.status = .failed
-            BatchStore.upsert(batch)
+            stores.batches.upsert(batch)
             if profile.canAct { releaseApproval(of: batch.id) }
-            reply("No pude abrir \(AI.name): \(error.localizedDescription)")
+            reply("No pude abrir \(ai.name): \(error.localizedDescription)")
             runNext()
             return
         }
@@ -279,7 +286,7 @@ public final class Controller {
         runStarted = Date()
         setStatus(AgentPrompts.statusText(for: mode, count: items.count, since: TextTools.shortTime()))
         if mode == .freelance || mode == .jobs {
-            reply("\(AI.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
+            reply("\(ai.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
         }
         Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.maxRunSeconds) { [weak self] in
@@ -303,10 +310,10 @@ public final class Controller {
         if code != 0 && ClaudeCLI.isAuthFailure(output + "\n" + errors) {
             handleAuthFailure(batchId, mode: mode, items: acts ? settleInterruptedExecution(batchId, mode: mode, items: items) : items)
         } else {
-            if var batch = BatchStore.find(id: batchId) {
+            if var batch = stores.batches.find(id: batchId) {
                 batch.status = code == 0 ? .done : .failed
                 batch.result = String(output.suffix(2000))
-                BatchStore.upsert(batch)
+                stores.batches.upsert(batch)
             }
             report(batchId, mode: mode, code: code, output: output)
             if acts { verify(batchId, mode: mode) }
@@ -343,14 +350,14 @@ public final class Controller {
         let restored = files.restoreChanges(since: before)
         guard !restored.isEmpty else { return }
         log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
-        reply("\(AI.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
+        reply("\(ai.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
     }
 
     static let practiceSummaryLimit = 15
 
     func simulateIfPracticing(_ batch: Batch) -> Bool {
         let kind = AgentKind.owner(of: batch.mode)
-        let agent = AgentStore.load(kind)
+        let agent = stores.agents.load(kind)
         guard agent.practice else { return false }
         let items = executionGuard.approvedItems(batch: batch.id).map(\.proposal)
         do {
@@ -362,8 +369,8 @@ public final class Controller {
         var finished = batch
         finished.status = .done
         finished.result = Self.practiceResult
-        BatchStore.upsert(finished)
-        Metrics.bump(batch.mode, Self.practiceMetric, items.count)
+        stores.batches.upsert(finished)
+        stores.metrics.bump(batch.mode, Self.practiceMetric, items.count)
         Log(agent: kind).write("Práctica: \(kind.rawValue) simuló \(items.count) acción(es) del lote \(batch.id)")
         reply(Self.practiceSummary(agentName: agent.name, items: items))
         return true
@@ -402,17 +409,18 @@ public final class Controller {
     }
 
     private func handleAuthFailure(_ batchId: String, mode: Mode, items: [BatchItem]) {
-        if var batch = BatchStore.find(id: batchId) {
+        if var batch = stores.batches.find(id: batchId) {
             let retry = mode.hasItems && !items.isEmpty
             batch.status = retry ? .pending : mode.hasItems ? .done : .interrupted
             if mode.hasItems { batch.items = items }
-            BatchStore.upsert(batch)
+            stores.batches.upsert(batch)
         }
         log.write("IA: la sesión venció; lote \(batchId) queda para reintentar")
         let now = Date()
         if lastAuthAlert.map({ now.timeIntervalSince($0) > Self.authAlertEvery }) ?? true {
             lastAuthAlert = now
-            reply("La sesión de \(AI.settings.kind.title) se venció y no pude trabajar. \(ClaudeCLI.loginHint(AI.settings.kind)) Las listas de propuestas y postulaciones quedaron guardadas: responde \"si\" para reintentar la última.")
+            let expired = "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(ClaudeCLI.loginHint(ai.settings.kind))"
+            reply(expired + " Las listas de propuestas y postulaciones quedaron guardadas: responde \"si\" para reintentar la última.")
         }
     }
 
@@ -432,7 +440,8 @@ public final class Controller {
         }
         guard code == 0 && !output.isEmpty else {
             let detail = output.isEmpty ? "sin salida" : String(output.suffix(1500))
-            reply("\(AI.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)\nRegistro: workspace/ejecuciones/\(batchId).log")
+            let failure = "\(ai.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)"
+            reply(failure + "\nRegistro: workspace/ejecuciones/\(batchId).log")
             return
         }
         reply(String(ProposalParser.removingBlock(from: output).suffix(3800)))
@@ -440,17 +449,17 @@ public final class Controller {
         case .prospecting: offerProspectingEmails()
         case .profileUpdate: finishProfileUpdate()
         case .linkedInDraft:
-            sendSlides(BatchStore.find(id: batchId)?.account)
+            sendSlides(stores.batches.find(id: batchId)?.account)
         default: break
         }
     }
 
     private func sendSlides(_ accountId: String?) {
-        guard let account = ContentAccountStore.find(accountId) else {
+        guard let account = stores.contentAccounts.find(accountId) else {
             reply("No encontré la cuenta de esta publicación en Ajustes → Cuentas de contenido.")
             return
         }
-        let several = ContentAccountStore.load().count > 1
+        let several = stores.contentAccounts.load().count > 1
         let publish = several ? "publica \(account.id)" : "publica"
         let change = several ? "post \(account.id) cambia <qué>" : "post cambia <qué>"
         let skip = several ? "post \(account.id) salta" : "post salta"
@@ -458,7 +467,8 @@ public final class Controller {
         SlideRenderer.renderAll(account) { [weak self] made, failed in
             var notes: [String] = []
             if made.isEmpty {
-                notes.append("Esta vez no salieron imágenes (\(AI.name) no dejó las láminas o Chrome no pudo convertirlas).")
+                let aiName = self?.ai.name ?? "la IA"
+                notes.append("Esta vez no salieron imágenes (\(aiName) no dejó las láminas o Chrome no pudo convertirlas).")
             } else if failed > 0 {
                 notes.append("\(failed) lámina(s) no se pudieron convertir.")
             }
@@ -514,7 +524,7 @@ public final class Controller {
             return
         case .failure(let failure):
             Log(agent: AgentKind.owner(of: mode)).write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
-            reply("\(AI.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
+            reply("\(ai.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
             return
         }
         let intake = ProposalIntake(window: Self.proposalSeenWindow, rules: targetRules).accept(
@@ -546,13 +556,13 @@ public final class Controller {
             reply("No pude guardar la lista para aprobar, así que no te la muestro: \(error.localizedDescription)")
             return false
         }
-        BatchStore.upsert(batch)
-        Metrics.bump(batch.mode, "avisados", proposals.count)
-        let auto = AgentStore.load(AgentKind.owner(of: batch.mode)).autoApprove
+        stores.batches.upsert(batch)
+        stores.metrics.bump(batch.mode, "avisados", proposals.count)
+        let auto = stores.agents.load(AgentKind.owner(of: batch.mode)).autoApprove
         let footer =
             auto
-            ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
-            : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
+            ? "\(ai.capitalizedName) ya los está procesando; te aviso al terminar."
+            : "Responde \"si\" para que \(ai.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
         notifier.announce(batch, title: title + (auto ? " (envío automático)" : ""), footer: footer)
         if auto { autoApprove(batch) }
         return true
@@ -560,7 +570,7 @@ public final class Controller {
 
     private func finishProfileUpdate() {
         ProfileRequests.clear()
-        let profile = Profile.load()
+        let profile = stores.profile.load()
         guard !profile.cvVariants.isEmpty else {
             reply("perfil.json no tiene hojas de vida definidas (cvVariants), así que no generé PDF.")
             return
@@ -570,7 +580,8 @@ public final class Controller {
                 self?.notifier.sendFile(file, caption: "Hoja de vida actualizada: \(file.lastPathComponent)")
             }
             var lines = ["Hojas de vida: \(result.made.count) de \(profile.cvVariants.count) listas."]
-            if !result.missing.isEmpty { lines.append("\(AI.capitalizedName) no dejó el HTML de: \(result.missing.joined(separator: ", ")).") }
+            let aiName = self?.ai.capitalizedName ?? "La IA"
+            if !result.missing.isEmpty { lines.append("\(aiName) no dejó el HTML de: \(result.missing.joined(separator: ", ")).") }
             if !result.failed.isEmpty { lines.append("No pude crear el PDF de: \(result.failed.joined(separator: ", ")) (revisa que Google Chrome esté instalado).") }
             self?.reply(lines.joined(separator: "\n"))
         }
@@ -583,7 +594,7 @@ public final class Controller {
         case .invalid(let ids):
             let numbers = ids.joined(separator: ", ")
             Log(agent: .clients).write("Prospección: correos incompletos o repetidos en pendientes.json (\(numbers))")
-            reply("\(AI.capitalizedName) dejó correos sin destinatario, asunto o texto válidos (\(numbers)); no te muestro la lista.")
+            reply("\(ai.capitalizedName) dejó correos sin destinatario, asunto o texto válidos (\(numbers)); no te muestro la lista.")
         case .found(let drafts):
             let batch = Batch(mode: .prospectingSend, items: drafts.map { BatchItem($0.proposal, kind: $0.kind) }, status: .pending)
             offer(batch, proposals: drafts.map(\.proposal), title: "Correos de hoy: \(drafts.count) para aprobar")
@@ -599,9 +610,9 @@ public final class Controller {
         }
     }
 
-    static func pausedNotice(_ mode: Mode, _ pause: AgentPause) -> String {
+    func pausedNotice(_ mode: Mode, _ pause: AgentPause) -> String {
         let kind = AgentKind.owner(of: mode)
-        let name = AgentStore.load(kind).name
+        let name = stores.agents.load(kind).name
         return "\(name) está en pausa desde la lista \(pause.batch) porque algo no coincidió con lo aprobado. "
             + "No ejecuto nada de \(name) hasta que escribas \"reanudar \(kind.rawValue)\"."
     }
@@ -609,10 +620,10 @@ public final class Controller {
     private func approvedWithinQuota(_ chosen: [BatchItem], from batch: Batch, approvedBy: Approver) -> [BatchItem]? {
         let agentID = ExecutionApprovals.agent(of: batch.mode)
         if let pause = activePause(of: agentID) {
-            reply(Self.pausedNotice(batch.mode, pause))
+            reply(pausedNotice(batch.mode, pause))
             return nil
         }
-        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
+        let agentSettings = stores.agents.load(AgentKind.owner(of: batch.mode))
         let plan: ExecutionPlan
         do {
             plan = try executionGuard.approve(
@@ -651,21 +662,21 @@ public final class Controller {
             reply("No pude separar los mensajes que necesitan tu revisión; quedan en la lista \(batch.id): \(error.localizedDescription)")
             return
         }
-        BatchStore.upsert(rest)
+        stores.batches.upsert(rest)
         notifier.announce(
             rest, title: "Estos mensajes no se envían solos",
             footer: "Revisa el texto y responde \"si\" para enviarlos, \"si 1 3\" para elegir o \"no\" para descartar.")
     }
 
     private func remove(_ ids: [String], from batchId: String) {
-        guard var batch = BatchStore.find(id: batchId) else { return }
+        guard var batch = stores.batches.find(id: batchId) else { return }
         let removed = Set(ids)
         batch.items.removeAll { removed.contains($0.id) }
         if batch.items.isEmpty {
             batch.status = .done
-            if let id = batch.messageId { telegram.removeButtons(chatId: Config.load().chatId, messageId: id) }
+            if let id = batch.messageId { telegram.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
         }
-        BatchStore.upsert(batch)
+        stores.batches.upsert(batch)
     }
 
     private func deferBeyondQuota(_ items: [BatchItem], from batch: Batch, running count: Int) {
@@ -678,24 +689,24 @@ public final class Controller {
             reply("Hoy queda cupo para \(count). No pude guardar los otros \(items.count) para mañana: vuelve a pedirlos cuando aparezcan.")
             return
         }
-        BatchStore.upsert(rest)
+        stores.batches.upsert(rest)
         reply("Hoy queda cupo para \(count): ejecuto esos y dejo \(items.count) en una lista pendiente para mañana.")
     }
 
     private func prepareScheduledExecution(_ batch: Batch, manual: Bool) -> Bool {
         let agentID = ExecutionApprovals.agent(of: batch.mode)
         if let pause = activePause(of: agentID) {
-            reply(Self.pausedNotice(batch.mode, pause))
+            reply(pausedNotice(batch.mode, pause))
             return false
         }
         guard batch.mode == .linkedInPublish,
-            let proposal = ContentAccountStore.find(batch.account).flatMap(ExecutionApprovals.publishProposal)
+            let proposal = stores.contentAccounts.find(batch.account).flatMap(ExecutionApprovals.publishProposal)
         else {
             log.write("\(batch.mode.rawValue): no se ejecuta sin una lista aprobada")
             if manual { reply("Eso solo se ejecuta sobre una lista que hayas aprobado; no ejecuto nada.") }
             return false
         }
-        let agentSettings = AgentStore.load(AgentKind.owner(of: batch.mode))
+        let agentSettings = stores.agents.load(AgentKind.owner(of: batch.mode))
         do {
             let plan = try executionGuard.approve(
                 [proposal], batch: batch.id, approvedBy: manual ? .person : .autoSend, agent: agentID, dailyLimit: agentSettings.dailyLimit)

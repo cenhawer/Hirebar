@@ -118,7 +118,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func render(busy: Bool) {
         statusItem.button?.image = StatusIcon.make(dot: busy ? .systemOrange : .systemGreen)
-        statusItem.button?.toolTip = "Hirebar · \(AI.capitalizedName): \(engine.controller.status)\nClic: panel · Clic derecho: menú"
+        let state = "\(engine.controller.ai.capitalizedName): \(engine.controller.status)"
+        statusItem.button?.toolTip = "Hirebar · \(state)\nClic: panel · Clic derecho: menú"
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 

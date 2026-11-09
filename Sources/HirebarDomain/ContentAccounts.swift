@@ -79,6 +79,8 @@ public struct ContentAccount: Codable, Identifiable, Equatable, Sendable {
     /// Subtítulos palabra por palabra sobre el video narrado.
     public var captions: Bool
 
+    public static let defaultIdentifier = "personal"
+
     public init(id: String, enabled: Bool = true, network: ContentNetwork = .linkedin, name: String = "",
                 tagline: String = "", handle: String = "", focus: String = ContentAccount.defaultFocus,
                 style: String = PalettePreset.standard.style, palette: ContentPalette = PalettePreset.standard.palette,

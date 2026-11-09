@@ -18,22 +18,22 @@ public enum AutoSend {
         }
     }
 
-    public static func explanation(for kinds: [AgentKind]) -> String {
-        let lines = kinds.filter(agents.contains).map { "• \(AgentStore.load($0).name) \(whatItDoes($0))" }
+    public static func explanation(for kinds: [AgentKind], agents repository: AgentRepository) -> String {
+        let lines = kinds.filter(Self.agents.contains).map { "• \(repository.load($0).name) \(whatItDoes($0))" }
         return "Con el envío automático, sin esperar tu \"si\":\n" + lines.joined(separator: "\n")
             + "\n\nNunca salen solos: respuestas a clientes, publicaciones, correos en frío y seguimientos a alguien nuevo. "
             + "El cupo diario de cada agente sigue igual y todo se verifica como siempre."
     }
 
-    public static func turnOn(_ kind: AgentKind, from origin: String) {
-        guard agents.contains(kind) else { return }
-        AgentStore.update(kind) { $0.autoApprove = true }
-        Log.write("Envío automático de \(AgentStore.load(kind).name) prendido desde \(origin)")
+    public static func turnOn(_ kind: AgentKind, from origin: String, agents repository: AgentRepository) {
+        guard Self.agents.contains(kind) else { return }
+        repository.update(kind) { $0.autoApprove = true }
+        Log.write("Envío automático de \(repository.load(kind).name) prendido desde \(origin)")
     }
 
-    public static func turnOff(_ kind: AgentKind, from origin: String) {
-        AgentStore.update(kind) { $0.autoApprove = false }
-        Log.write("Envío automático de \(AgentStore.load(kind).name) apagado desde \(origin)")
+    public static func turnOff(_ kind: AgentKind, from origin: String, agents repository: AgentRepository) {
+        repository.update(kind) { $0.autoApprove = false }
+        Log.write("Envío automático de \(repository.load(kind).name) apagado desde \(origin)")
     }
 
     public static func newlyEnabled(saved: [AgentSettings], edited: [AgentSettings]) -> [AgentKind] {

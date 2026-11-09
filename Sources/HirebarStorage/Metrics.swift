@@ -7,10 +7,7 @@ public enum Metrics {
     public static var agentURL: URL { Paths.workspaceFile("metricas-claude.json") }
 
     public static func weekKey(_ date: Date = Date()) -> String {
-        var calendar = Calendar(identifier: .iso8601)
-        calendar.timeZone = .current
-        let parts = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
-        return String(format: "%04d-S%02d", parts.yearForWeekOfYear ?? 0, parts.weekOfYear ?? 0)
+        WeekKey.of(date)
     }
 
     public static func load() -> [String: Any] {

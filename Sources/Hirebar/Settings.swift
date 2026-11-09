@@ -18,10 +18,11 @@ enum SettingsPage: Hashable {
 }
 
 final class SettingsWindowController {
-    private let model = SettingsModel()
+    private let model: SettingsModel
     let channel: ChannelSettingsModel
 
     init(engine: Engine) {
+        model = SettingsModel(agentRepository: engine.controller.stores.agents)
         channel = ChannelSettingsModel(engine: engine)
     }
     private var window: NSWindow?
@@ -64,6 +65,12 @@ struct DayOption: Identifiable {
 }
 
 final class SettingsModel: ObservableObject {
+    let agentRepository: AgentRepository
+
+    init(agentRepository: AgentRepository) {
+        self.agentRepository = agentRepository
+    }
+
     @Published var agents: [AgentSettings] = []
     @Published var sources: [String: Bool] = [:]
     @Published var skills: [EditableSkill] = []
@@ -115,7 +122,7 @@ final class SettingsModel: ObservableObject {
             accounts.append(account)
         }
         let turnedOn = AutoSend.newlyEnabled(saved: AgentKind.allCases.map(AgentStore.load), edited: agents)
-        let confirmed = turnedOn.isEmpty || AutoSendConfirmation.ask(turnedOn)
+        let confirmed = turnedOn.isEmpty || AutoSendConfirmation.ask(turnedOn, agents: agentRepository)
         for var agent in agents {
             if !confirmed && turnedOn.contains(agent.id) { agent.autoApprove = false }
             if !portals.filter({ $0.agent == agent.id && $0.enabled }).isEmpty { agent.ensurePortalScanTask() }
@@ -131,7 +138,7 @@ final class SettingsModel: ObservableObject {
             AgentStore.save(agent)
         }
         if confirmed {
-            for kind in turnedOn { AutoSend.turnOn(kind, from: AutoSendConfirmation.settingsOrigin) }
+            for kind in turnedOn { AutoSend.turnOn(kind, from: AutoSendConfirmation.settingsOrigin, agents: agentRepository) }
         }
         var config = Config.load()
         for (source, on) in sources { config.setEnabled(source, on) }

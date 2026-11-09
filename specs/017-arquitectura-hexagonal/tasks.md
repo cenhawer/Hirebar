@@ -21,5 +21,6 @@ description: "Tareas de implementación: arquitectura hexagonal"
 
 ## Paso 3: Casos de uso y composición
 
+- [x] T008a Puertos de repositorio (`ConfigRepository`, `BatchRepository`, `AgentRepository`, `ContentAccountRepository`, `MetricsRepository`, `ProfileRepository`, `QuotaRepository`, `PortalRepository`) en `HirebarApplication`; el motor los recibe agrupados en `Repositories` y `HirebarStorage` los implementa con archivos (FR-003)
 - [ ] T008 Casos de uso de lotes, comandos, programación y radares en `HirebarApplication` (FR-003)
 - [x] T009 Raíz de composición (`Engine`) que crea y conecta Telegram, `Controller`, radares y programador; la app la recibe; sin `.shared` propios, vigilado por test (FR-004, SC-002)

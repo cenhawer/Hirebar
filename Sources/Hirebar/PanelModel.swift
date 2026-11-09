@@ -190,11 +190,6 @@ final class PanelModel: ObservableObject {
     }
 
     func openLog() {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: Paths.log.path) {
-            try? fm.createDirectory(at: Paths.logs, withIntermediateDirectories: true)
-            fm.createFile(atPath: Paths.log.path, contents: nil)
-        }
-        NSWorkspace.shared.open(Paths.log)
+        LogExport.openRecent()
     }
 }

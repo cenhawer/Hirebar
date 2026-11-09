@@ -52,7 +52,7 @@ struct ChannelTelegram {
 
 public final class ChannelSetup {
     let settings: ChannelSettings?
-    let now: () -> Date
+    let clock: Clock
     let telegram: ChannelTelegram
     private var pairing: ChannelPairing?
     private var guardian: ChannelGuard
@@ -60,11 +60,11 @@ public final class ChannelSetup {
 
     let configs: ConfigRepository
 
-    init(settings: ChannelSettings?, telegram: ChannelTelegram, configs: ConfigRepository, now: @escaping () -> Date = Date.init) {
+    init(settings: ChannelSettings?, telegram: ChannelTelegram, configs: ConfigRepository, clock: Clock) {
         self.configs = configs
         self.settings = settings
         self.telegram = telegram
-        self.now = now
+        self.clock = clock
         guardian = ChannelGuard(messagesPerMinute: settings?.messagesPerMinute ?? 0)
     }
 
@@ -76,7 +76,7 @@ public final class ChannelSetup {
         let bot = config.botUsername
         if let owner = config.channelOwner { return .connected(owner, bot: bot) }
         guard let pairing else { return .unlinked(bot: bot) }
-        if pairing.isExpired(at: now()) { return .expired(bot: bot) }
+        if pairing.isExpired(at: clock.now()) { return .expired(bot: bot) }
         if let candidate = pairing.current { return .confirming(candidate, bot: bot) }
         return .waitingForHello(bot: bot)
     }
@@ -97,10 +97,10 @@ public final class ChannelSetup {
 
     public func startPairing() {
         guard let settings else { return }
-        let started = now()
+        let started = clock.now()
         pairing = ChannelPairing(startedAt: started, window: settings.pairingWindow)
         notify()
-        DispatchQueue.main.asyncAfter(deadline: .now() + settings.pairingWindow) { [weak self] in
+        clock.after(settings.pairingWindow) { [weak self] in
             guard let self, self.pairing?.startedAt == started else { return }
             self.notify()
         }
@@ -112,7 +112,7 @@ public final class ChannelSetup {
     }
 
     func offer(_ sender: ChannelSender, text: String) -> Bool {
-        guard configs.load().channelOwner == nil, pairing != nil, pairing?.receive(sender, text: text, at: now()) == true else {
+        guard configs.load().channelOwner == nil, pairing != nil, pairing?.receive(sender, text: text, at: clock.now()) == true else {
             return false
         }
         notify()
@@ -154,7 +154,7 @@ public final class ChannelSetup {
     }
 
     func admit(_ sender: ChannelSender) -> ChannelDecision {
-        guardian.check(sender, owner: configs.load().channelOwner, now: now())
+        guardian.check(sender, owner: configs.load().channelOwner, now: clock.now())
     }
 
     @MainActor

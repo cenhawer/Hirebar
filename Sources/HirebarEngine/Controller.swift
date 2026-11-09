@@ -22,13 +22,15 @@ public final class Controller {
     weak var jobRadar: JobRadar?
     weak var freelanceRadar: FreelanceRadar?
 
+    let clock: Clock
     public let stores: Repositories
 
-    public init(telegram: Telegram, stores: Repositories) {
+    public init(telegram: Telegram, stores: Repositories, clock: Clock) {
+        self.clock = clock
         self.telegram = telegram
         self.stores = stores
         notifier = Notifier(telegram: telegram, config: stores.config, batches: stores.batches)
-        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram), configs: stores.config)
+        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram), configs: stores.config, clock: clock)
     }
 
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }
@@ -47,24 +49,25 @@ public final class Controller {
     private var runningMode: Mode?
     private var runningAccount: String?
     private var runStarted: Date?
-    private var watchdog: Timer?
+    private var watchdog: ScheduledWork?
     private var lastAuthAlert: Date?
+
+    static let watchdogInterval: TimeInterval = 60
+    static let recoveryDelay: TimeInterval = 5
 
     public var isIdle: Bool { running == nil && queue.isEmpty }
     public var runningAgent: AgentKind? { runningMode.map(AgentKind.owner) }
 
     public func start() {
         if watchdog == nil {
-            let timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in self?.stopIfStuck() }
-            RunLoop.main.add(timer, forMode: .common)
-            watchdog = timer
+            watchdog = clock.every(Self.watchdogInterval, tolerance: 0) { [weak self] in self?.stopIfStuck() }
         }
         Paths.ensure()
         telegram.onMessage = { [weak self] message in self?.handle(message) }
         telegram.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
         telegram.start()
         Task { @MainActor [weak self] in await self?.channel.completeMissingDetails() }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in self?.recoverInterrupted() }
+        clock.after(Self.recoveryDelay) { [weak self] in self?.recoverInterrupted() }
     }
 
     func setStatus(_ text: String) {
@@ -289,7 +292,7 @@ public final class Controller {
             reply("\(ai.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
         }
         Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(profile.phase)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.maxRunSeconds) { [weak self] in
+        clock.after(Self.maxRunSeconds) { [weak self] in
             guard let self, self.runningBatch == batchId, let process = self.running, process.isRunning else { return }
             log.write("IA: lote \(batchId) superó 1 hora, se detiene")
             process.terminate()

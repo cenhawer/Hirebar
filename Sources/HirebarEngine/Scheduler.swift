@@ -12,22 +12,24 @@ public final class Scheduler {
     weak var freelanceRadar: FreelanceRadar?
 
     let stores: Repositories
+    let clock: Clock
 
-    public init(stores: Repositories) {
+    public init(stores: Repositories, clock: Clock) {
         self.stores = stores
+        self.clock = clock
     }
     static let cleanupHour = 19
+    static let tickInterval: TimeInterval = 60
+    static let tickTolerance: TimeInterval = 10
+    static let firstTickDelay: TimeInterval = 120
 
     public var onChange: (() -> Void)?
-    private var timer: Timer?
+    private var timer: ScheduledWork?
 
     public func start() {
-        timer?.invalidate()
-        let clock = Timer(timeInterval: 60, repeats: true) { [weak self] _ in self?.tick() }
-        clock.tolerance = 10
-        RunLoop.main.add(clock, forMode: .common)
-        timer = clock
-        DispatchQueue.main.asyncAfter(deadline: .now() + 120) { [weak self] in self?.tick() }
+        timer?.cancel()
+        timer = clock.every(Self.tickInterval, tolerance: Self.tickTolerance) { [weak self] in self?.tick() }
+        clock.after(Self.firstTickDelay) { [weak self] in self?.tick() }
     }
 
     static func dayKey(_ date: Date) -> String {
@@ -48,7 +50,7 @@ public final class Scheduler {
     }
 
     private func tick() {
-        let now = Date()
+        let now = clock.now()
         for agent in stores.agents.all() where agent.enabled {
             for task in agent.tasks {
                 if Self.isIdlePortalScan(task.mode, portals: stores.portals) { continue }

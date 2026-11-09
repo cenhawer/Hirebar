@@ -302,6 +302,7 @@ struct AgentEditor: View {
                 if [.jobs, .freelance, .clients].contains(agent.id) {
                     Toggle("Envío automático (sin esperar tu \"si\" en Telegram)", isOn: $agent.autoApprove)
                 }
+                Toggle("Modo práctica (hace todo menos enviar y te cuenta lo que habría hecho)", isOn: $agent.practice)
             } header: {
                 Label(agent.name, systemImage: AgentStyle.symbol(agent.id))
             }

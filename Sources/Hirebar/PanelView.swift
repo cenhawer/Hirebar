@@ -209,6 +209,11 @@ struct AgentRow: View {
                         .font(.system(size: 11))
                         .fixedSize()
                 }
+                Toggle("Práctica", isOn: Binding(get: { agent.practice }, set: { _ in model.togglePractice(agent.id) }))
+                    .toggleStyle(.checkbox)
+                    .font(.system(size: 11))
+                    .fixedSize()
+                    .help("Hace todo menos enviar y te cuenta lo que habría hecho")
                 Spacer()
                 Button(agent.id == .profile ? "Regenerar HV" : "Correr ahora") { model.runNow(agent.id) }
                     .controlSize(.small)

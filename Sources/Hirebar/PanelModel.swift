@@ -18,6 +18,7 @@ struct AgentCardData: Identifiable {
     let next: String
     let enabled: Bool
     let autoApprove: Bool
+    let practice: Bool
     let working: Bool
     let stats: [String]
     let sources: [SourceToggle]
@@ -103,6 +104,7 @@ final class PanelModel: ObservableObject {
             next: next,
             enabled: agent.enabled,
             autoApprove: agent.autoApprove,
+            practice: agent.practice,
             working: working,
             stats: stats,
             sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
@@ -126,6 +128,13 @@ final class PanelModel: ObservableObject {
         AgentStore.update(kind) { $0.enabled.toggle() }
         refresh()
     }
+
+    func togglePractice(_ kind: AgentKind) {
+        Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.panelOrigin)
+        refresh()
+    }
+
+    static let panelOrigin = "el panel"
 
     func toggleAutoApprove(_ kind: AgentKind) {
         AutoSendConfirmation.toggle(kind)

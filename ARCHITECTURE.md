@@ -254,8 +254,8 @@ Contrato de entrada con la persona. Agregar, quitar o cambiar un comando se escr
 | Responder citando un aviso | Elige a qué lista aplica la respuesta |
 | `reanudar <agente>` · botones "Reanudar <agente>" y "Mantener en pausa" | Levanta o mantiene la pausa de un agente por una acción no autorizada |
 
-El chat se vincula hoy con el primer mensaje que llega; la spec `012-canal-de-mensajes` lo cambia a
-un código que muestra la app.
+El bot atiende solo a la cuenta anclada en Ajustes → Telegram y avisos (spec `012-canal-de-mensajes`,
+ADR-0005); mensajes y botones de otras cuentas o de grupos se ignoran.
 
 **Contrato con la IA de terminal** (motor propio y adaptadores):
 
@@ -386,6 +386,7 @@ Los valores de esta tabla pasan a configuración (spec `024`).
 | [ADR-0002](docs/adr/0002-arquitectura-hexagonal.md) | Arquitectura hexagonal con límites por targets de SwiftPM | Aceptado | 2026-11-05 |
 | [ADR-0003](docs/adr/0003-ffmpeg-prerrequisito-del-sistema.md) | ffmpeg como prerrequisito del sistema | Aceptado | 2026-11-05 |
 | [ADR-0004](docs/adr/0004-macos-26-y-swift-6.md) | macOS 26 y Swift 6 como base | Aceptado | 2026-11-05 |
+| [ADR-0005](docs/adr/0005-anclar-el-bot-por-id-de-usuario.md) | Anclar el bot por ID de usuario | Aceptado | 2026-11-09 |
 
 Índice y plantilla en `docs/adr/README.md`.
 

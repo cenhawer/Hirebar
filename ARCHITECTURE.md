@@ -211,7 +211,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarSources/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
 | `HirebarSources/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarEngine/Controller.swift` | Application | Se parte en los casos de uso de lotes |
-| `HirebarEngine/Commands.swift` | Telegram + Application | Lectura de comandos al adaptador (`013-parser-comandos`); acciones a casos de uso |
+| `HirebarApplication/CommandParser.swift` · `HirebarEngine/Commands.swift` | Application · Telegram | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones pasan a casos de uso en la spec `017` |
 | `HirebarEngine/Scheduler.swift` | Application | Programar tareas, con `Clock` |
 | `HirebarEngine/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
 | `HirebarEngine/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |

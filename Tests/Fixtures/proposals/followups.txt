@@ -1,0 +1,9 @@
+Un cliente respondió y una propuesta necesita seguimiento.
+HIREBAR_PROPOSALS_BEGIN
+{"schemaVersion": 1, "proposals": [
+  {"id": "r:1", "action": "replyToClient", "target": {"url": "https://ejemplo.com/mensajes/1"},
+   "title": "Cliente de la API de pagos", "source": "Workana · respondió hoy", "text": "Gracias por responder. ¿Podemos hablar mañana?"},
+  {"id": "s:1", "action": "sendFollowUp", "target": {"url": "https://ejemplo.com/proyecto/2"},
+   "title": "App de reservas", "source": "Workana · enviada hace 2 días", "text": "Una idea para el riesgo de concurrencia en las reservas."}
+]}
+HIREBAR_PROPOSALS_END

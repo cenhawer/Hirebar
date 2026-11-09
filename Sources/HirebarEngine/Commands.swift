@@ -268,6 +268,9 @@ extension Controller {
         }
         if verb == "no" {
             discard(emails, chatId: Config.load().chatId)
+            let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
+            let stamp = Int(Date().timeIntervalSince1970)
+            try? FileManager.default.moveItem(at: pending, to: Paths.prospecting.appendingPathComponent("descartados-\(stamp).json"))
             return
         }
         approve(emails, picks: numbers)

@@ -51,4 +51,18 @@ final class TelegramSenderTests: XCTestCase {
         XCTAssertFalse(Telegram.looksLikeToken("hola"))
         XCTAssertFalse(Telegram.looksLikeToken("123:corto"))
     }
+
+    func testVoiceNotesCarryTheirSizeAndDuration() {
+        let voice: [String: Any] = ["file_id": "f1", "file_size": 123_456, "duration": 42]
+        let message: [String: Any] = [
+            "message_id": 6,
+            "date": 1,
+            "voice": voice,
+            "from": ["id": 7, "first_name": "Ana"],
+            "chat": ["id": 7, "type": "private"],
+        ]
+        let parsed = Telegram.parse(["message": message])
+        XCTAssertEqual(parsed?.audioBytes, 123_456)
+        XCTAssertEqual(parsed?.audioSeconds, 42)
+    }
 }

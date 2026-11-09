@@ -28,8 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         quit.target = self
         menu.addItem(quit)
 
-        notificationRouter.onOpen = { [weak self] in self?.showPanel() }
-        UNUserNotificationCenter.current().delegate = notificationRouter
+        if MacNotifications.isAvailable {
+            notificationRouter.onOpen = { [weak self] in self?.showPanel() }
+            UNUserNotificationCenter.current().delegate = notificationRouter
+            Task { await MacNotifications.requestPermissionIfUndecided() }
+        }
         StatusMenu.shared.onOpenChannel = { [weak self] in self?.settings.show(.channel) }
         settings.channel.onStateChange = { [weak self] in
             self?.panel.refresh()

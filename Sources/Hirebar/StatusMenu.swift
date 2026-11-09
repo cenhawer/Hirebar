@@ -67,9 +67,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             AgentStore.update(kind) { $0.enabled.toggle() }
         })
         if [.jobs, .freelance, .clients].contains(kind) {
-            menu.addItem(check("Envío automático", { AgentStore.load(kind).autoApprove }) {
-                AgentStore.update(kind) { $0.autoApprove.toggle() }
-            })
+            let autoSend = check("Envío automático", { AgentStore.load(kind).autoApprove }, { AutoSendConfirmation.toggle(kind) })
+            menu.addItem(autoSend)
         }
         let sources = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
         if !sources.isEmpty {

@@ -191,7 +191,9 @@ casos de uso de lotes, comandos, programación y radares; `Engine` es la raíz d
 (crea Telegram con su almacén de secretos, el `Controller`, los radares y el programador, y los
 conecta) y la app recibe esa instancia. No hay singletons propios (test). Los casos de uso leen y escriben datos solo a
 través de los puertos de repositorio de `HirebarApplication`, agrupados en `Repositories`; la raíz
-de composición pasa las implementaciones de archivos de `HirebarStorage` (`Repositories.files`). El paso 3 de la spec
+de composición pasa las implementaciones de archivos de `HirebarStorage` (`Repositories.files`). El estado
+de corrida (vistos de los radares, turnos ya ejecutados y la cuenta que espera la nota de voz) entra
+por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

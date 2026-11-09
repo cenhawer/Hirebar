@@ -90,6 +90,10 @@ extension Controller {
             }
             Metrics.event(note)
             reply("Anotado para el informe del domingo.")
+        case "autoon":
+            confirmAutoSend(callbackArgument ?? "")
+        case "autocancel":
+            reply("Listo, el envío automático sigue como estaba.")
         case "auto", "automatico":
             handleAuto(Array(words.dropFirst()))
         case "agentes":
@@ -301,18 +305,40 @@ extension Controller {
         approve(emails, picks: numbers)
     }
 
+    static let autoSendOrigin = "Telegram"
+
     private func handleAuto(_ rest: [String]) {
         let named = rest.count > 1 ? AgentKind.parse(rest.dropLast().joined(separator: " ")) : nil
-        let targets: [AgentKind] = named.map { [$0] } ?? [.jobs, .freelance]
-        if let value = rest.last, ["si", "on", "no", "off"].contains(value) {
-            let on = value == "si" || value == "on"
-            for kind in targets { AgentStore.update(kind) { $0.autoApprove = on } }
+        let targets: [AgentKind] = (named.map { [$0] } ?? [.jobs, .freelance]).filter(AutoSend.agents.contains)
+        if let value = rest.last, ["si", "on"].contains(value) {
+            let pending = targets.filter { !AgentStore.load($0).autoApprove }
+            if !pending.isEmpty {
+                askToTurnOnAutoSend(pending)
+                return
+            }
+        }
+        if let value = rest.last, ["no", "off"].contains(value) {
+            for kind in targets { AutoSend.turnOff(kind, from: Self.autoSendOrigin) }
         }
         let lines = [AgentKind.jobs, .freelance, .clients].map { kind -> String in
             let agent = AgentStore.load(kind)
             return "\(agent.name): \(agent.autoApprove ? "SÍ" : "no")"
         }
         reply("Envío automático · " + lines.joined(separator: " · ") + "\nCambiar: \"auto si\", \"auto no\", \"auto empleo no\", \"auto clientes si\".")
+    }
+
+    func askToTurnOnAutoSend(_ kinds: [AgentKind]) {
+        let names = kinds.map(\.rawValue).joined(separator: ",")
+        questions(
+            AutoSend.explanation(for: kinds) + "\n\n¿Lo prendo?",
+            [[("Sí, prender", "autoon:\(names)"), ("No", "autocancel:\(names)")]])
+    }
+
+    func confirmAutoSend(_ names: String) {
+        let kinds = names.split(separator: ",").compactMap { AgentKind(rawValue: String($0)) }.filter(AutoSend.agents.contains)
+        guard !kinds.isEmpty else { return }
+        for kind in kinds { AutoSend.turnOn(kind, from: Self.autoSendOrigin) }
+        reply("Envío automático prendido: " + kinds.map { AgentStore.load($0).name }.joined(separator: ", ") + ".")
     }
 
     private func handleAgentSwitch(_ rest: [String]) {

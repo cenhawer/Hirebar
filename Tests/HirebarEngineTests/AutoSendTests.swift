@@ -23,7 +23,7 @@ final class AutoSendTests: XCTestCase {
     }
 
     override func setUp() {
-        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock(), aiRunner: TestAIRunner())
+        controller = Controller.forTests()
         for kind in AutoSend.agents { AgentStore.update(kind) { $0.autoApprove = false } }
         replies = []
         questions = []

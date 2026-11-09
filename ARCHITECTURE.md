@@ -196,7 +196,8 @@ de corrida (vistos de los radares, turnos ya ejecutados y la cuenta que espera l
 por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. La hora y los
 temporizadores entran por `Clock`. La IA corre a través de `AIRunner`: `ProcessAIRunner` arma el proceso por
 perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos antes de entregar el
-resultado. El paso 3 de la spec
+resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
+radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

@@ -203,7 +203,6 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
 | La aprobación de correos no tiene una vista de historia para la persona | II | `028-vista-actividad` |
-| Sin modo práctica | II | `014-modo-practica` |
 | Las listas descartadas (`descartados-<marca>.json`) no tienen retención | IV | `029-politica-datos` |
 | El motor del agente no tiene tests | VII | `019-tests-engine` |
 

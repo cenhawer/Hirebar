@@ -281,7 +281,6 @@ defecto.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| Sin modo práctica | II | `014-modo-practica` |
 | Las vacantes vistas se guardan en `UserDefaults` | IV | `022-version-datos` |
 | Intervalos, máximos, ventanas y listas de idioma escritos en el código | VI | `024-textos-y-valores-fuera-del-codigo` |
 | El motor del agente no tiene tests | VII | `019-tests-engine` |

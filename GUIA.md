@@ -197,6 +197,7 @@ Quedan guardadas en `workspace/contenido/cuentas.json`.
 | Prender o apagar un agente | `agente clientes off` · `agente clientes on` |
 | Envío automático | `auto si` · `auto no` (Empleo y Freelance) · `auto empleo no` · `auto clientes si`. Para prenderlo te llega qué hará cada agente y se prende con el botón **Sí, prender**; apagarlo es inmediato |
 | Sacar un agente de la pausa | `reanudar empleo` (o el botón **Reanudar** del aviso) |
+| Modo práctica | `practica` · `practica empleo si` · `practica empleo no`. El agente busca, redacta y te deja aprobar como siempre, pero no envía nada: te cuenta lo que habría hecho. También en el panel (casilla **Práctica**), el menú y Ajustes |
 | Aprobar o descartar una lista | `si` · `si 1 3` · `no` (o los botones del mensaje) |
 | Correos del día | `envia correos` · `envia correos 1 3` · `no correos` |
 | Video con tu voz | `video <cuenta>` (vuelve a mandar la vista previa y el guion) · responder con una nota de voz (te devuelvo el video con tu voz) |

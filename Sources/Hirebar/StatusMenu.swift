@@ -70,6 +70,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             let autoSend = check("Envío automático", { AgentStore.load(kind).autoApprove }, { AutoSendConfirmation.toggle(kind) })
             menu.addItem(autoSend)
         }
+        let practice = check("Modo práctica", { AgentStore.load(kind).practice }, { Self.togglePractice(kind) })
+        menu.addItem(practice)
         let sources = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
         if !sources.isEmpty {
             menu.addItem(.separator())
@@ -99,6 +101,12 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         })
         menu.addItem(action("Ajustes…") { [weak self] in self?.onOpenSettings?(kind) })
         return menu
+    }
+
+    static let menuOrigin = "el menú"
+
+    static func togglePractice(_ kind: AgentKind) {
+        Practice.set(kind, on: !AgentStore.load(kind).practice, from: menuOrigin)
     }
 
     func menuWillOpen(_ menu: NSMenu) { refresh() }

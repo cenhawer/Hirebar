@@ -39,7 +39,7 @@ public struct ExecutionGuard: Sendable {
         let eligible = items.filter { !held.contains($0) }
         let plan = ExecutionPlanner.plan(eligible, remainingQuota: remainingQuota(of: agent, dailyLimit: dailyLimit))
         try store.saveApproved(plan.now, batch: batch)
-        return ExecutionPlan(now: plan.now, deferred: plan.deferred + held)
+        return ExecutionPlan(now: plan.now, deferred: plan.deferred, held: held)
     }
 
     @discardableResult

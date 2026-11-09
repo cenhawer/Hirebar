@@ -27,8 +27,8 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 
 | Agente | Qué hace | Cuándo | Qué haces tú |
 |---|---|---|---|
-| Empleo | Revisa LinkedIn, Get on Board, Computrabajo, elempleo y Magneto; descarta lo que no encaja y postula. También busca vacantes publicadas en redes. | Búsqueda cada 30 min; redes cada 2 h de 8 a. m. a 8 p. m. | Con envío automático, nada. Sin él, respondes `si`, `si 1 3` o `no` en Telegram. |
-| Freelance | Revisa Workana y Freelancer; analiza la competencia, pone precio, redacta y envía. Hace seguimientos a las 48 h. | Búsqueda cada 20 min; seguimientos 10 a. m. y 4 p. m. | Igual que Empleo. Si un cliente responde, te llega primero: contestas tú. |
+| Empleo | Revisa LinkedIn, Get on Board, Computrabajo, elempleo y Magneto; descarta lo que no encaja y postula. También busca vacantes publicadas en redes y te las propone como lista. | Búsqueda cada 30 min; redes cada 2 h de 8 a. m. a 8 p. m. | Con envío automático, nada. Sin él, respondes `si`, `si 1 3` o `no` en Telegram. |
+| Freelance | Revisa Workana y Freelancer; analiza la competencia, pone precio, redacta y envía. Propone seguimientos a las 48 h. | Búsqueda cada 20 min; seguimientos 10 a. m. y 4 p. m. | Igual que Empleo, también para los seguimientos. Si un cliente responde, te llega una respuesta propuesta que solo sale con tu `si`, aunque tengas el envío automático. |
 | Clientes | Busca empresas y negocios que necesitan software y les escribe por correo desde tu Gmail. | Lunes a viernes, 7 a. m. | Con envío automático, nada. Sin él, `envia correos`, `envia correos 1 3` o `no correos`. Las respuestas con interés siempre las apruebas tú. |
 | Contenido | Prepara publicaciones con texto e imágenes (carrusel) para cada cuenta que configures: por ejemplo, la de tu empresa en Instagram y la tuya en LinkedIn. Cada cuenta tiene su nombre, sus colores y sus días. Los temas no salen de tu hoja de vida: consejos de tecnología para negocios, mitos del software, noticias de la semana y buenas prácticas. | 9 a. m. en los días de cada cuenta, o cuando escribas `post` (pasa de primero en la fila). | `publica <cuenta>`, `post <cuenta> cambia <qué>` o `post <cuenta> salta`. Nunca publica sin tu aprobación. |
 | Perfil | Mantiene tu perfil y regenera tus hojas de vida. | Cuando se lo pides. | Ver la sección siguiente. |
@@ -41,13 +41,31 @@ La búsqueda en los portales incluidos no usa IA. La IA hace el trabajo pesado: 
 | Opción | Qué necesitas |
 |---|---|
 | **Claude Code** (recomendado) | `curl -fsSL https://claude.ai/install.sh \| bash`, luego `claude` para iniciar sesión, y la extensión Claude in Chrome. Es la que está probada de punta a punta. |
-| **Codex (OpenAI)** | `npm i -g @openai/codex` y `codex login`. Para que use el navegador, configura un servidor MCP de Chrome en `~/.codex/config.toml`. |
-| **Gemini CLI (Google)** | `npm i -g @google/gemini-cli` y abrir `gemini` una vez para iniciar sesión. Para el navegador, un servidor MCP de Chrome en `~/.gemini/settings.json`. |
-| **Otra IA** | Escribes el comando. Hirebar lo corre en la terminal con estas variables: `$HIREBAR_PROMPT` (el pedido), `$HIREBAR_INSTRUCTIONS` (ruta de las reglas de la tarea), `$HIREBAR_FULL_PROMPT` (reglas + pedido juntos) y `$HIREBAR_WORKSPACE` (la carpeta de trabajo). Lo que imprima es la respuesta que te llega a Telegram. |
+| **Codex (OpenAI)** | `npm i -g @openai/codex` y `codex login`. Para que use el navegador, configura un servidor MCP de Chrome en `~/.codex/config.toml`. Las tareas que leen con el navegador (redes, tus portales, seguimientos, clientes y revisión de rendimiento) no corren con Codex. |
+| **Gemini CLI (Google)** | `npm i -g @google/gemini-cli` y abrir `gemini` una vez para iniciar sesión. Para el navegador, un servidor MCP de Chrome en `~/.gemini/settings.json`. Igual que con Codex, las tareas que leen con el navegador no corren. |
+| **Otra IA** | Escribes dos comandos: uno de lectura y redacción, y otro de ejecución. Hirebar los corre en la terminal con estas variables: `$HIREBAR_PROMPT` (el pedido), `$HIREBAR_INSTRUCTIONS` (ruta de las reglas de la tarea), `$HIREBAR_FULL_PROMPT` (reglas + pedido juntos), `$HIREBAR_WORKSPACE` (la carpeta de trabajo), `$HIREBAR_PHASE` (`read`, `draft` o `act`) y `$HIREBAR_WRITABLE_PATHS` (dónde puede escribir en `draft`). Lo que imprima es la respuesta que te llega a Telegram. Hirebar no puede verificar qué permisos tienen tus comandos: el de lectura no debería poder enviar ni escribir fuera de la carpeta de trabajo. |
 
 Después de elegir, pulsa **Probar**: le hace una pregunta corta y te dice si respondió, si falta iniciar sesión o qué error dio. Luego **Guardar**.
 
-Ejemplo de comando propio: `mi-ia run --system-file "$HIREBAR_INSTRUCTIONS" "$HIREBAR_PROMPT"`.
+Ejemplo de comandos propios: lectura `mi-ia run --read-only --system-file "$HIREBAR_INSTRUCTIONS" "$HIREBAR_PROMPT"` y ejecución `mi-ia run --system-file "$HIREBAR_INSTRUCTIONS" "$HIREBAR_PROMPT"`.
+
+### Qué puede hacer la IA en cada tarea
+
+La IA nunca tiene más permisos de los que necesita la tarea:
+
+| Tarea | Puede |
+|---|---|
+| Redes y tus portales | Leer y buscar. No escribe archivos ni actúa en las páginas: te devuelve una lista para aprobar. |
+| Seguimientos, clientes, contenido, perfil y análisis | Leer y escribir solo en su carpeta (por ejemplo, el análisis solo escribe en `informes/`). No envía nada. |
+| Postular, enviar propuestas, seguimientos y correos, publicar | Actuar con tu Chrome, solo sobre lo que aprobaste. |
+
+En las tareas que leen páginas, la IA no puede abrir `perfil.json`, `perfil.md` ni tus hojas de vida: lo que necesita (tus habilidades, tus logros) va en el pedido, sin tus datos de contacto.
+
+### Verificación y pausa
+
+Cada vez que la IA envía algo, deja un registro de lo que hizo. Hirebar lo compara con lo que aprobaste: si mandó algo que no estaba en la lista, a otro destino o con otro texto, o si no dejó el registro, ese agente queda **en pausa** y te llega un aviso con lo que no coincidió y dos botones: **Reanudar** y **Mantener en pausa**. Mientras está en pausa no ejecuta nada. También puedes reanudarlo con `reanudar <agente>` o desde el panel.
+
+El cupo diario de cada agente (Ajustes) también se cumple: si apruebas más de lo que queda, se ejecuta lo que cabe y el resto queda en una lista pendiente para el día siguiente.
 
 Si la sesión de la IA se vence, te llega un aviso por Telegram con el comando para volver a entrar, y las listas quedan guardadas para reintentar con `si`.
 
@@ -177,7 +195,8 @@ Quedan guardadas en `workspace/contenido/cuentas.json`.
 | Buscar ya | `buscar` · `buscar empleo` · `buscar freelance` |
 | Correr un agente ya | `corre clientes` · `corre contenido` · `corre analista` |
 | Prender o apagar un agente | `agente clientes off` · `agente clientes on` |
-| Envío automático | `auto si` · `auto no` · `auto empleo no` · `auto clientes si` |
+| Envío automático | `auto si` · `auto no` (Empleo y Freelance) · `auto empleo no` · `auto clientes si` |
+| Sacar un agente de la pausa | `reanudar empleo` (o el botón **Reanudar** del aviso) |
 | Aprobar o descartar una lista | `si` · `si 1 3` · `no` (o los botones del mensaje) |
 | Correos del día | `envia correos` · `envia correos 1 3` · `no correos` |
 | Video con tu voz | `video <cuenta>` (vuelve a mandar la vista previa y el guion) · responder con una nota de voz (te devuelvo el video con tu voz) |
@@ -197,6 +216,8 @@ Cualquier otra cosa: el bot responde con la lista completa.
 | Claude dice que no pudo enviar algo | Revisa que Chrome esté abierto, con la extensión Claude in Chrome y con sesión en ese portal. Hirebar nunca resuelve CAPTCHAs ni escribe contraseñas. |
 | No salen los PDF de la hoja de vida | Hace falta Google Chrome instalado en `/Applications`. El mensaje de Telegram dice cuál falló. |
 | Cambié algo y no se nota | Ajustes y habilidades aplican desde la búsqueda siguiente. Para forzarla: `buscar`. |
+| Un agente dice "en pausa" | La IA hizo algo que no coincidía con lo que aprobaste, o no dejó el registro. Lee el aviso de Telegram y, si está bien, `reanudar <agente>`. |
+| Llega "esta tarea necesita Claude Code" | Elegiste Codex o Gemini: las tareas que leen con el navegador solo corren con Claude Code. |
 
 ## Actualizar Hirebar
 

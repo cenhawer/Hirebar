@@ -1,6 +1,6 @@
 # Hirebar
 
-App para la barra de menú de macOS que busca empleo remoto, proyectos freelance y clientes por ti. Revisa los portales cada pocos minutos, filtra con tu perfil y te avisa por Telegram. Cuando apruebas (o si activas el envío automático), una IA de terminal abre tu Chrome, redacta y envía las propuestas o postulaciones, y te cuenta qué hizo. Puedes usar [Claude Code](https://claude.com/claude-code) (recomendado), Codex de OpenAI, Gemini CLI de Google u otra que se pueda ejecutar desde la terminal.
+App para la barra de menú de macOS que busca empleo remoto, proyectos freelance y clientes por ti. Revisa los portales cada pocos minutos, filtra con tu perfil y te avisa por Telegram. Cuando apruebas (o si activas el envío automático), una IA de terminal abre tu Chrome, redacta y envía las propuestas o postulaciones, y te cuenta qué hizo. La IA solo actúa sobre lo que aprobaste, y Hirebar verifica cada envío: si algo no coincide, el agente queda en pausa hasta que lo revises. Puedes usar [Claude Code](https://claude.com/claude-code) (recomendado), Codex de OpenAI, Gemini CLI de Google u otra que se pueda ejecutar desde la terminal.
 
 Está dividida en agentes independientes, cada uno con su horario: **Empleo, Freelance, Clientes, Contenido, Perfil y Analista**. Cómo se usa cada uno está en la [guía de uso](GUIA.md).
 

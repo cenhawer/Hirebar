@@ -24,7 +24,7 @@ final class PracticeTests: XCTestCase {
     }
 
     override func setUp() {
-        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock(), aiRunner: TestAIRunner())
+        controller = Controller.forTests()
         store = FileExecutionStateStore(
             stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"), runsFolder: Paths.runs)
         controller.executionGuard = ExecutionGuard(store: store, alerts: SilentAlerts())

@@ -23,7 +23,7 @@ final class AIRunnerFlowTests: XCTestCase {
 
     override func setUp() {
         runner = TestAIRunner()
-        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock(), aiRunner: runner)
+        controller = Controller.forTests(aiRunner: runner)
         replies = []
         controller.replies = { [weak self] text in self?.replies.append(text) }
     }

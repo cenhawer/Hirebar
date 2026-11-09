@@ -132,8 +132,7 @@ final class ChannelSetupTests: XCTestCase {
         var config = Config.load()
         config.channelOwner = ChannelOwner(userId: 7, chatId: 7, name: "Ana")
         config.save()
-        let controller = Controller(
-            telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock(), aiRunner: TestAIRunner())
+        let controller = Controller.forTests()
         controller.channel = setup
         let chat: [String: Any] = ["id": 7, "type": "private"]
         let button: [String: Any] = [

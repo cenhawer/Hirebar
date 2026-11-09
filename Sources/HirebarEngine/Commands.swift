@@ -41,7 +41,7 @@ extension Controller {
         guard admits(message) else { return }
         let config = Config.load()
         if let fileId = message.audioFileId {
-            handleRecording(fileId: fileId, ext: message.audioExtension)
+            handleRecording(fileId: fileId, ext: message.audioExtension, size: (message.audioBytes, message.audioSeconds))
             return
         }
 
@@ -486,7 +486,26 @@ extension Controller {
     }
 
     /// La persona mandó una nota de voz: se une con el video que está esperando voz.
-    func handleRecording(fileId: String, ext: String) {
+    func audioProblem(bytes: Int?, seconds: Int?) -> String? {
+        guard let tools = try? SystemTools.bundled() else {
+            return "Falta herramientas.json dentro de la app; vuelve a instalarla con scripts/bundle.sh --install."
+        }
+        guard tools.ffmpegPath() != nil else {
+            return "Para armar el video con tu voz falta ffmpeg en el Mac. Instálalo con \(tools.ffmpeg.install) "
+                + "y vuelve a mandar el audio."
+        }
+        guard tools.acceptsAudio(bytes: bytes, seconds: seconds) else {
+            let minutes = tools.maxAudioSeconds / 60
+            return "Ese audio es muy largo: el máximo es \(minutes) minutos o \(tools.maxAudioMegabytes) MB. Graba uno más corto."
+        }
+        return nil
+    }
+
+    func handleRecording(fileId: String, ext: String, size: (bytes: Int?, seconds: Int?) = (nil, nil)) {
+        if let problem = audioProblem(bytes: size.bytes, seconds: size.seconds) {
+            reply(problem)
+            return
+        }
         let waiting = UserDefaults.standard.string(forKey: Controller.waitingVoiceKey)
         let candidates = ContentAccountStore.load().filter {
             $0.video && FileManager.default.fileExists(atPath: $0.videoFolder.appendingPathComponent("guion.json").path)
@@ -498,7 +517,8 @@ extension Controller {
         reply("Recibí tu audio. Armo el video de \(account.title) con tu voz; tarda unos minutos.")
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
-            guard Telegram.shared.download(fileId: fileId, to: file) else {
+            let limit = (try? SystemTools.bundled())?.maxAudioBytes
+            guard Telegram.shared.download(fileId: fileId, to: file, maxBytes: limit) else {
                 DispatchQueue.main.async { self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.") }
                 return
             }

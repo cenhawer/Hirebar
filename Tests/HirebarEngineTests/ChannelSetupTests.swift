@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 import XCTest
@@ -7,7 +8,11 @@ import XCTest
 
 final class ChannelSetupTests: XCTestCase {
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-channel-\(UUID().uuidString)")
-    let moment = Date(timeIntervalSince1970: 1_800_000_000)
+    let started = Date(timeIntervalSince1970: 1_800_000_000)
+    var moment = Date(timeIntervalSince1970: 1_800_000_000)
+    var sent: [(String, Int64)] = []
+    var tokenRejected = false
+    var tokenSaved = true
     var setup: ChannelSetup!
 
     override static func setUp() {
@@ -18,49 +23,129 @@ final class ChannelSetupTests: XCTestCase {
         try? FileManager.default.removeItem(at: home)
     }
 
+    var settings: ChannelSettings {
+        get throws { try ChannelSettings.load(from: EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/canal.json")) }
+    }
+
+    func makeSetup(settings: ChannelSettings?) -> ChannelSetup {
+        let telegram = ChannelTelegram(
+            isConfigured: { true },
+            tokenRejected: { [unowned self] in self.tokenRejected },
+            send: { [unowned self] text, chat in self.sent.append((text, chat)) },
+            saveToken: { [unowned self] _ in self.tokenSaved },
+            removeToken: { [unowned self] in self.tokenSaved },
+            start: {}
+        )
+        return ChannelSetup(settings: settings, telegram: telegram, now: { [unowned self] in self.moment })
+    }
+
     override func setUpWithError() throws {
-        Config().save()
-        let settings = try ChannelSettings.load(from: EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/canal.json"))
-        let moment = self.moment
-        setup = ChannelSetup(settings: settings, now: { moment })
+        var config = Config()
+        config.botUsername = "hirebar_bot"
+        config.save()
+        moment = started
+        sent = []
+        tokenRejected = false
+        tokenSaved = true
+        setup = makeSetup(settings: try settings)
     }
 
-    func sender(user: Int64, privateChat: Bool = true) -> ChannelSender {
-        ChannelSender(userId: user, chatId: user, name: "Ana", username: "ana", isPrivateChat: privateChat, sentAt: moment)
+    func sender(user: Int64, viaButton: Bool = false) -> ChannelSender {
+        ChannelSender(
+            userId: user, chatId: user, name: "Ana", username: "ana", isPrivateChat: true, sentAt: started, viaButton: viaButton)
     }
 
-    func testConfirmingTheProposedAccountAnchorsTheBotToIt() {
-        XCTAssertFalse(setup.offer(sender(user: 7)))
+    func testConfirmingTheProposedAccountAnchorsTheBotToItAndWelcomesIt() {
+        XCTAssertEqual(setup.state, .unlinked(bot: "hirebar_bot"))
+        XCTAssertFalse(setup.offer(sender(user: 7), text: "hola"))
         setup.startPairing()
-        XCTAssertTrue(setup.offer(sender(user: 7)))
-        XCTAssertFalse(setup.offer(sender(user: 8)))
-        setup.confirm(welcome: "hola")
+        XCTAssertEqual(setup.state, .waitingForHello(bot: "hirebar_bot"))
+        XCTAssertTrue(setup.offer(sender(user: 7), text: "hola"))
+        guard case .confirming(let candidate, _) = setup.state else { return XCTFail("debía pedir confirmación") }
+        XCTAssertEqual(candidate.text, "hola")
+        setup.confirm(welcome: "bienvenida")
         XCTAssertEqual(Config.load().channelOwner?.userId, 7)
+        XCTAssertEqual(sent.first?.1, 7)
         XCTAssertEqual(setup.admit(sender(user: 7)), .allowed)
         XCTAssertEqual(setup.admit(sender(user: 8)), .notOwner)
+        XCTAssertEqual(setup.admit(sender(user: 8, viaButton: true)), .notOwner)
     }
 
-    func testDecliningKeepsWaitingForTheRightAccount() {
+    func testDecliningShowsTheNextAccountThatWrote() {
         setup.startPairing()
-        XCTAssertTrue(setup.offer(sender(user: 8)))
+        XCTAssertTrue(setup.offer(sender(user: 8), text: "hola"))
+        XCTAssertTrue(setup.offer(sender(user: 7), text: "hola, soy yo"))
         setup.decline()
-        XCTAssertFalse(setup.offer(sender(user: 8)))
-        XCTAssertTrue(setup.offer(sender(user: 7)))
+        guard case .confirming(let candidate, _) = setup.state else { return XCTFail("debía mostrar el siguiente") }
+        XCTAssertEqual(candidate.owner.userId, 7)
         XCTAssertNil(Config.load().channelOwner)
     }
 
-    func testChangingAccountForgetsTheAnchoredOne() {
+    func testButtonsDoNotCountAsTheHello() {
         setup.startPairing()
-        _ = setup.offer(sender(user: 7))
+        XCTAssertFalse(setup.offer(sender(user: 7, viaButton: true), text: "si:b1"))
+        XCTAssertEqual(setup.state, .waitingForHello(bot: "hirebar_bot"))
+    }
+
+    func testPairingExpiresAfterItsWindow() throws {
+        setup.startPairing()
+        moment = started.addingTimeInterval(try settings.pairingWindow + 1)
+        XCTAssertEqual(setup.state, .expired(bot: "hirebar_bot"))
+        XCTAssertFalse(setup.offer(sender(user: 7), text: "hola"))
+    }
+
+    func testChangingAccountForgetsTheAnchoredOneAndCancelStopsWaiting() {
+        setup.startPairing()
+        _ = setup.offer(sender(user: 7), text: "hola")
         setup.confirm(welcome: "hola")
         setup.changeAccount()
         XCTAssertNil(Config.load().channelOwner)
         XCTAssertEqual(setup.admit(sender(user: 7)), .notOwner)
+        setup.cancelPairing()
+        XCTAssertEqual(setup.state, .unlinked(bot: "hirebar_bot"))
+    }
+
+    func testRejectedTokenAndMissingSettingsAreShown() {
+        tokenRejected = true
+        XCTAssertEqual(setup.state, .tokenRejected)
+        let broken = makeSetup(settings: nil)
+        XCTAssertEqual(broken.state, .misconfigured)
+        XCTAssertEqual(broken.admit(sender(user: 7)), .notOwner)
+    }
+
+    func testRemovingTheBotKeepsTheConfigurationWhenTheKeychainFails() {
+        setup.startPairing()
+        _ = setup.offer(sender(user: 7), text: "hola")
+        setup.confirm(welcome: "hola")
+        tokenSaved = false
+        XCTAssertEqual(setup.removeBot(), .keychainFailed)
+        XCTAssertEqual(Config.load().channelOwner?.userId, 7)
+        tokenSaved = true
+        XCTAssertEqual(setup.removeBot(), .done)
+        XCTAssertNil(Config.load().channelOwner)
+    }
+
+    func testMessagesFromAnotherAccountNeverReachTheCommands() {
+        var config = Config.load()
+        config.channelOwner = ChannelOwner(userId: 7, chatId: 7, name: "Ana")
+        config.save()
+        let shared = Controller.shared.channel
+        Controller.shared.channel = setup
+        defer { Controller.shared.channel = shared }
+        let chat: [String: Any] = ["id": 7, "type": "private"]
+        let button: [String: Any] = [
+            "id": "c1", "data": "si:b1", "from": ["id": 99, "first_name": "Ana"], "message": ["message_id": 1, "chat": chat],
+        ]
+        let text: [String: Any] = ["message_id": 2, "date": 1, "text": "estado", "from": ["id": 7, "first_name": "Ana"], "chat": chat]
+        guard let stranger = Telegram.parse(["callback_query": button]), let owner = Telegram.parse(["message": text]) else {
+            return XCTFail("debía leer los updates")
+        }
+        XCTAssertFalse(Controller.shared.admits(stranger))
+        XCTAssertTrue(Controller.shared.admits(owner))
     }
 
     func testBundledChannelSettingsAreReadable() throws {
-        let settings = try ChannelSettings.load(from: EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/canal.json"))
-        XCTAssertGreaterThan(settings.pairingWindow, 0)
-        XCTAssertGreaterThan(settings.messagesPerMinute, 0)
+        XCTAssertGreaterThan(try settings.pairingWindow, 0)
+        XCTAssertGreaterThan(try settings.messagesPerMinute, 0)
     }
 }

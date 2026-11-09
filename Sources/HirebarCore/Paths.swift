@@ -59,15 +59,20 @@ public enum Paths {
             "db7fa978455f0893a60c0399bc60419a2612fb446b3f73f822a52250afebcb93",
             "e20353453c4f9dea20b3925709b6c762aeddc2c0dfab9c036970ea3f7efec51f",
             "9dcc00aa0e7d6aa9e2fe0fb952dc45291f32fcf4bcb918d45f1c80df702e1430",
+            "d15f30cfdb755fd5eb9cc1b9f7329b07c7b0ea057423776c14e66871e5ecb73b",
         ],
         "instrucciones-empleo.md": ["9a5f8307fbae0f8eaf39efdd29a9b0baa6d8cfa91e3f21e0b6baed7bd131df76"],
         "instrucciones-freelance.md": ["87e9d3076ff683fc6a318e4029973eb8facf9193e9b3f98453b227d613fd7ed4"],
         "instrucciones-portales-empleo.md": ["5a6848c1e8abe89bbba134e88702b3408f8ac617c0dda5adcf28335c9ee795ee"],
         "instrucciones-portales-freelance.md": ["ec168296d7802c7ddc4b69a56af3694e3169b11409c5537e193c53b641a67e9e"],
         "instrucciones-prospeccion-envio.md": ["2ca940762ff9cca8f53b38c0790c77344d0dfdf1ba17ff1828810d809bbd72b2"],
-        "instrucciones-prospeccion.md": ["a6c6ad9fcb07e3a7827594e1e75b75edecd750466e952323a299619fed7be8a2"],
+        "instrucciones-prospeccion.md": [
+            "a6c6ad9fcb07e3a7827594e1e75b75edecd750466e952323a299619fed7be8a2",
+            "fccf9290a49de2dbc110609493713e01b8caae38e1b7b48a0863c5917b800a26",
+        ],
         "instrucciones-redes.md": ["11ca75e85c7dd4ef18905b1cf168ff7687e470d4e3eb72c479cabbbd223a6990"],
         "instrucciones-seguimiento.md": ["7da33ef4ef15fed7ee3013544cf47503c4844f95f98be857cfded350931e4b4a"],
+        "instrucciones-seguimiento-envio.md": ["ce5c95c927cb0572f3f3681bcb7b67f2f03821de76c23763487775a73650e11d"],
     ]
 
     static func sha256(_ data: Data) -> String {

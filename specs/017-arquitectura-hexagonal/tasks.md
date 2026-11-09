@@ -14,9 +14,10 @@ description: "Tareas de implementación: arquitectura hexagonal"
 
 ## Paso 2: Adaptadores
 
-- [ ] T005 `HirebarStorage` con los almacenes, `Paths`, `Config`, `Keychain`, `Log` y el estado de ejecución (FR-002)
-- [ ] T006 `HirebarTelegram` y `HirebarNotifications`; `Messenger` como puerto y la elección de canal en la aplicación (FR-002)
-- [ ] T007 `HirebarPortals`, `HirebarAI` y `HirebarMedia` (FR-002)
+- [x] T005 `HirebarStorage` con los almacenes, `Paths`, `Config`, el Llavero (`KeychainSecretStore` sobre `Security.framework`, puerto `SecretStore`) y el estado de ejecución (FR-002)
+- [x] T006 `HirebarTelegram` (con su cliente HTTP y el token inyectado) y `HirebarNotifications`; `Notifier` queda en el motor hasta el paso 3 (FR-002)
+- [x] T007 `HirebarPortals` con `Net` (FR-002)
+- [ ] T007b `HirebarAI` y `HirebarMedia`, junto con los casos de uso del paso 3 (FR-002)
 
 ## Paso 3: Casos de uso y composición
 

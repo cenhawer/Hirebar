@@ -185,31 +185,30 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 ### 3.3 Estado actual y destino de cada archivo
 
-Hoy el código tiene cuatro targets en cadena (`Hirebar` → `HirebarEngine` → `HirebarSources` →
-`HirebarCore`) y el motor usa singletons. La spec `017-arquitectura-hexagonal` lleva cada archivo a
-su destino; los que mezclan capas se parten.
+Dominio, aplicación y adaptadores ya son targets propios (`HirebarStorage`, `HirebarTelegram`,
+`HirebarNotifications`, `HirebarPortals`). `HirebarEngine` todavía mezcla casos de uso con los
+adaptadores de IA y medios y usa singletons; el paso 3 de la spec `017-arquitectura-hexagonal` lo
+reparte.
 
 | Archivo actual | Destino | Nota |
 |---|---|---|
-| `HirebarCore/Models.swift` | Domain | `Batch`, `BatchItem`, `Hit`, `Fit`, `Mode` |
-| `HirebarCore/Agents.swift` | Domain + Storage | Entidades al dominio; `AgentStore` a un repositorio |
-| `HirebarDomain/Profile.swift` · `HirebarCore/ProfileStore.swift` | Domain · Storage | Entidades en el dominio; lectura, `ProfileEditor` y `loadEffective` en el almacén |
-| `HirebarDomain/SearchProfile.swift` · `HirebarCore/SearchProfileStore.swift` | Domain · Storage | Las listas de palabras pasan a datos (spec `024`) |
-| `HirebarDomain/ContentAccounts.swift` · `HirebarCore/ContentAccountStore.swift` | Domain · Storage | Entidades en el dominio; carpetas, archivos y `ContentAccountStore` en el almacén |
-| `HirebarDomain/Portals.swift` · `HirebarCore/PortalStore.swift` | Domain · Storage | `CustomPortal` en el dominio; `PortalStore` en el almacén |
-| `HirebarDomain/PlatformQuota.swift` · `HirebarCore/Quotas.swift` | Domain · Storage | Cupo en el dominio; conteo persistido en el almacén |
-| `HirebarCore/AIEngine.swift` | Domain + AI | Elección del motor al dominio; comandos y variables al adaptador |
-| `HirebarDomain/TextTools.swift`, `Models.swift`, `Agents.swift` · `HirebarCore/AgentStore.swift` | Domain · Storage | Normalización, lotes, agentes y tareas en el dominio; `AgentStore` y la búsqueda por nombre en el almacén |
-| `HirebarCore/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
-| `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
-| `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
+| `HirebarDomain/Profile.swift` · `HirebarStorage/ProfileStore.swift` | Domain · Storage | Entidades en el dominio; lectura, `ProfileEditor` y `loadEffective` en el almacén |
+| `HirebarDomain/SearchProfile.swift` · `HirebarStorage/SearchProfileStore.swift` | Domain · Storage | Las listas de palabras pasan a datos (spec `024`) |
+| `HirebarDomain/ContentAccounts.swift` · `HirebarStorage/ContentAccountStore.swift` | Domain · Storage | Entidades en el dominio; carpetas, archivos y `ContentAccountStore` en el almacén |
+| `HirebarDomain/Portals.swift` · `HirebarStorage/PortalStore.swift` | Domain · Storage | `CustomPortal` en el dominio; `PortalStore` en el almacén |
+| `HirebarDomain/PlatformQuota.swift` · `HirebarStorage/Quotas.swift` | Domain · Storage | Cupo en el dominio; conteo persistido en el almacén |
+| `HirebarStorage/AIEngine.swift` | Domain + AI | Elección del motor al dominio; comandos y variables al adaptador |
+| `HirebarDomain/TextTools.swift`, `Models.swift`, `Agents.swift` · `HirebarStorage/AgentStore.swift` | Domain · Storage | Normalización, lotes, agentes y tareas en el dominio; `AgentStore` y la búsqueda por nombre en el almacén |
+| `HirebarStorage/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
+| `HirebarStorage/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
+| `HirebarStorage/Keychain.swift` | Storage | `KeychainSecretStore` con `Security.framework`, puerto `SecretStore` |
 | `HirebarApplication/Log.swift` · `Hirebar/LogExport.swift` | Application · Hirebar | `os.Logger` por área y por agente; el botón "Registro" exporta los últimos días |
-| `HirebarCore/Telegram.swift`, `Notifier.swift`, `MacNotifications.swift` | Telegram + Notifications | `Messenger` y `CommandSource` |
-| `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
-| `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
+| `HirebarTelegram/Telegram.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarEngine/Notifier.swift` | Telegram · Notifications · Application | `Messenger` y `CommandSource`; `Notifier` elige el canal y pasa a caso de uso en el paso 3 |
+| `HirebarPortals/Net.swift` | Portals | `WebPageFetcher` |
+| `HirebarEngine/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
-| `HirebarSources/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
-| `HirebarSources/*Source.swift` (7) | Portals | Un adaptador por portal |
+| `HirebarPortals/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
+| `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarEngine/Controller.swift` | Application | Se parte en los casos de uso de lotes |
 | `HirebarApplication/CommandParser.swift` · `HirebarEngine/Commands.swift` | Application · Telegram | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones pasan a casos de uso en la spec `017` |
 | `HirebarEngine/Scheduler.swift` | Application | Programar tareas, con `Clock` |

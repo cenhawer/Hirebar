@@ -25,14 +25,7 @@ public enum BotCheck: Equatable, Sendable {
     case notSaved
 }
 
-struct NoSecrets: SecretStore {
-    func secret(for account: String) -> String? { nil }
-    func save(_ secret: String, for account: String) -> Bool { false }
-    func delete(_ account: String) -> Bool { false }
-}
-
 public final class Telegram: @unchecked Sendable {
-    nonisolated(unsafe) public static var shared = Telegram(secrets: NoSecrets())
     let secrets: SecretStore
 
     public init(secrets: SecretStore) {

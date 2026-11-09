@@ -8,21 +8,27 @@ import HirebarTelegram
 
 private let log = Log(.notifications)
 
-public enum Notifier {
-    public static var canUseTelegram: Bool {
-        Telegram.shared.isConfigured && !Telegram.shared.tokenRejected && Config.load().chatId != 0
+public struct Notifier: Sendable {
+    public let telegram: Telegram
+
+    public init(telegram: Telegram) {
+        self.telegram = telegram
+    }
+
+    public var canUseTelegram: Bool {
+        telegram.isConfigured && !telegram.tokenRejected && Config.load().chatId != 0
     }
 
     static let messageLimit = 3800
 
-    public static func announce(_ batch: Batch, title: String, footer: String) {
+    public func announce(_ batch: Batch, title: String, footer: String) {
         var blocks = [title]
         for (index, item) in batch.items.enumerated() {
             let lines = ["\(index + 1). [\(item.kind)] \(item.title)", item.detail] + (item.url.isEmpty ? [] : [item.url])
             blocks.append(lines.joined(separator: "\n"))
         }
         blocks.append(footer)
-        let messages = chunks(blocks, limit: messageLimit)
+        let messages = Self.chunks(blocks, limit: Self.messageLimit)
         guard canUseTelegram else {
             MacNotifications.show(title: title, body: "Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.")
             return
@@ -70,7 +76,7 @@ public enum Notifier {
         return pieces
     }
 
-    static func sendInOrder(
+    func sendInOrder(
         _ messages: [String],
         chatId: Int64,
         buttons: [[(String, String)]],
@@ -81,7 +87,7 @@ public enum Notifier {
             return
         }
         let rest = Array(messages.dropFirst())
-        Telegram.shared.send(first, chatId: chatId, buttons: rest.isEmpty ? buttons : []) { id in
+        telegram.send(first, chatId: chatId, buttons: rest.isEmpty ? buttons : []) { id in
             if rest.isEmpty || id == nil {
                 completion(id)
             } else {
@@ -92,25 +98,25 @@ public enum Notifier {
 
     static let notificationTitle = "Hirebar"
 
-    public static func tell(_ text: String) {
+    public func tell(_ text: String) {
         guard canUseTelegram else {
-            MacNotifications.show(title: notificationTitle, body: text)
+            MacNotifications.show(title: Self.notificationTitle, body: text)
             return
         }
-        Telegram.shared.send(text, chatId: Config.load().chatId) { id in
-            if id == nil { MacNotifications.show(title: notificationTitle, body: text) }
+        telegram.send(text, chatId: Config.load().chatId) { id in
+            if id == nil { MacNotifications.show(title: Self.notificationTitle, body: text) }
         }
     }
 
-    public static func sendFile(_ file: URL, caption: String) {
+    public func sendFile(_ file: URL, caption: String) {
         guard canUseTelegram else {
             log.write("Archivo listo sin canal para enviarlo: \(file.path)")
             return
         }
-        Telegram.shared.sendDocument(file, caption: caption, chatId: Config.load().chatId)
+        telegram.sendDocument(file, caption: caption, chatId: Config.load().chatId)
     }
 
-    public static func sendPhotos(_ files: [URL], caption: String, completion: @escaping () -> Void) {
+    public func sendPhotos(_ files: [URL], caption: String, completion: @escaping () -> Void) {
         guard canUseTelegram, !files.isEmpty else {
             if let folder = files.first?.deletingLastPathComponent().path {
                 log.write("Imágenes listas sin canal para enviarlas: \(folder)")
@@ -118,15 +124,15 @@ public enum Notifier {
             completion()
             return
         }
-        Telegram.shared.sendPhotos(files, caption: caption, chatId: Config.load().chatId, completion: completion)
+        telegram.sendPhotos(files, caption: caption, chatId: Config.load().chatId, completion: completion)
     }
 
-    public static func sendVideo(_ file: URL, caption: String, completion: @escaping () -> Void) {
+    public func sendVideo(_ file: URL, caption: String, completion: @escaping () -> Void) {
         guard canUseTelegram else {
             log.write("Video listo sin canal para enviarlo: \(file.path)")
             completion()
             return
         }
-        Telegram.shared.sendVideo(file, caption: caption, chatId: Config.load().chatId, completion: completion)
+        telegram.sendVideo(file, caption: caption, chatId: Config.load().chatId, completion: completion)
     }
 }

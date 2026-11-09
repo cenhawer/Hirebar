@@ -9,10 +9,10 @@ import HirebarTelegram
 private let log = Log(.portals)
 
 public final class FreelanceRadar: Radar {
-    public static let shared = FreelanceRadar()
+    weak var controller: Controller?
     static let maxPerBatch = 5
 
-    private init() {
+    public init() {
         super.init(firstDelay: 60, seenKey: "radar.seen", seenDays: 14)
     }
 
@@ -82,9 +82,9 @@ public final class FreelanceRadar: Radar {
         let footer = auto
             ? "Cupos: \(Quotas.summary())\n\n\(AI.capitalizedName) ya está analizando y enviando las propuestas; te aviso al terminar."
             : "Cupos: \(Quotas.summary())\n\nResponde \"si\" y \(AI.name) analiza la competencia, redacta y envía las propuestas. \"si 1 3\" para elegir, \"no\" para descartar."
-        Notifier.announce(batch, title: title, footer: footer)
+        controller?.notifier.announce(batch, title: title, footer: footer)
         if auto {
-            DispatchQueue.main.async { Controller.shared.autoApprove(BatchStore.find(id: batch.id) ?? batch) }
+            DispatchQueue.main.async { self.controller?.autoApprove(BatchStore.find(id: batch.id) ?? batch) }
         }
     }
 }

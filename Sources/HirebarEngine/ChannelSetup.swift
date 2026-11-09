@@ -32,14 +32,22 @@ struct ChannelTelegram {
     var removeToken: () -> Bool
     var start: () -> Void
 
-    static let live = ChannelTelegram(
-        isConfigured: { Telegram.shared.isConfigured },
-        tokenRejected: { Telegram.shared.tokenRejected },
-        send: { text, chatId in Telegram.shared.send(text, chatId: chatId) },
-        saveToken: { Telegram.shared.saveToken($0) },
-        removeToken: { Telegram.shared.removeToken() },
-        start: { Telegram.shared.start() }
-    )
+    var botUsername: () async -> String? = { nil }
+    var chatName: (Int64) async -> String? = { _ in nil }
+
+    static func live(_ telegram: Telegram) -> ChannelTelegram {
+        var live = ChannelTelegram(
+            isConfigured: { telegram.isConfigured },
+            tokenRejected: { telegram.tokenRejected },
+            send: { text, chatId in telegram.send(text, chatId: chatId) },
+            saveToken: { telegram.saveToken($0) },
+            removeToken: { telegram.removeToken() },
+            start: { telegram.start() }
+        )
+        live.botUsername = { await telegram.botUsername() }
+        live.chatName = { await telegram.chatName($0) }
+        return live
+    }
 }
 
 public final class ChannelSetup {
@@ -50,7 +58,7 @@ public final class ChannelSetup {
     private var guardian: ChannelGuard
     public var onChange: ((ChannelState) -> Void)?
 
-    init(settings: ChannelSettings?, telegram: ChannelTelegram = .live, now: @escaping () -> Date = Date.init) {
+    init(settings: ChannelSettings?, telegram: ChannelTelegram, now: @escaping () -> Date = Date.init) {
         self.settings = settings
         self.telegram = telegram
         self.now = now
@@ -150,10 +158,10 @@ public final class ChannelSetup {
     public func completeMissingDetails() async {
         var config = Config.load()
         guard telegram.isConfigured() else { return }
-        if config.botUsername.isEmpty, let username = await Telegram.shared.botUsername() {
+        if config.botUsername.isEmpty, let username = await telegram.botUsername() {
             config.botUsername = username
         }
-        if let owner = config.channelOwner, owner.name.isEmpty, let name = await Telegram.shared.chatName(owner.chatId) {
+        if let owner = config.channelOwner, owner.name.isEmpty, let name = await telegram.chatName(owner.chatId) {
             config.channelOwner = ChannelOwner(userId: owner.userId, chatId: owner.chatId, name: name, username: owner.username)
         }
         config.save()

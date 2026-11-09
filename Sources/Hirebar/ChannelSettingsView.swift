@@ -18,8 +18,11 @@ final class ChannelSettingsModel: ObservableObject {
 
     static let botFather = URL(string: "https://t.me/BotFather")
 
-    init() {
-        Controller.shared.channel.onChange = { [weak self] state in
+    let engine: Engine
+
+    init(engine: Engine) {
+        self.engine = engine
+        engine.controller.channel.onChange = { [weak self] state in
             Task { @MainActor in
                 self?.state = state
                 self?.onStateChange?()
@@ -28,7 +31,7 @@ final class ChannelSettingsModel: ObservableObject {
     }
 
     func reload() {
-        state = Controller.shared.channel.state
+        state = engine.controller.channel.state
         Task { @MainActor [weak self] in self?.notificationsAllowed = await MacNotifications.isAllowed() }
     }
 
@@ -42,7 +45,7 @@ final class ChannelSettingsModel: ObservableObject {
         checking = true
         problem = nil
         Task { @MainActor [weak self] in
-            let result = await Controller.shared.channel.useToken(candidate)
+            let result = await engine.controller.channel.useToken(candidate)
             self?.finishCheck(result)
         }
     }
@@ -62,15 +65,15 @@ final class ChannelSettingsModel: ObservableObject {
         reload()
     }
 
-    func startPairing() { Controller.shared.channel.startPairing() }
-    func confirm() { Controller.shared.channel.confirm(welcome: Controller.welcome) }
-    func decline() { Controller.shared.channel.decline() }
-    func changeAccount() { Controller.shared.channel.changeAccount() }
-    func cancelPairing() { Controller.shared.channel.cancelPairing() }
-    func sendTest() { Controller.shared.sendTestMessage() }
+    func startPairing() { engine.controller.channel.startPairing() }
+    func confirm() { engine.controller.channel.confirm(welcome: Controller.welcome) }
+    func decline() { engine.controller.channel.decline() }
+    func changeAccount() { engine.controller.channel.changeAccount() }
+    func cancelPairing() { engine.controller.channel.cancelPairing() }
+    func sendTest() { engine.controller.sendTestMessage() }
 
     func removeBot() {
-        if Controller.shared.channel.removeBot() == .keychainFailed {
+        if engine.controller.channel.removeBot() == .keychainFailed {
             problem = "No pude borrar el token del Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar."
         }
         reload()

@@ -9,15 +9,17 @@ import HirebarTelegram
 private let log = Log(.telegram)
 
 struct TelegramExecutionAlerts: ExecutionAlerts {
+    let notifier: Notifier
+
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {
         let name = AgentKind(rawValue: agent.rawValue).map { AgentStore.load($0).name } ?? agent.rawValue
         let text = Self.message(agentName: name, alias: agent.rawValue, verification: verification, pauseSaved: pauseSaved)
         log.write("Verificación: \(name) en pausa por la lista \(verification.batch)")
-        guard Notifier.canUseTelegram else {
-            Notifier.tell(text)
+        guard notifier.canUseTelegram else {
+            notifier.tell(text)
             return
         }
-        Telegram.shared.send(
+        notifier.telegram.send(
             text, chatId: Config.load().chatId,
             buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
     }

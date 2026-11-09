@@ -19,7 +19,11 @@ enum SettingsPage: Hashable {
 
 final class SettingsWindowController {
     private let model = SettingsModel()
-    let channel = ChannelSettingsModel()
+    let channel: ChannelSettingsModel
+
+    init(engine: Engine) {
+        channel = ChannelSettingsModel(engine: engine)
+    }
     private var window: NSWindow?
 
     var onSaved: (() -> Void)? {

@@ -58,6 +58,12 @@ enum AgentStyle {
 }
 
 final class PanelModel: ObservableObject {
+    let engine: Engine
+
+    init(engine: Engine) {
+        self.engine = engine
+    }
+
     @Published var agents: [AgentCardData] = []
     @Published var claude = "en espera"
     @Published var aiName = "Claude"
@@ -70,13 +76,13 @@ final class PanelModel: ObservableObject {
     var onOpenSettings: ((SettingsPage?) -> Void)?
 
     func refresh() {
-        let running = Controller.shared.runningAgent
-        let pauses = Controller.shared.pauseReasons()
+        let running = engine.controller.runningAgent
+        let pauses = engine.controller.pauseReasons()
         agents = AgentKind.allCases.map { card($0, running: running, pauseReason: pauses[$0]) }
-        claude = Controller.shared.status
+        claude = engine.controller.status
         aiName = AI.capitalizedName
-        claudeBusy = !Controller.shared.isIdle
-        let channel = Controller.shared.channel.state
+        claudeBusy = !engine.controller.isIdle
+        let channel = engine.controller.channel.state
         telegram = ChannelStatusText.describe(channel)
         telegramReady = ChannelStatusText.isReady(channel)
         opensAtLogin = SMAppService.mainApp.status == .enabled
@@ -88,12 +94,12 @@ final class PanelModel: ObservableObject {
         let working = running == kind
         var status: String
         switch kind {
-        case .jobs: status = "Última búsqueda: \(JobRadar.shared.status)"
-        case .freelance: status = "Última búsqueda: \(FreelanceRadar.shared.status)"
+        case .jobs: status = "Última búsqueda: \(engine.jobRadar.status)"
+        case .freelance: status = "Última búsqueda: \(engine.freelanceRadar.status)"
         case .profile: status = "\(Profile.load().cvVariants.count) hojas de vida · escribe \"logro\" o \"hv\" en Telegram"
         case .clients, .content, .analyst: status = agent.tasks.first.map { "Corre \($0.scheduleText)" } ?? "Sin horario"
         }
-        if working { status = Self.capitalized(Controller.shared.status) }
+        if working { status = Self.capitalized(engine.controller.status) }
         let next = nextText(kind, enabled: agent.enabled, working: working, paused: pauseReason != nil)
         var stats = WeeklyStats.lines(for: kind)
         if kind == .freelance {
@@ -122,7 +128,7 @@ final class PanelModel: ObservableObject {
         if paused { return "en pausa" }
         if !enabled { return "apagado" }
         if working { return "trabajando" }
-        return Scheduler.shared.nextRun(of: kind).map(TextTools.countdown) ?? "a pedido"
+        return engine.scheduler.nextRun(of: kind).map(TextTools.countdown) ?? "a pedido"
     }
 
     static func capitalized(_ text: String) -> String {
@@ -154,12 +160,12 @@ final class PanelModel: ObservableObject {
     }
 
     func resume(_ kind: AgentKind) {
-        Controller.shared.resumeAgent(kind)
+        engine.controller.resumeAgent(kind)
         refresh()
     }
 
     func runNow(_ kind: AgentKind) {
-        Controller.shared.runAgentNow(kind)
+        engine.controller.runAgentNow(kind)
         refresh()
     }
 
@@ -183,7 +189,7 @@ final class PanelModel: ObservableObject {
                 try SMAppService.mainApp.register()
             }
         } catch {
-            StatusMenu.shared.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
+            StatusMenu.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
         }
         refresh()
     }

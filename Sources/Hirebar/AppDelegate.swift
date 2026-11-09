@@ -14,17 +14,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let menu = NSMenu()
     private let loginItem = NSMenuItem(title: "Abrir al iniciar sesión", action: #selector(toggleLogin), keyEquivalent: "")
     private let popover = NSPopover()
-    private let panel = PanelModel()
+    private let engine = Engine()
+    private lazy var statusMenu = StatusMenu(engine: engine)
+    private lazy var panel = PanelModel(engine: engine)
     private var activity: NSObjectProtocol?
     private var panelTimer: Timer?
-    private let settings = SettingsWindowController()
+    private lazy var settings = SettingsWindowController(engine: engine)
     private let notificationRouter = NotificationRouter()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiatedAllowingIdleSystemSleep],
                                                          reason: "Hirebar busca proyectos y vacantes durante el día")
-        Engine.start(resources: Bundle.main.resourceURL)
-        StatusMenu.shared.install(in: menu)
+        engine.start(resources: Bundle.main.resourceURL)
+        statusMenu.install(in: menu)
         menu.addItem(.separator())
         loginItem.target = self
         menu.addItem(loginItem)
@@ -37,17 +39,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             UNUserNotificationCenter.current().delegate = notificationRouter
             Task { await MacNotifications.requestPermissionIfUndecided() }
         }
-        StatusMenu.shared.onOpenChannel = { [weak self] in self?.settings.show(.channel) }
+        statusMenu.onOpenChannel = { [weak self] in self?.settings.show(.channel) }
         settings.channel.onStateChange = { [weak self] in
             self?.panel.refresh()
-            StatusMenu.shared.refresh()
+            self?.statusMenu.refresh()
         }
         panel.onQuit = { NSApp.terminate(nil) }
         panel.onOpenSettings = { [weak self] page in self?.closePanel { self?.settings.show(page) } }
-        StatusMenu.shared.onOpenSettings = { [weak self] kind in self?.settings.show(.agent(kind)) }
+        statusMenu.onOpenSettings = { [weak self] kind in self?.settings.show(.agent(kind)) }
         settings.onSaved = { [weak self] in
             self?.panel.refresh()
-            StatusMenu.shared.refresh()
+            self?.statusMenu.refresh()
         }
         popover.behavior = .transient
         popover.delegate = self
@@ -59,7 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         statusItem.button?.target = self
         statusItem.button?.action = #selector(statusItemClicked)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        StatusMenu.shared.onRefresh = { [weak self] busy in
+        statusMenu.onRefresh = { [weak self] busy in
             self?.render(busy: busy)
             if self?.popover.isShown == true { self?.panel.refresh() }
         }
@@ -77,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func showMenu() {
         closePanel()
-        StatusMenu.shared.refresh()
+        statusMenu.refresh()
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil
@@ -116,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func render(busy: Bool) {
         statusItem.button?.image = StatusIcon.make(dot: busy ? .systemOrange : .systemGreen)
-        statusItem.button?.toolTip = "Hirebar · \(AI.capitalizedName): \(Controller.shared.status)\nClic: panel · Clic derecho: menú"
+        statusItem.button?.toolTip = "Hirebar · \(AI.capitalizedName): \(engine.controller.status)\nClic: panel · Clic derecho: menú"
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
@@ -128,9 +130,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
                 try SMAppService.mainApp.register()
             }
         } catch {
-            StatusMenu.shared.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
+            StatusMenu.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
         }
-        render(busy: !Controller.shared.isIdle)
+        render(busy: !engine.controller.isIdle)
     }
 
     @objc private func quit() {

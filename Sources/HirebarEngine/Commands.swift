@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
@@ -34,103 +35,115 @@ extension Controller {
         (Puedes responder citando un aviso para elegir cuál lista.)
         """
 
-    static let approveVerbs: Set<String> = ["si", "dale", "ok", "listo", "envia", "enviar", "postula", "aplica"]
-    static let emailVerbs: Set<String> = ["envia", "enviar", "envialos", "envie", "si", "dale", "ok", "no", "aprobado", "aprueba"]
+    static let callbackAnswer = "Recibido"
+    static let missingVocabulary =
+        "Faltan los comandos dentro de la app (comandos.json). Vuelve a instalarla con scripts/bundle.sh --install."
 
     func handle(_ message: TelegramMessage) {
         guard admits(message) else { return }
-        let config = Config.load()
-        if let fileId = message.audioFileId {
+        if let callback = message.callbackId { Telegram.shared.answerCallback(callback, text: Self.callbackAnswer) }
+        guard let parser = commandParser else {
+            reply(Self.missingVocabulary)
+            return
+        }
+        let command = parser.parse(
+            CommandInput(
+                text: message.text, isButton: message.callbackId != nil, replyTo: message.replyTo, hasAudio: message.audioFileId != nil))
+        if command.kind == .voiceNote, let fileId = message.audioFileId {
             handleRecording(fileId: fileId, ext: message.audioExtension, size: (message.audioBytes, message.audioSeconds))
             return
         }
+        perform(command)
+    }
 
-        var text = message.text.lowercased().folding(options: .diacriticInsensitive, locale: Locale(identifier: "es"))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        var batch: Batch?
-        var callbackArgument: String?
-        if let callback = message.callbackId {
-            Telegram.shared.answerCallback(callback, text: "Recibido")
-            if let colon = text.firstIndex(of: ":") {
-                callbackArgument = String(text[text.index(after: colon)...])
-                batch = BatchStore.find(id: callbackArgument ?? "")
-                text = String(text[..<colon])
-            }
+    func list(for target: ListTarget) -> Batch? {
+        switch target {
+        case .batch(let id): return BatchStore.find(id: id)
+        case .reply(let messageId): return BatchStore.find(messageId: messageId) ?? BatchStore.latestPending()
+        case .emails: return latestPendingEmails()
+        case .latest: return BatchStore.latestPending()
         }
-        if batch == nil, let replyTo = message.replyTo { batch = BatchStore.find(messageId: replyTo) }
+    }
 
-        let words = text.split { !$0.isLetter && !$0.isNumber }.map(String.init)
-        let verb = words.first ?? ""
-        let numbers = words.compactMap { Int($0) }
-        if (words.contains("correos") || words.contains("correo")) && Self.emailVerbs.contains(verb) {
-            handleEmails(verb: verb, numbers: numbers)
-            return
+    func perform(_ command: ParsedCommand) {
+        switch command.kind {
+        case .approve, .discard, .status, .agents, .resume, .keepPaused, .autoSend, .autoSendConfirm, .autoSendCancel:
+            performControl(command)
+        case .followUps, .weeklyReport, .regenerateCV, .note, .agentSwitch, .runAgent, .search:
+            performRoutine(command)
+        case .publish, .post, .video, .remake: performContent(command)
+        case .achievement, .jobChange, .skill, .skills: performProfile(command)
+        case .voiceNote, .help: reply(Self.help)
         }
-        switch verb {
-        case _ where Self.approveVerbs.contains(verb):
-            approve(batch ?? BatchStore.latestPending(), picks: numbers)
-        case "no", "descarta", "nada":
-            discard(batch ?? BatchStore.latestPending(), chatId: config.chatId)
-        case "estado":
-            reply(statusReport())
-        case "reanudar", "resume":
-            resumeAgent(named: callbackArgument ?? rest(of: message.text))
-        case "keep":
-            keepPaused(named: callbackArgument ?? "")
-        case "seguimientos", "seguimiento":
-            runScheduled(.followUp, manual: true)
-        case "informe":
-            runScheduled(.weeklyReport, manual: true)
-        case "anota", "anotar", "nota":
-            let note = message.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                .split(separator: " ", maxSplits: 1).dropFirst().first.map(String.init) ?? ""
-            guard !note.isEmpty else {
-                reply("Escribe qué anotar, por ejemplo: anota entrevista el jueves")
-                return
-            }
-            Metrics.event(note)
-            reply("Anotado para el informe del domingo.")
-        case "autoon":
-            confirmAutoSend(callbackArgument ?? "")
-        case "autocancel":
-            reply("Listo, el envío automático sigue como estaba.")
-        case "auto", "automatico":
-            handleAuto(Array(words.dropFirst()))
-        case "agentes":
-            reply(agentsReport())
-        case "agente":
-            handleAgentSwitch(Array(words.dropFirst()))
-        case "corre", "correr":
-            handleRunNow(rest(of: message.text))
-        case "publica", "publicar":
-            switch draftAccount(named: words.dropFirst().first, verb: "publica") {
+    }
+
+    func performControl(_ command: ParsedCommand) {
+        switch command.kind {
+        case .approve: approve(list(for: command.target), picks: command.numbers)
+        case .discard: discardList(list(for: command.target))
+        case .status: reply(statusReport())
+        case .agents: reply(agentsReport())
+        case .resume: resumeAgent(named: command.argument ?? command.rest)
+        case .keepPaused: keepPaused(named: command.argument ?? "")
+        case .autoSend: handleAuto(command.words)
+        case .autoSendConfirm: confirmAutoSend(command.argument ?? "")
+        case .autoSendCancel: reply("Listo, el envío automático sigue como estaba.")
+        default: reply(Self.help)
+        }
+    }
+
+    func performRoutine(_ command: ParsedCommand) {
+        switch command.kind {
+        case .followUps: runScheduled(.followUp, manual: true)
+        case .weeklyReport: runScheduled(.weeklyReport, manual: true)
+        case .regenerateCV: runScheduled(.profileUpdate, manual: true)
+        case .note: takeNote(command.rest)
+        case .agentSwitch: handleAgentSwitch(command.words)
+        case .runAgent: handleRunNow(command.rest)
+        case .search: searchNow(command.words.first ?? "")
+        default: reply(Self.help)
+        }
+    }
+
+    func performContent(_ command: ParsedCommand) {
+        switch command.kind {
+        case .publish:
+            switch draftAccount(named: command.words.first, verb: "publica") {
             case .found(let account): runScheduled(.linkedInPublish, manual: true, account: account.id)
             case .problem(let text): reply(text)
             }
-        case "post":
-            handlePost(message.text)
-        case "video":
-            rebuildVideo(words.dropFirst().first)
-        case "rearmar", "rehacer":
-            remakeWithLastRecording(words.dropFirst().first)
-        case "logro", "logros":
-            requestProfileChange("Logro", rest(of: message.text), example: "logro bajé el costo de AWS 20% en Acme")
-        case "trabajo":
-            requestProfileChange("Cambio de trabajo", rest(of: message.text), example: "trabajo nuevo Backend Senior en Acme desde dic 2026")
-        case "habilidad", "skill":
-            handleSkill(rest(of: message.text))
-        case "habilidades", "skills":
-            reply(Profile.load().summary)
-        case "hv":
-            runScheduled(.profileUpdate, manual: true)
-        case "buscar":
-            let target = words.dropFirst().first ?? ""
-            if target != "empleo" { FreelanceRadar.shared.checkNow() }
-            if target != "freelance" { JobRadar.shared.checkNow() }
-            reply("Buscando ahora; si encuentro algo te aviso.")
-        default:
-            reply(Self.help)
+        case .post: handlePost(command.rest)
+        case .video: rebuildVideo(command.words.first)
+        case .remake: remakeWithLastRecording(command.words.first)
+        default: reply(Self.help)
         }
+    }
+
+    func performProfile(_ command: ParsedCommand) {
+        switch command.kind {
+        case .achievement:
+            requestProfileChange("Logro", command.rest, example: "logro bajé el costo de AWS 20% en Acme")
+        case .jobChange:
+            requestProfileChange("Cambio de trabajo", command.rest, example: "trabajo nuevo Backend Senior en Acme desde dic 2026")
+        case .skill: handleSkill(command.rest)
+        case .skills: reply(Profile.load().summary)
+        default: reply(Self.help)
+        }
+    }
+
+    private func takeNote(_ note: String) {
+        guard !note.isEmpty else {
+            reply("Escribe qué anotar, por ejemplo: anota entrevista el jueves")
+            return
+        }
+        Metrics.event(note)
+        reply("Anotado para el informe del domingo.")
+    }
+
+    private func searchNow(_ scope: String) {
+        if scope != "empleo" { FreelanceRadar.shared.checkNow() }
+        if scope != "freelance" { JobRadar.shared.checkNow() }
+        reply("Buscando ahora; si encuentro algo te aviso.")
     }
 
     public func sendTestMessage() {
@@ -237,12 +250,6 @@ extension Controller {
         reply("\(AgentStore.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando quieras.")
     }
 
-    private func rest(of raw: String) -> String {
-        raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: " ", maxSplits: 1).dropFirst().first.map(String.init)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    }
-
     private func requestProfileChange(_ kind: String, _ text: String, example: String) {
         guard !text.isEmpty else {
             reply("Escribe el detalle, por ejemplo: \(example)")
@@ -275,6 +282,20 @@ extension Controller {
         }
     }
 
+    func latestPendingEmails() -> Batch? {
+        let since = Date().addingTimeInterval(-24 * 3600)
+        return BatchStore.load().filter { $0.mode == .prospectingSend && $0.status == .pending && $0.created > since }
+            .max { $0.created < $1.created }
+    }
+
+    private func discardList(_ found: Batch?) {
+        discard(found, chatId: Config.load().chatId)
+        guard found?.status == .pending, found?.mode == .prospectingSend else { return }
+        let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
+        let stamp = Int(Date().timeIntervalSince1970)
+        try? FileManager.default.moveItem(at: pending, to: Paths.prospecting.appendingPathComponent("descartados-\(stamp).json"))
+    }
+
     private func discard(_ found: Batch?, chatId: Int64) {
         guard var target = found, target.status == .pending else {
             reply("No tengo listas pendientes.")
@@ -285,24 +306,6 @@ extension Controller {
         Metrics.bump(target.mode, "listas_descartadas")
         if let id = target.messageId { Telegram.shared.removeButtons(chatId: chatId, messageId: id) }
         reply("Descartada. Sigo buscando.")
-    }
-
-    private func handleEmails(verb: String, numbers: [Int]) {
-        let since = Date().addingTimeInterval(-24 * 3600)
-        let emails = BatchStore.load().filter { $0.mode == .prospectingSend && $0.status == .pending && $0.created > since }
-            .max { $0.created < $1.created }
-        guard let emails else {
-            reply("No tengo correos pendientes de aprobar.")
-            return
-        }
-        if verb == "no" {
-            discard(emails, chatId: Config.load().chatId)
-            let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
-            let stamp = Int(Date().timeIntervalSince1970)
-            try? FileManager.default.moveItem(at: pending, to: Paths.prospecting.appendingPathComponent("descartados-\(stamp).json"))
-            return
-        }
-        approve(emails, picks: numbers)
     }
 
     static let autoSendOrigin = "Telegram"
@@ -526,9 +529,8 @@ extension Controller {
         }
     }
 
-    private func handlePost(_ raw: String) {
-        var parts = raw.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ", maxSplits: 3).map(String.init)
-        parts.removeFirst()
+    private func handlePost(_ rest: String) {
+        var parts = rest.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ", maxSplits: 2).map(String.init)
         var named: ContentAccount?
         if let first = parts.first, let account = ContentAccountStore.match(first) {
             named = account

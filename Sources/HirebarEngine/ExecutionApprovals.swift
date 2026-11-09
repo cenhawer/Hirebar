@@ -43,9 +43,9 @@ enum ExecutionApprovals {
 
     static func emailDrafts(
         rules: TargetRules,
-        pending: URL = Paths.prospecting.appendingPathComponent("pendientes.json")
+        pending: Data?
     ) -> EmailDraftsReading {
-        guard let data = try? Data(contentsOf: pending),
+        guard let data = pending,
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let emails = object["correos"] as? [[String: Any]], !emails.isEmpty
         else { return .none }

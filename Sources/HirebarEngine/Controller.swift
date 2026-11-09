@@ -473,7 +473,7 @@ public final class Controller {
                 notes.append("\(failed) lámina(s) no se pudieron convertir.")
             }
             self?.notifier.sendPhotos(made, caption: "\(account.title): imágenes de la publicación (\(made.count))") {
-                if let text = Self.copyText(account.draft) {
+                if let text = self?.stores.contentAccounts.draftText(account) {
                     self?.reply("Texto de la publicación de \(account.title), listo para copiar:\n\n\(text)")
                 }
                 guard account.video else {
@@ -483,10 +483,10 @@ public final class Controller {
                 ReelRenderer.renderPreview(account) { video, problem in
                     let rest = {
                         if let script = ReelRenderer.readingScript(account) {
-                            UserDefaults.standard.set(account.id, forKey: Self.waitingVoiceKey)
+                            self?.stores.runState.setWaitingVoiceAccount(account.id)
                             self?.reply(script)
                         }
-                        if let text = Self.copyText(account.videoFolder.appendingPathComponent("texto.md")) {
+                        if let text = self?.stores.contentAccounts.videoDescription(account) {
                             self?.reply("Descripción del video de \(account.title), lista para copiar:\n\n\(text)")
                         }
                         self?.reply((notes + [ask + " El video se sube cuando me mandes tu voz."]).joined(separator: " "))
@@ -503,15 +503,8 @@ public final class Controller {
     }
 
     /// Cuenta cuyo video está esperando la nota de voz de la persona.
-    static let waitingVoiceKey = "video.esperandoVoz"
 
     /// Texto de un archivo para mandarlo a Telegram tal cual, listo para copiar y pegar.
-    static func copyText(_ file: URL) -> String? {
-        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return nil }
-        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return clean.count > 10 ? String(clean.prefix(3800)) : nil
-    }
-
     static let proposalSeenWindow: TimeInterval = 30 * 86400
 
     private func offerProposals(from output: String, mode: Mode) {
@@ -569,7 +562,7 @@ public final class Controller {
     }
 
     private func finishProfileUpdate() {
-        ProfileRequests.clear()
+        stores.profile.clearChangeRequests()
         let profile = stores.profile.load()
         guard !profile.cvVariants.isEmpty else {
             reply("perfil.json no tiene hojas de vida definidas (cvVariants), así que no generé PDF.")
@@ -588,7 +581,7 @@ public final class Controller {
     }
 
     private func offerProspectingEmails() {
-        switch ExecutionApprovals.emailDrafts(rules: targetRules) {
+        switch ExecutionApprovals.emailDrafts(rules: targetRules, pending: stores.prospecting.pendingEmails()) {
         case .none:
             return
         case .invalid(let ids):

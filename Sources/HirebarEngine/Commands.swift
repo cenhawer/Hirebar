@@ -273,7 +273,7 @@ extension Controller {
             reply("Escribe el detalle, por ejemplo: \(example)")
             return
         }
-        ProfileRequests.append(kind, text)
+        stores.profile.appendChangeRequest(kind, text, at: Date())
         runScheduled(.profileUpdate, manual: true)
     }
 
@@ -309,9 +309,7 @@ extension Controller {
     private func discardList(_ found: Batch?) {
         discard(found, chatId: stores.config.load().chatId)
         guard found?.status == .pending, found?.mode == .prospectingSend else { return }
-        let pending = Paths.prospecting.appendingPathComponent("pendientes.json")
-        let stamp = Int(Date().timeIntervalSince1970)
-        try? FileManager.default.moveItem(at: pending, to: Paths.prospecting.appendingPathComponent("descartados-\(stamp).json"))
+        stores.prospecting.discardPendingEmails(at: Date())
     }
 
     private func discard(_ found: Batch?, chatId: Int64) {
@@ -436,9 +434,7 @@ extension Controller {
 
     /// Vuelve a mandar la vista previa sin voz y el guion para grabar.
     private func rebuildVideo(_ word: String?) {
-        let withScenes = stores.contentAccounts.load().filter {
-            FileManager.default.fileExists(atPath: $0.videoFolder.appendingPathComponent("guion.json").path)
-        }
+        let withScenes = stores.contentAccounts.load().filter(stores.contentAccounts.hasVideoScript)
         let account: ContentAccount
         if let word, let named = stores.contentAccounts.match(word) {
             account = named
@@ -455,7 +451,7 @@ extension Controller {
         ReelRenderer.renderPreview(account) { [weak self] video, problem in
             let sendScript = {
                 if let script = ReelRenderer.readingScript(account) {
-                    UserDefaults.standard.set(account.id, forKey: Controller.waitingVoiceKey)
+                    self?.stores.runState.setWaitingVoiceAccount(account.id)
                     self?.reply(script)
                 }
             }
@@ -471,17 +467,12 @@ extension Controller {
     /// Rehace el video con la última nota de voz guardada de la cuenta.
     private func remakeWithLastRecording(_ word: String?) {
         let accounts = stores.contentAccounts.load()
-        let waiting = stores.contentAccounts.find(UserDefaults.standard.string(forKey: Controller.waitingVoiceKey))
+        let waiting = stores.contentAccounts.find(stores.runState.waitingVoiceAccount())
         guard let account = word.flatMap(stores.contentAccounts.match) ?? waiting ?? accounts.first(where: \.video) else {
             reply("No sé de qué cuenta. Escribe: rearmar <cuenta>")
             return
         }
-        let files = (try? FileManager.default.contentsOfDirectory(at: account.videoFolder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
-        guard let recording = files.filter({ $0.lastPathComponent.hasPrefix("grabacion.") }).max(by: {
-            let a = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-            let b = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-            return a < b
-        }) else {
+        guard let recording = stores.contentAccounts.latestRecording(account) else {
             reply("No tengo una nota de voz guardada de \(account.title). Mándame una leyendo el guion.")
             return
         }
@@ -497,7 +488,7 @@ extension Controller {
                 return
             }
             self?.notifier.sendVideo(video, caption: "\(account.title): video con tu voz, listo para subir") {
-                if let text = Controller.copyText(account.videoFolder.appendingPathComponent("texto.md")) {
+                if let text = self?.stores.contentAccounts.videoDescription(account) {
                     self?.reply("Descripción del video de \(account.title), lista para copiar:\n\n\(text)")
                 }
                 let several = (self?.stores.contentAccounts.load().count ?? 0) > 1
@@ -528,10 +519,8 @@ extension Controller {
             reply(problem)
             return
         }
-        let waiting = UserDefaults.standard.string(forKey: Controller.waitingVoiceKey)
-        let candidates = stores.contentAccounts.load().filter {
-            $0.video && FileManager.default.fileExists(atPath: $0.videoFolder.appendingPathComponent("guion.json").path)
-        }
+        let waiting = stores.runState.waitingVoiceAccount()
+        let candidates = stores.contentAccounts.load().filter { $0.video && stores.contentAccounts.hasVideoScript($0) }
         guard let account = stores.contentAccounts.find(waiting) ?? candidates.first else {
             reply("Recibí tu audio, pero no tengo ningún video esperando voz. Escribe \"post <cuenta>\" con el video prendido.")
             return
@@ -570,13 +559,11 @@ extension Controller {
         }
         if sub == "cambia" {
             let note = parts.dropFirst().joined(separator: " ")
-            try? note.write(to: account.changes, atomically: true, encoding: .utf8)
+            stores.contentAccounts.requestChange(account, note)
             runScheduled(.linkedInDraft, manual: true, account: account.id)
             return
         }
-        let stamp = ISO8601DateFormatter().string(from: Date()).prefix(10)
-        try? FileManager.default.moveItem(at: account.draft,
-                                          to: account.folder.appendingPathComponent("descartado-\(stamp)-\(Int(Date().timeIntervalSince1970)).md"))
+        stores.contentAccounts.discardDraft(account, at: Date())
         reply("Listo, no se publica en \(account.title). Escribe \"post \(account.id)\" cuando quieras otra.")
     }
 }

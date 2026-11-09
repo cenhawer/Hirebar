@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals
@@ -15,8 +16,10 @@ public class Radar {
     private let firstDelay: TimeInterval
     private let seenKey: String
     private let seenDays: Double
+    private let runState: RunStateRepository
 
-    init(firstDelay: TimeInterval, seenKey: String, seenDays: Double) {
+    init(firstDelay: TimeInterval, seenKey: String, seenDays: Double, runState: RunStateRepository) {
+        self.runState = runState
         self.firstDelay = firstDelay
         self.seenKey = seenKey
         self.seenDays = seenDays
@@ -60,7 +63,7 @@ public class Radar {
     }
 
     func seen() -> [String: Date] {
-        UserDefaults.standard.dictionary(forKey: seenKey) as? [String: Date] ?? [:]
+        runState.seen(seenKey)
     }
 
     func remember(_ hits: [Hit]) {
@@ -68,6 +71,6 @@ public class Radar {
         var map = seen()
         for hit in hits { map[hit.id] = now }
         map = map.filter { now.timeIntervalSince($0.value) < seenDays * 86400 }
-        UserDefaults.standard.set(map, forKey: seenKey)
+        runState.saveSeen(map, key: seenKey)
     }
 }

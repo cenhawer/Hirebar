@@ -193,7 +193,8 @@ conecta) y la app recibe esa instancia. No hay singletons propios (test). Los ca
 través de los puertos de repositorio de `HirebarApplication`, agrupados en `Repositories`; la raíz
 de composición pasa las implementaciones de archivos de `HirebarStorage` (`Repositories.files`). El estado
 de corrida (vistos de los radares, turnos ya ejecutados y la cuenta que espera la nota de voz) entra
-por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. El paso 3 de la spec
+por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. La hora y los
+temporizadores entran por `Clock`. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

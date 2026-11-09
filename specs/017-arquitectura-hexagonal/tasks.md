@@ -23,5 +23,6 @@ description: "Tareas de implementación: arquitectura hexagonal"
 
 - [x] T008a Puertos de repositorio (`ConfigRepository`, `BatchRepository`, `AgentRepository`, `ContentAccountRepository`, `MetricsRepository`, `ProfileRepository`, `QuotaRepository`, `PortalRepository`) en `HirebarApplication`; el motor los recibe agrupados en `Repositories` y `HirebarStorage` los implementa con archivos (FR-003)
 - [x] T008b Puertos `ProspectingRepository` y `RunStateRepository`, y los archivos de la cuenta de contenido y de los pedidos de perfil en sus repositorios: el motor no toca archivos ni `UserDefaults` (FR-003)
+- [x] T008c Puerto `Clock` para la hora y los temporizadores del motor (vigilancia de la IA, radares, programador, ventana de emparejamiento); `SystemClock` en la raíz de composición y un reloj de prueba en los tests (FR-003)
 - [ ] T008 Casos de uso de lotes, comandos, programación y radares en `HirebarApplication` (FR-003)
 - [x] T009 Raíz de composición (`Engine`) que crea y conecta Telegram, `Controller`, radares y programador; la app la recibe; sin `.shared` propios, vigilado por test (FR-004, SC-002)

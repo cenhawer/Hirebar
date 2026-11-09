@@ -3,26 +3,81 @@ import Foundation
 public enum Notifier {
     public static var canUseTelegram: Bool { Telegram.shared.isConfigured && Config.load().chatId != 0 }
 
+    static let messageLimit = 3800
+
     public static func announce(_ batch: Batch, title: String, footer: String) {
-        var lines = [title, ""]
+        var blocks = [title]
         for (index, item) in batch.items.enumerated() {
-            lines.append("\(index + 1). [\(item.kind)] \(item.title)")
-            lines.append(item.detail)
-            if !item.url.isEmpty { lines.append(item.url) }
-            lines.append("")
+            let lines = ["\(index + 1). [\(item.kind)] \(item.title)", item.detail] + (item.url.isEmpty ? [] : [item.url])
+            blocks.append(lines.joined(separator: "\n"))
         }
-        lines.append(footer)
-        let text = lines.joined(separator: "\n")
-        if canUseTelegram {
-            let label = batch.mode == .jobs ? "Sí, postular a todas" : "Sí, enviar todas"
-            Telegram.shared.send(text, chatId: Config.load().chatId,
-                                 buttons: [[(label, "si:\(batch.id)"), ("No", "no:\(batch.id)")]]) { id in
-                guard let id, var stored = BatchStore.find(id: batch.id) else { return }
-                stored.messageId = id
+        blocks.append(footer)
+        let messages = chunks(blocks, limit: messageLimit)
+        guard canUseTelegram else {
+            let hint = "(Configura Telegram en el menú de Hirebar para responder \"si\" desde el celular.)"
+            ntfy(title: title, message: messages.joined(separator: "\n\n") + "\n\n" + hint)
+            return
+        }
+        let label = batch.mode == .jobs ? "Sí, postular a todas" : "Sí, enviar todas"
+        let chatId = Config.load().chatId
+        sendInOrder(messages, chatId: chatId, buttons: [[(label, "si:\(batch.id)"), ("No", "no:\(batch.id)")]]) { id in
+            guard var stored = BatchStore.find(id: batch.id) else { return }
+            guard let id else {
+                guard stored.status == .pending else { return }
+                stored.status = .discarded
                 BatchStore.upsert(stored)
+                Log.write("Telegram: la lista \(batch.id) no llegó completa y se descartó")
+                let notice = "No pude mostrarte completa la lista \(batch.id), así que la descarté para que no se apruebe a ciegas."
+                Telegram.shared.send(notice, chatId: chatId)
+                return
             }
-        } else {
-            ntfy(title: title, message: text + "\n\n(Configura Telegram en el menú de Hirebar para responder \"si\" desde el celular.)")
+            stored.messageId = id
+            BatchStore.upsert(stored)
+        }
+    }
+
+    static func chunks(_ blocks: [String], limit: Int) -> [String] {
+        var messages: [String] = []
+        var current = ""
+        for block in blocks.flatMap({ pieces(of: $0, limit: limit) }) {
+            if !current.isEmpty && current.count + 2 + block.count > limit {
+                messages.append(current)
+                current = ""
+            }
+            current += (current.isEmpty ? "" : "\n\n") + block
+        }
+        if !current.isEmpty { messages.append(current) }
+        return messages
+    }
+
+    static func pieces(of block: String, limit: Int) -> [String] {
+        guard block.count > limit else { return [block] }
+        var pieces: [String] = []
+        var rest = Substring(block)
+        while !rest.isEmpty {
+            pieces.append(String(rest.prefix(limit)))
+            rest = rest.dropFirst(limit)
+        }
+        return pieces
+    }
+
+    static func sendInOrder(
+        _ messages: [String],
+        chatId: Int64,
+        buttons: [[(String, String)]],
+        completion: @escaping (Int?) -> Void
+    ) {
+        guard let first = messages.first else {
+            completion(nil)
+            return
+        }
+        let rest = Array(messages.dropFirst())
+        Telegram.shared.send(first, chatId: chatId, buttons: rest.isEmpty ? buttons : []) { id in
+            if rest.isEmpty || id == nil {
+                completion(id)
+            } else {
+                sendInOrder(rest, chatId: chatId, buttons: buttons, completion: completion)
+            }
         }
     }
 

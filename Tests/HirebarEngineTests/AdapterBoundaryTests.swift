@@ -19,4 +19,15 @@ final class AdapterBoundaryTests: XCTestCase {
             }
         }
     }
+
+    func testNoOwnSingletonsAreLeft() throws {
+        let walker = FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil)
+        let files = (walker?.allObjects as? [URL] ?? []).filter { $0.pathExtension == "swift" }
+        XCTAssertFalse(files.isEmpty)
+        for file in files {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            XCTAssertFalse(source.contains("static let shared"), file.lastPathComponent)
+            XCTAssertFalse(source.contains("static var shared"), file.lastPathComponent)
+        }
+    }
 }

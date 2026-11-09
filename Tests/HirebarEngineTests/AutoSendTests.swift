@@ -9,6 +9,7 @@ import XCTest
 @testable import HirebarEngine
 
 final class AutoSendTests: XCTestCase {
+    var controller: Controller!
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-auto-\(UUID().uuidString)")
     var replies: [String] = []
     var questions: [(String, [[(String, String)]])] = []
@@ -22,29 +23,28 @@ final class AutoSendTests: XCTestCase {
     }
 
     override func setUp() {
+        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
         for kind in AutoSend.agents { AgentStore.update(kind) { $0.autoApprove = false } }
         replies = []
         questions = []
-        Controller.shared.replies = { [weak self] text in self?.replies.append(text) }
-        Controller.shared.questions = { [weak self] text, buttons in self?.questions.append((text, buttons)) }
+        controller.replies = { [weak self] text in self?.replies.append(text) }
+        controller.questions = { [weak self] text, buttons in self?.questions.append((text, buttons)) }
     }
 
     override func tearDown() {
-        Controller.shared.replies = Notifier.tell
-        Controller.shared.questions = Controller.ask
     }
 
     func testAskingFromTelegramDoesNotTurnItOnUntilThePersonConfirms() {
-        Controller.shared.askToTurnOnAutoSend([.jobs])
+        controller.askToTurnOnAutoSend([.jobs])
         XCTAssertFalse(AgentStore.load(.jobs).autoApprove)
         XCTAssertEqual(questions.first?.1.first?.first?.1, "autoon:empleo")
         XCTAssertTrue(questions.first?.0.contains("Nunca salen solos") ?? false)
-        Controller.shared.confirmAutoSend("empleo")
+        controller.confirmAutoSend("empleo")
         XCTAssertTrue(AgentStore.load(.jobs).autoApprove)
     }
 
     func testOnlyAgentsWithAutomaticSendingCanBeTurnedOn() {
-        Controller.shared.confirmAutoSend("contenido,perfil")
+        controller.confirmAutoSend("contenido,perfil")
         XCTAssertFalse(AgentStore.load(.content).autoApprove)
         XCTAssertTrue(replies.isEmpty)
     }

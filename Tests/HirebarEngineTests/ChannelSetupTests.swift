@@ -132,9 +132,8 @@ final class ChannelSetupTests: XCTestCase {
         var config = Config.load()
         config.channelOwner = ChannelOwner(userId: 7, chatId: 7, name: "Ana")
         config.save()
-        let shared = Controller.shared.channel
-        Controller.shared.channel = setup
-        defer { Controller.shared.channel = shared }
+        let controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
+        controller.channel = setup
         let chat: [String: Any] = ["id": 7, "type": "private"]
         let button: [String: Any] = [
             "id": "c1", "data": "si:b1", "from": ["id": 99, "first_name": "Ana"], "message": ["message_id": 1, "chat": chat],
@@ -143,8 +142,8 @@ final class ChannelSetupTests: XCTestCase {
         guard let stranger = Telegram.parse(["callback_query": button]), let owner = Telegram.parse(["message": text]) else {
             return XCTFail("debía leer los updates")
         }
-        XCTAssertFalse(Controller.shared.admits(stranger))
-        XCTAssertTrue(Controller.shared.admits(owner))
+        XCTAssertFalse(controller.admits(stranger))
+        XCTAssertTrue(controller.admits(owner))
     }
 
     func testBundledChannelSettingsAreReadable() throws {

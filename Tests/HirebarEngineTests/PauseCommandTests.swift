@@ -9,11 +9,18 @@ import XCTest
 
 @testable import HirebarEngine
 
+struct NoTestSecrets: SecretStore {
+    func secret(for account: String) -> String? { nil }
+    func save(_ secret: String, for account: String) -> Bool { false }
+    func delete(_ account: String) -> Bool { false }
+}
+
 final class SilentAlerts: ExecutionAlerts {
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {}
 }
 
 final class PauseCommandTests: XCTestCase {
+    var controller: Controller!
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-pause-\(UUID().uuidString)")
 
     var store: FileExecutionStateStore!
@@ -29,32 +36,32 @@ final class PauseCommandTests: XCTestCase {
     }
 
     override func setUp() {
+        controller = Controller(telegram: Telegram(secrets: NoTestSecrets()))
         store = FileExecutionStateStore(
             stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"),
             runsFolder: Self.home.appendingPathComponent("ejecuciones"))
-        Controller.shared.executionGuard = ExecutionGuard(store: store, alerts: SilentAlerts())
-        Controller.shared.unsavedPauses = [:]
+        controller.executionGuard = ExecutionGuard(store: store, alerts: SilentAlerts())
+        controller.unsavedPauses = [:]
         replies = []
-        Controller.shared.replies = { [weak self] text in self?.replies.append(text) }
+        controller.replies = { [weak self] text in self?.replies.append(text) }
     }
 
     override func tearDown() {
-        Controller.shared.replies = Notifier.tell
     }
 
     func testPauseIsVisibleAndOnlyLiftedOnce() throws {
         try store.pause(AgentPause(agent: jobs, batch: "b1", reason: "notApproved", since: Date()))
-        XCTAssertEqual(Controller.shared.pauseReason(of: .jobs), "lista b1 (notApproved)")
-        XCTAssertEqual(Controller.shared.pauseReasons(), [.jobs: "lista b1 (notApproved)"])
-        XCTAssertNil(Controller.shared.pauseReason(of: .freelance))
-        XCTAssertTrue(Controller.shared.resumeAgent(.jobs))
-        XCTAssertNil(Controller.shared.pauseReason(of: .jobs))
-        XCTAssertFalse(Controller.shared.resumeAgent(.jobs))
+        XCTAssertEqual(controller.pauseReason(of: .jobs), "lista b1 (notApproved)")
+        XCTAssertEqual(controller.pauseReasons(), [.jobs: "lista b1 (notApproved)"])
+        XCTAssertNil(controller.pauseReason(of: .freelance))
+        XCTAssertTrue(controller.resumeAgent(.jobs))
+        XCTAssertNil(controller.pauseReason(of: .jobs))
+        XCTAssertFalse(controller.resumeAgent(.jobs))
     }
 
     func testResumeButtonLiftsThePauseAndSaysWhatStillWaits() throws {
         try store.pause(AgentPause(agent: jobs, batch: "b1", reason: "notApproved", since: Date()))
-        Controller.shared.resumeAgent(named: "empleo")
+        controller.resumeAgent(named: "empleo")
         XCTAssertNil(store.pauses().first)
         XCTAssertTrue(replies.last?.contains("reanudado") ?? false)
         XCTAssertFalse(replies.last?.contains("se vuelven a ejecutar") ?? true)
@@ -62,17 +69,17 @@ final class PauseCommandTests: XCTestCase {
 
     func testKeepButtonLeavesThePauseAndExplainsHowToResume() throws {
         try store.pause(AgentPause(agent: jobs, batch: "b1", reason: "notApproved", since: Date()))
-        Controller.shared.keepPaused(named: "empleo")
+        controller.keepPaused(named: "empleo")
         XCTAssertEqual(store.pauses().map(\.batch), ["b1"])
         XCTAssertTrue(replies.last?.contains("reanudar empleo") ?? false)
     }
 
     func testPauseThatCouldNotBeSavedStillBlocksTheAgentUntilResumed() {
         let pause = AgentPause(agent: jobs, batch: "b2", reason: "logMissing", since: Date())
-        Controller.shared.unsavedPauses[jobs] = pause
-        XCTAssertEqual(Controller.shared.activePause(of: jobs), pause)
-        XCTAssertTrue(Controller.shared.resumeAgent(.jobs))
-        XCTAssertNil(Controller.shared.activePause(of: jobs))
+        controller.unsavedPauses[jobs] = pause
+        XCTAssertEqual(controller.activePause(of: jobs), pause)
+        XCTAssertTrue(controller.resumeAgent(.jobs))
+        XCTAssertNil(controller.activePause(of: jobs))
     }
 
     func testReviewMessageExplainsEachViolationAndHowToResume() {

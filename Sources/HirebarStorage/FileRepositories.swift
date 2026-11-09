@@ -37,6 +37,13 @@ public struct FileContentAccountRepository: ContentAccountRepository {
     public func match(_ word: String) -> ContentAccount? { ContentAccountStore.match(word) }
     public func hasDraft(_ account: ContentAccount) -> Bool { account.hasDraft }
     public func needsPerformanceCheck(_ account: ContentAccount) -> Bool { account.needsPerformanceCheck }
+    public func takeChangeRequest(_ account: ContentAccount) -> String { ContentAccountFiles.takeChangeRequest(account) }
+    public func requestChange(_ account: ContentAccount, _ note: String) { ContentAccountFiles.requestChange(account, note) }
+    public func discardDraft(_ account: ContentAccount, at date: Date) { ContentAccountFiles.discardDraft(account, at: date) }
+    public func draftText(_ account: ContentAccount) -> String? { ContentAccountFiles.copyableText(account.draft) }
+    public func videoDescription(_ account: ContentAccount) -> String? { ContentAccountFiles.copyableText(account.videoDescription) }
+    public func hasVideoScript(_ account: ContentAccount) -> Bool { ContentAccountFiles.hasVideoScript(account) }
+    public func latestRecording(_ account: ContentAccount) -> URL? { ContentAccountFiles.latestRecording(account) }
 }
 
 public struct FileMetricsRepository: MetricsRepository {
@@ -58,6 +65,9 @@ public struct FileProfileRepository: ProfileRepository {
     public func saveSkills(_ skills: [Skill]) throws { try ProfileEditor.saveSkills(skills) }
     public func setSkill(_ name: String, level: SkillLevel) -> SkillChange { ProfileEditor.setSkill(name, level: level) }
     public func effectiveSearch() -> SearchProfile { SearchProfile.loadEffective() }
+    public func appendChangeRequest(_ kind: String, _ text: String, at date: Date) { ProfileRequests.append(kind, text, at: date) }
+    public func changeRequests() -> String { ProfileRequests.read() }
+    public func clearChangeRequests() { ProfileRequests.clear() }
 }
 
 public struct FileQuotaRepository: QuotaRepository {
@@ -80,6 +90,7 @@ extension Repositories {
         Repositories(
             config: FileConfigRepository(), batches: FileBatchRepository(), agents: FileAgentRepository(),
             contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(), profile: FileProfileRepository(),
-            quotas: FileQuotaRepository(), portals: FilePortalRepository())
+            quotas: FileQuotaRepository(), portals: FilePortalRepository(), prospecting: FileProspectingRepository(),
+            runState: DefaultsRunStateRepository())
     }
 }

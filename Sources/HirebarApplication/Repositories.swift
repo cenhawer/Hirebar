@@ -32,6 +32,13 @@ public protocol ContentAccountRepository: Sendable {
     func match(_ word: String) -> ContentAccount?
     func hasDraft(_ account: ContentAccount) -> Bool
     func needsPerformanceCheck(_ account: ContentAccount) -> Bool
+    func takeChangeRequest(_ account: ContentAccount) -> String
+    func requestChange(_ account: ContentAccount, _ note: String)
+    func discardDraft(_ account: ContentAccount, at date: Date)
+    func draftText(_ account: ContentAccount) -> String?
+    func videoDescription(_ account: ContentAccount) -> String?
+    func hasVideoScript(_ account: ContentAccount) -> Bool
+    func latestRecording(_ account: ContentAccount) -> URL?
 }
 
 public protocol MetricsRepository: Sendable {
@@ -46,6 +53,22 @@ public protocol ProfileRepository: Sendable {
     func effectiveSearch() -> SearchProfile
     func pastEmployers() -> [String]
     func achievements() -> [String]
+    func appendChangeRequest(_ kind: String, _ text: String, at date: Date)
+    func changeRequests() -> String
+    func clearChangeRequests()
+}
+
+public protocol ProspectingRepository: Sendable {
+    func pendingEmails() -> Data?
+    func discardPendingEmails(at date: Date)
+}
+
+public protocol RunStateRepository: Sendable {
+    func seen(_ key: String) -> [String: Date]
+    func saveSeen(_ seen: [String: Date], key: String)
+    func claim(_ key: String) -> Bool
+    func waitingVoiceAccount() -> String?
+    func setWaitingVoiceAccount(_ id: String)
 }
 
 extension MetricsRepository {
@@ -76,6 +99,8 @@ public struct Repositories: Sendable {
     public let profile: ProfileRepository
     public let quotas: QuotaRepository
     public let portals: PortalRepository
+    public let prospecting: ProspectingRepository
+    public let runState: RunStateRepository
 
     public init(
         config: ConfigRepository,
@@ -85,7 +110,9 @@ public struct Repositories: Sendable {
         metrics: MetricsRepository,
         profile: ProfileRepository,
         quotas: QuotaRepository,
-        portals: PortalRepository
+        portals: PortalRepository,
+        prospecting: ProspectingRepository,
+        runState: RunStateRepository
     ) {
         self.config = config
         self.batches = batches
@@ -95,5 +122,7 @@ public struct Repositories: Sendable {
         self.profile = profile
         self.quotas = quotas
         self.portals = portals
+        self.prospecting = prospecting
+        self.runState = runState
     }
 }

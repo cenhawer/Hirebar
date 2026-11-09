@@ -7,7 +7,11 @@ import HirebarStorage
 import HirebarTelegram
 
 public final class Scheduler {
-    public static let shared = Scheduler()
+    weak var controller: Controller?
+    weak var jobRadar: JobRadar?
+    weak var freelanceRadar: FreelanceRadar?
+
+    public init() {}
     static let cleanupHour = 19
 
     public var onChange: (() -> Void)?
@@ -49,7 +53,7 @@ public final class Scheduler {
                 guard let slot = task.dueSlot(at: now) else { continue }
                 once(Self.key(for: task, day: slot.day, hour: slot.hour)) {
                     Log.write("Programador: \(agent.name) · \(task.mode.rawValue) de las \(slot.hour) h")
-                    Controller.shared.runScheduled(task.mode)
+                    controller?.runScheduled(task.mode)
                 }
             }
         }
@@ -70,7 +74,7 @@ public final class Scheduler {
         let weekday = calendar.component(.weekday, from: now)
         let hour = calendar.component(.hour, from: now)
         let due = (weekday == 1 && hour >= Self.cleanupHour) || weekday == 2
-        guard due, Controller.shared.isIdle else { return }
+        guard due, controller?.isIdle ?? false else { return }
         let sunday = weekday == 2 ? now.addingTimeInterval(-86400) : now
         once("sched.limpieza.\(Metrics.weekKey(sunday))") { Housekeeping.run() }
     }
@@ -80,8 +84,8 @@ public final class Scheduler {
         guard agent.enabled else { return nil }
         let search: Date?
         switch kind {
-        case .jobs: search = JobRadar.shared.nextRun
-        case .freelance: search = FreelanceRadar.shared.nextRun
+        case .jobs: search = jobRadar?.nextRun
+        case .freelance: search = freelanceRadar?.nextRun
         default: search = nil
         }
         let tasks = agent.tasks.filter { !Self.isIdlePortalScan($0.mode) }.compactMap { $0.nextStart(after: Date()) }.min()

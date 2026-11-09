@@ -47,7 +47,7 @@ extension Controller {
 
     func handle(_ message: TelegramMessage) {
         guard admits(message) else { return }
-        if let callback = message.callbackId { Telegram.shared.answerCallback(callback, text: Self.callbackAnswer) }
+        if let callback = message.callbackId { telegram.answerCallback(callback, text: Self.callbackAnswer) }
         guard let parser = commandParser else {
             reply(Self.missingVocabulary)
             return
@@ -159,13 +159,13 @@ extension Controller {
     }
 
     private func searchNow(_ scope: String) {
-        if scope != "empleo" { FreelanceRadar.shared.checkNow() }
-        if scope != "freelance" { JobRadar.shared.checkNow() }
+        if scope != "empleo" { freelanceRadar?.checkNow() }
+        if scope != "freelance" { jobRadar?.checkNow() }
         reply("Buscando ahora; si encuentro algo te aviso.")
     }
 
     public func sendTestMessage() {
-        Notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + statusReport())
+        notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + statusReport())
     }
 
     public static var welcome: String {
@@ -182,7 +182,7 @@ extension Controller {
         }
         guard Config.load().channelOwner != nil else {
             if channel.offer(sender, text: message.text) {
-                Telegram.shared.send(Self.pairingReply, chatId: sender.chatId)
+                telegram.send(Self.pairingReply, chatId: sender.chatId)
             } else {
                 log.write("Telegram: ignorado un mensaje fuera de la vinculación")
             }
@@ -204,8 +204,8 @@ extension Controller {
         """
         \(AI.capitalizedName): \(status)
         Cupos: \(Quotas.summary())
-        Búsqueda freelance: \(FreelanceRadar.shared.status)
-        Búsqueda de empleo: \(JobRadar.shared.status)
+        Búsqueda freelance: \(freelanceRadar?.status ?? "")
+        Búsqueda de empleo: \(jobRadar?.status ?? "")
 
         \(agentsReport())
         """
@@ -322,7 +322,7 @@ extension Controller {
         target.status = .discarded
         BatchStore.upsert(target)
         Metrics.bump(target.mode, "listas_descartadas")
-        if let id = target.messageId { Telegram.shared.removeButtons(chatId: chatId, messageId: id) }
+        if let id = target.messageId { telegram.removeButtons(chatId: chatId, messageId: id) }
         reply("Descartada. Sigo buscando.")
     }
 
@@ -350,9 +350,9 @@ extension Controller {
 
     func askToTurnOnAutoSend(_ kinds: [AgentKind]) {
         let names = kinds.map(\.rawValue).joined(separator: ",")
-        questions(
+        askPerson(
             AutoSend.explanation(for: kinds) + "\n\n¿Lo prendo?",
-            [[("Sí, prender", "autoon:\(names)"), ("No", "autocancel:\(names)")]])
+            buttons: [[("Sí, prender", "autoon:\(names)"), ("No", "autocancel:\(names)")]])
     }
 
     func confirmAutoSend(_ names: String) {
@@ -384,8 +384,8 @@ extension Controller {
     public func runAgentNow(_ kind: AgentKind) {
         let agent = AgentStore.load(kind)
         switch kind {
-        case .jobs: JobRadar.shared.checkNow()
-        case .freelance: FreelanceRadar.shared.checkNow()
+        case .jobs: jobRadar?.checkNow()
+        case .freelance: freelanceRadar?.checkNow()
         default: break
         }
         if kind == .profile {
@@ -406,7 +406,7 @@ extension Controller {
             if agent.enabled {
                 if [.jobs, .freelance, .clients].contains(agent.id) { line += " · auto \(agent.autoApprove ? "sí" : "no")" }
                 if agent.practice { line += " · en práctica (no envía)" }
-                if let next = Scheduler.shared.nextRun(of: agent.id) { line += " · próxima \(TextTools.countdown(next))" }
+                if let next = scheduler?.nextRun(of: agent.id) { line += " · próxima \(TextTools.countdown(next))" }
                 if let reason = pauseReason(of: agent.id) { line += " · en pausa: \(reason)" }
             }
             return line
@@ -464,7 +464,7 @@ extension Controller {
                 sendScript()
                 return
             }
-            Notifier.sendVideo(video, caption: "\(account.title): vista previa del video, sin voz") { sendScript() }
+            self?.notifier.sendVideo(video, caption: "\(account.title): vista previa del video, sin voz") { sendScript() }
         }
     }
 
@@ -496,7 +496,7 @@ extension Controller {
                 self?.reply("No pude armar el video con tu voz: \(problem ?? "sin detalle"). Puedes mandar el audio otra vez.")
                 return
             }
-            Notifier.sendVideo(video, caption: "\(account.title): video con tu voz, listo para subir") {
+            self?.notifier.sendVideo(video, caption: "\(account.title): video con tu voz, listo para subir") {
                 if let text = Controller.copyText(account.videoFolder.appendingPathComponent("texto.md")) {
                     self?.reply("Descripción del video de \(account.title), lista para copiar:\n\n\(text)")
                 }
@@ -540,7 +540,7 @@ extension Controller {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
             let limit = (try? SystemTools.bundled())?.maxAudioBytes
-            guard Telegram.shared.download(fileId: fileId, to: file, maxBytes: limit) else {
+            guard self?.telegram.download(fileId: fileId, to: file, maxBytes: limit) == true else {
                 DispatchQueue.main.async { self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.") }
                 return
             }

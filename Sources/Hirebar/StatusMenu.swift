@@ -8,7 +8,11 @@ import HirebarStorage
 import HirebarTelegram
 
 final class StatusMenu: NSObject, NSMenuDelegate {
-    static let shared = StatusMenu()
+    let engine: Engine
+
+    init(engine: Engine) {
+        self.engine = engine
+    }
 
     var onRefresh: ((Bool) -> Void)?
     var onOpenSettings: ((AgentKind) -> Void)?
@@ -53,9 +57,9 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         menu.addItem(action("Abrir carpeta de datos") { Self.open(Paths.root) })
         menu.delegate = self
 
-        FreelanceRadar.shared.onStatusChange = { [weak self] _ in self?.refresh() }
-        JobRadar.shared.onStatusChange = { [weak self] _ in self?.refresh() }
-        Controller.shared.onStatusChange = { [weak self] _ in self?.refresh() }
+        engine.freelanceRadar.onStatusChange = { [weak self] _ in self?.refresh() }
+        engine.jobRadar.onStatusChange = { [weak self] _ in self?.refresh() }
+        engine.controller.onStatusChange = { [weak self] _ in self?.refresh() }
         let timer = Timer(timeInterval: 20, repeats: true) { [weak self] _ in self?.refresh() }
         RunLoop.main.add(timer, forMode: .common)
         ticker = timer
@@ -101,9 +105,8 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             }
         }
         menu.addItem(.separator())
-        menu.addItem(action(kind == .profile ? "Regenerar hojas de vida" : "Correr ahora") {
-            Controller.shared.runAgentNow(kind)
-        })
+        let runTitle = kind == .profile ? "Regenerar hojas de vida" : "Correr ahora"
+        menu.addItem(action(runTitle) { [weak self] in self?.engine.controller.runAgentNow(kind) })
         menu.addItem(action("Ajustes…") { [weak self] in self?.onOpenSettings?(kind) })
         return menu
     }
@@ -120,11 +123,11 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         for (item, kind) in headers { item.title = headerTitle(kind) }
         for (item, isOn) in checks { item.state = isOn() ? .on : .off }
         for (item, text) in labels { item.title = text() }
-        claudeItem.title = "\(AI.capitalizedName): \(Controller.shared.status)"
-        let state = ChannelStatusText.describe(Controller.shared.channel.state)
+        claudeItem.title = "\(AI.capitalizedName): \(engine.controller.status)"
+        let state = ChannelStatusText.describe(engine.controller.channel.state)
         telegramState.title = state
         telegramHeader.title = state
-        onRefresh?(!Controller.shared.isIdle)
+        onRefresh?(!engine.controller.isIdle)
     }
 
     private func headerTitle(_ kind: AgentKind) -> String {
@@ -132,11 +135,11 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         guard agent.enabled else { return "\(agent.name): apagado" }
         var title = agent.name
         switch kind {
-        case .jobs: title += ": \(JobRadar.shared.status)"
-        case .freelance: title += ": \(FreelanceRadar.shared.status)"
+        case .jobs: title += ": \(engine.jobRadar.status)"
+        case .freelance: title += ": \(engine.freelanceRadar.status)"
         default: break
         }
-        if let next = Scheduler.shared.nextRun(of: kind) { title += " · próxima \(TextTools.countdown(next))" }
+        if let next = engine.scheduler.nextRun(of: kind) { title += " · próxima \(TextTools.countdown(next))" }
         return title
     }
 
@@ -178,14 +181,14 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     }
 
     func sendTest() {
-        guard Notifier.canUseTelegram else {
+        guard engine.controller.notifier.canUseTelegram else {
             onOpenChannel?()
             return
         }
-        Controller.shared.sendTestMessage()
+        engine.controller.sendTestMessage()
     }
 
-    func info(_ message: String) {
+    static func info(_ message: String) {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = "Hirebar"

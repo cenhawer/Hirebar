@@ -11,11 +11,22 @@ import HirebarTelegram
 private let log = Log(.ai)
 
 public final class Controller {
-    public static let shared = Controller()
     let targetRules = TargetRulesFile.bundled()
-    lazy var executionGuard = ExecutionGuard(store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(), rules: targetRules)
+    lazy var executionGuard = ExecutionGuard(
+        store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(notifier: notifier), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
-    public internal(set) var channel = ChannelSetup(settings: try? ChannelSettings.bundled())
+    public let telegram: Telegram
+    public let notifier: Notifier
+    public internal(set) var channel: ChannelSetup
+    weak var scheduler: Scheduler?
+    weak var jobRadar: JobRadar?
+    weak var freelanceRadar: FreelanceRadar?
+
+    public init(telegram: Telegram) {
+        self.telegram = telegram
+        notifier = Notifier(telegram: telegram)
+        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram))
+    }
     var commandParser = (try? CommandVocabularyFile.bundled()).map(CommandParser.init)
     private var protectedSnapshot: ProtectedFiles.Snapshot?
     static let noNewsMarker = "SIN_NOVEDADES"
@@ -43,9 +54,9 @@ public final class Controller {
             watchdog = timer
         }
         Paths.ensure()
-        Telegram.shared.onMessage = { [weak self] message in self?.handle(message) }
-        Telegram.shared.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
-        Telegram.shared.start()
+        telegram.onMessage = { [weak self] message in self?.handle(message) }
+        telegram.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
+        telegram.start()
         Task { @MainActor [weak self] in await self?.channel.completeMissingDetails() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in self?.recoverInterrupted() }
     }
@@ -55,17 +66,23 @@ public final class Controller {
         onStatusChange?(text)
     }
 
-    var replies: (String) -> Void = Notifier.tell
-    var questions: (String, [[(String, String)]]) -> Void = Controller.ask
+    var replies: ((String) -> Void)?
+    var questions: ((String, [[(String, String)]]) -> Void)?
 
-    func reply(_ text: String) { replies(text) }
+    func reply(_ text: String) {
+        if let replies { replies(text) } else { notifier.tell(text) }
+    }
 
-    static func ask(_ text: String, buttons: [[(String, String)]]) {
-        guard Notifier.canUseTelegram else {
-            Notifier.tell(text)
+    func askPerson(_ text: String, buttons: [[(String, String)]]) {
+        if let questions {
+            questions(text, buttons)
             return
         }
-        Telegram.shared.send(text, chatId: Config.load().chatId, buttons: buttons)
+        guard notifier.canUseTelegram else {
+            notifier.tell(text)
+            return
+        }
+        telegram.send(text, chatId: Config.load().chatId, buttons: buttons)
     }
 
     public func autoApprove(_ batch: Batch) {
@@ -92,7 +109,7 @@ public final class Controller {
         batch.items = ready
         BatchStore.upsert(batch)
         Metrics.bump(batch.mode, "aprobados", ready.count)
-        if let id = batch.messageId { Telegram.shared.removeButtons(chatId: Config.load().chatId, messageId: id) }
+        if let id = batch.messageId { telegram.removeButtons(chatId: Config.load().chatId, messageId: id) }
         queue.append((batch, ready))
         if running == nil {
             runNext()
@@ -165,8 +182,9 @@ public final class Controller {
             if !batch.items.isEmpty && batch.created > since && batch.mode.hasItems {
                 batch.status = .pending
                 BatchStore.upsert(batch)
-                Notifier.announce(batch, title: "Quedaron sin terminar estas \(Self.noun(for: batch.mode)) (la Mac se durmió o se cerró la app)",
-                                  footer: "Responde \"si\" para reintentar, \"si 1 3\" para elegir o \"no\" para descartar.")
+                let title = "Quedaron sin terminar estas \(Self.noun(for: batch.mode)) (la Mac se durmió o se cerró la app)"
+                let footer = "Responde \"si\" para reintentar, \"si 1 3\" para elegir o \"no\" para descartar."
+                notifier.announce(batch, title: title, footer: footer)
             } else {
                 batch.status = .interrupted
                 BatchStore.upsert(batch)
@@ -237,10 +255,10 @@ public final class Controller {
         }
         let batchId = batch.id
         let mode = batch.mode
-        process.terminationHandler = { finished in
+        process.terminationHandler = { [weak self] finished in
             let code = finished.terminationStatus
             DispatchQueue.main.async {
-                Controller.shared.finished(batchId, mode: mode, items: items, code: code, outURL: outURL, errURL: errURL)
+                self?.finished(batchId, mode: mode, items: items, code: code, outURL: outURL, errURL: errURL)
             }
         }
         protectedSnapshot = profile.canAct ? Self.protectedFiles()?.snapshot() : nil
@@ -444,7 +462,7 @@ public final class Controller {
             } else if failed > 0 {
                 notes.append("\(failed) lámina(s) no se pudieron convertir.")
             }
-            Notifier.sendPhotos(made, caption: "\(account.title): imágenes de la publicación (\(made.count))") {
+            self?.notifier.sendPhotos(made, caption: "\(account.title): imágenes de la publicación (\(made.count))") {
                 if let text = Self.copyText(account.draft) {
                     self?.reply("Texto de la publicación de \(account.title), listo para copiar:\n\n\(text)")
                 }
@@ -468,7 +486,7 @@ public final class Controller {
                         rest()
                         return
                     }
-                    Notifier.sendVideo(video, caption: "\(account.title): vista previa del video, sin voz") { rest() }
+                    self?.notifier.sendVideo(video, caption: "\(account.title): vista previa del video, sin voz") { rest() }
                 }
             }
         }
@@ -535,7 +553,7 @@ public final class Controller {
             auto
             ? "\(AI.capitalizedName) ya los está procesando; te aviso al terminar."
             : "Responde \"si\" para que \(AI.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
-        Notifier.announce(batch, title: title + (auto ? " (envío automático)" : ""), footer: footer)
+        notifier.announce(batch, title: title + (auto ? " (envío automático)" : ""), footer: footer)
         if auto { autoApprove(batch) }
         return true
     }
@@ -549,7 +567,7 @@ public final class Controller {
         }
         CVRenderer.renderAll(profile) { [weak self] result in
             for file in result.made {
-                Notifier.sendFile(file, caption: "Hoja de vida actualizada: \(file.lastPathComponent)")
+                self?.notifier.sendFile(file, caption: "Hoja de vida actualizada: \(file.lastPathComponent)")
             }
             var lines = ["Hojas de vida: \(result.made.count) de \(profile.cvVariants.count) listas."]
             if !result.missing.isEmpty { lines.append("\(AI.capitalizedName) no dejó el HTML de: \(result.missing.joined(separator: ", ")).") }
@@ -634,7 +652,7 @@ public final class Controller {
             return
         }
         BatchStore.upsert(rest)
-        Notifier.announce(
+        notifier.announce(
             rest, title: "Estos mensajes no se envían solos",
             footer: "Revisa el texto y responde \"si\" para enviarlos, \"si 1 3\" para elegir o \"no\" para descartar.")
     }
@@ -645,7 +663,7 @@ public final class Controller {
         batch.items.removeAll { removed.contains($0.id) }
         if batch.items.isEmpty {
             batch.status = .done
-            if let id = batch.messageId { Telegram.shared.removeButtons(chatId: Config.load().chatId, messageId: id) }
+            if let id = batch.messageId { telegram.removeButtons(chatId: Config.load().chatId, messageId: id) }
         }
         BatchStore.upsert(batch)
     }

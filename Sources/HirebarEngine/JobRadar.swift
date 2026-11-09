@@ -9,12 +9,12 @@ import HirebarTelegram
 private let log = Log(.portals)
 
 public final class JobRadar: Radar {
-    public static let shared = JobRadar()
+    weak var controller: Controller?
     static let maxReviewed = 15
     static let maxStrong = 6
     static let maxStretchOnly = 2
 
-    private init() {
+    public init() {
         super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21)
     }
 
@@ -99,12 +99,13 @@ public final class JobRadar: Radar {
             ? "Radar empleo: nada de tu fuerte esta hora, pero hay \(hits.count) vacante(s) RETO"
             : "Radar empleo: \(hits.count) vacante(s) para ti"
         let auto = AgentStore.load(.jobs).autoApprove
-        Notifier.announce(batch, title: auto ? title + " (postulación automática)" : title,
-                          footer: auto
-                            ? "\(AI.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar."
-                            : "Responde \"si\" y \(AI.name) revisa cada vacante, llena el formulario y te postula. \"si 1 3\" para elegir, \"no\" para descartar.")
+        let automatic = "\(AI.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar."
+        let manual =
+            "Responde \"si\" y \(AI.name) revisa cada vacante, llena el formulario y te postula. "
+            + "\"si 1 3\" para elegir, \"no\" para descartar."
+        controller?.notifier.announce(batch, title: auto ? title + " (postulación automática)" : title, footer: auto ? automatic : manual)
         if auto {
-            DispatchQueue.main.async { Controller.shared.autoApprove(BatchStore.find(id: batch.id) ?? batch) }
+            DispatchQueue.main.async { self.controller?.autoApprove(BatchStore.find(id: batch.id) ?? batch) }
         }
     }
 }

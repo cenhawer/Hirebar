@@ -5,11 +5,7 @@ import HirebarDomain
 private let log = Log(.media)
 
 public enum CVRenderer {
-    public struct Result {
-        public var made: [URL] = []
-        public var missing: [String] = []
-        public var failed: [String] = []
-    }
+    public typealias Result = CVRenderResult
 
     public static let timeout: TimeInterval = 90
     public static var htmlFolder: URL { Paths.workspace.appendingPathComponent("hv", isDirectory: true) }

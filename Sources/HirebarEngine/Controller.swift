@@ -24,10 +24,12 @@ public final class Controller {
 
     let clock: Clock
     let aiRunner: AIRunner
+    let media: MediaRenderer
     public let stores: Repositories
 
-    public init(telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner) {
+    public init(telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner, media: MediaRenderer) {
         self.clock = clock
+        self.media = media
         self.aiRunner = aiRunner
         self.telegram = telegram
         self.stores = stores
@@ -213,7 +215,7 @@ public final class Controller {
         var batch = pending
         let owner = stores.config.load().ownerName
         if batch.mode == .linkedInDraft, let account = stores.contentAccounts.find(batch.account) {
-            SlideRenderer.prepare(account)
+            media.prepareSlides(for: account)
         }
         let account = stores.contentAccounts.find(batch.account)
         let profile = TaskProfiles.profile(for: batch.mode, account: account)
@@ -450,7 +452,7 @@ public final class Controller {
         let change = several ? "post \(account.id) cambia <qué>" : "post cambia <qué>"
         let skip = several ? "post \(account.id) salta" : "post salta"
         let ask = "¿Lo subo a \(account.title)? Responde \"\(publish)\" para subirlo tal cual, \"\(change)\" para ajustarlo o \"\(skip)\" para no publicarlo."
-        SlideRenderer.renderAll(account) { [weak self] made, failed in
+        media.renderSlides(for: account) { [weak self] made, failed in
             var notes: [String] = []
             if made.isEmpty {
                 let aiName = self?.ai.name ?? "la IA"
@@ -466,9 +468,9 @@ public final class Controller {
                     self?.reply((notes + [ask]).joined(separator: " "))
                     return
                 }
-                ReelRenderer.renderPreview(account) { video, problem in
+                self?.media.renderVideoPreview(for: account) { video, problem in
                     let rest = {
-                        if let script = ReelRenderer.readingScript(account) {
+                        if let script = self?.media.readingScript(for: account) {
                             self?.stores.runState.setWaitingVoiceAccount(account.id)
                             self?.reply(script)
                         }
@@ -554,7 +556,7 @@ public final class Controller {
             reply("perfil.json no tiene hojas de vida definidas (cvVariants), así que no generé PDF.")
             return
         }
-        CVRenderer.renderAll(profile) { [weak self] result in
+        media.renderCVs(for: profile) { [weak self] result in
             for file in result.made {
                 self?.notifier.sendFile(file, caption: "Hoja de vida actualizada: \(file.lastPathComponent)")
             }

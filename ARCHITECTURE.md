@@ -140,7 +140,7 @@ flowchart TB
 | Repositorios | Salida | Config, agentes, perfil, lotes, portales, cuentas, vistos, métricas | `HirebarStorage` |
 | `SecretStore` | Salida | Token de Telegram y claves | `HirebarStorage` |
 | `Clock` | Salida | Hora actual y temporizadores | `Hirebar` (raíz) |
-| `Logger` | Salida | Registro sin datos personales | `HirebarStorage` |
+| `Log` | Salida | Registro sin datos personales, sobre `os.Logger` | `HirebarApplication` (sin E/S propia) |
 
 ### 3.1.1 Perfiles de ejecución de la IA
 
@@ -203,7 +203,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarCore/WeeklyStats.swift`, `Metrics.swift` | Application + Storage | Cálculo como caso de uso; archivos de métricas a un repositorio |
 | `HirebarCore/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarCore/Keychain.swift` | Storage | `SecretStore` |
-| `HirebarCore/Log.swift` | Storage | `Logger` sobre `OSLog` (spec `023`) |
+| `HirebarApplication/Log.swift` · `Hirebar/LogExport.swift` | Application · Hirebar | `os.Logger` por área y por agente; el botón "Registro" exporta los últimos días |
 | `HirebarCore/Telegram.swift`, `Notifier.swift`, `MacNotifications.swift` | Telegram + Notifications | `Messenger` y `CommandSource` |
 | `HirebarCore/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarCore/Shell.swift` | AI | Lanzamiento de procesos |
@@ -341,9 +341,12 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 
 ## 7. Observabilidad
 
-- **Registro:** `~/Library/Logs/Hirebar/hirebar.log` hoy; pasa a `OSLog` con subsistema
-  `com.vmsoftware.hirebar` y una categoría por agente (spec `023`). Campos: agente, caso de uso,
-  lote y resultado. Sin datos personales.
+- **Registro:** `OSLog` con subsistema `com.vmsoftware.hirebar` y una categoría por agente
+  (`empleo`, `freelance`, `clientes`, `contenido`, `perfil`, `analista`) y por área (`telegram`, `ia`,
+  `portales`, `medios`, `notificaciones`, `datos`, `sistema`). El botón "Registro" exporta los últimos
+  3 días a `~/Library/Logs/Hirebar/hirebar.log` y lo abre; también se lee con
+  `log show --predicate 'subsystem == "com.vmsoftware.hirebar"'`. Campos: agente, caso de uso, lote y
+  resultado. Sin datos personales.
 - **Métricas de negocio:** avisos vistos, descartados y propuestos; envíos aprobados y hechos;
   respuestas; por agente y por semana. Las muestra el panel y las usa el Analista.
 - **Métricas técnicas:** duración de cada ejecución de la IA y de cada búsqueda, fallos por portal.

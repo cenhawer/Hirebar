@@ -18,7 +18,7 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 
 ### Pie
 - **Informes:** análisis de cada semana.
-- **Registro:** lo que la app hizo, minuto a minuto. Mira aquí cuando algo no corre.
+- **Registro:** lo que la app hizo en los últimos 3 días, minuto a minuto, con el agente o el área de cada línea. Mira aquí cuando algo no corre.
 - **Datos:** tu carpeta (`~/Library/Application Support/Hirebar/`).
 - **Ajustes:** ventana para configurar agentes y habilidades sin editar archivos.
 - **Engranaje:** Telegram y avisos, abrir al iniciar sesión y salir.

@@ -1,7 +1,10 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 import HirebarSources
+
+private let log = Log(.portals)
 
 public final class JobRadar: Radar {
     public static let shared = JobRadar()
@@ -51,7 +54,7 @@ public final class JobRadar: Radar {
                 continue
             }
             if let reason = source.staleReason(page: page) {
-                Log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
+                log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
                 await Net.pause(1)
                 continue
             }
@@ -59,7 +62,7 @@ public final class JobRadar: Radar {
                                              requireRemote: source.requiresRemoteInDescription, profile: profile)
             switch verdict {
             case .reject(let reason):
-                Log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
+                log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
             case .keep(let fit):
                 let final: Fit = (hit.fit == .stretch || fit == .stretch) ? .stretch : .strong
                 kept.append(hit.with(fit: final, detail: hit.detail + " · descripción revisada"))
@@ -81,13 +84,13 @@ public final class JobRadar: Radar {
         let hour = TextTools.shortTime()
         guard !hits.isEmpty else {
             setStatus("\(hour), nada nuevo")
-            Log.write("Empleo: nada nuevo")
+            log.write("Empleo: nada nuevo")
             return
         }
         setStatus("\(hour), \(hits.count) avisada(s)")
         Metrics.bump(.jobs, "avisados", hits.count)
         Metrics.bump(.jobs, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
-        Log.write("Empleo: \(hits.count) vacante(s) avisada(s)")
+        log.write("Empleo: \(hits.count) vacante(s) avisada(s)")
         let batch = Batch(mode: .jobs, items: hits.map(BatchItem.init), status: .pending)
         BatchStore.upsert(batch)
         let title = fits.isEmpty

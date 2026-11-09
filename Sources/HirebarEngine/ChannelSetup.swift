@@ -3,6 +3,8 @@ import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
+private let log = Log(.telegram)
+
 public enum ChannelState: Equatable, Sendable {
     case misconfigured
     case notConfigured
@@ -109,7 +111,7 @@ public final class ChannelSetup {
         config.channelOwner = candidate.owner
         config.save()
         pairing = nil
-        Log.write("Telegram: bot anclado a la cuenta confirmada")
+        log.write("Telegram: bot anclado a la cuenta confirmada")
         telegram.send(welcome, candidate.owner.chatId)
         notify()
     }

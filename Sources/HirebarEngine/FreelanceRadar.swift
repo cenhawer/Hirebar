@@ -1,7 +1,10 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 import HirebarSources
+
+private let log = Log(.portals)
 
 public final class FreelanceRadar: Radar {
     public static let shared = FreelanceRadar()
@@ -62,13 +65,13 @@ public final class FreelanceRadar: Radar {
         let suffix = note.isEmpty ? "" : " (\(note))"
         guard !hits.isEmpty else {
             setStatus("\(hour), nada nuevo\(suffix)")
-            Log.write("Freelance: nada nuevo\(suffix)")
+            log.write("Freelance: nada nuevo\(suffix)")
             return
         }
         setStatus("\(hour), \(hits.count) avisado(s)\(suffix)")
         Metrics.bump(.freelance, "avisados", hits.count)
         Metrics.bump(.freelance, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
-        Log.write("Freelance: \(hits.count) proyecto(s) avisado(s)")
+        log.write("Freelance: \(hits.count) proyecto(s) avisado(s)")
 
         let batch = Batch(mode: .freelance, items: hits.map(BatchItem.init), status: .pending)
         BatchStore.upsert(batch)

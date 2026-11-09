@@ -3,6 +3,8 @@ import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
+private let log = Log(.telegram)
+
 extension Controller {
     static let help = """
         Comandos:
@@ -171,14 +173,14 @@ extension Controller {
 
     func admits(_ message: TelegramMessage) -> Bool {
         guard let sender = message.sender else {
-            Log.write("Telegram: ignorado un mensaje sin remitente")
+            log.write("Telegram: ignorado un mensaje sin remitente")
             return false
         }
         guard Config.load().channelOwner != nil else {
             if channel.offer(sender, text: message.text) {
                 Telegram.shared.send(Self.pairingReply, chatId: sender.chatId)
             } else {
-                Log.write("Telegram: ignorado un mensaje fuera de la vinculación")
+                log.write("Telegram: ignorado un mensaje fuera de la vinculación")
             }
             return false
         }
@@ -186,10 +188,10 @@ extension Controller {
         case .allowed:
             return true
         case .notOwner:
-            Log.write("Telegram: ignorado un mensaje de otra cuenta")
+            log.write("Telegram: ignorado un mensaje de otra cuenta")
             return false
         case .tooMany:
-            Log.write("Telegram: ignorado un mensaje por superar el límite por minuto")
+            log.write("Telegram: ignorado un mensaje por superar el límite por minuto")
             return false
         }
     }
@@ -227,10 +229,10 @@ extension Controller {
         unsavedPauses[agent] = nil
         do {
             try executionGuard.resume(agent)
-            Log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
+            log.write("Verificación: \(AgentStore.load(kind).name) reanudado por la persona")
             return true
         } catch {
-            Log.write("Verificación: no pude reanudar \(kind.rawValue): \(error.localizedDescription)")
+            log.write("Verificación: no pude reanudar \(kind.rawValue): \(error.localizedDescription)")
             return false
         }
     }

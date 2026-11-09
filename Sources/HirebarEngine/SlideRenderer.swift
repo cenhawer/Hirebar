@@ -1,8 +1,10 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 
-/// Convierte las láminas HTML de la publicación (1080×1350) en PNG con Chrome sin ventana.
+private let log = Log(.media)
+
 public enum SlideRenderer {
     static let width = 1080
     static let height = 1350
@@ -36,12 +38,12 @@ public enum SlideRenderer {
         let sources = pages(in: folder)
         DispatchQueue.global(qos: .utility).async {
             guard !sources.isEmpty else {
-                Log.write("Contenido: no hay láminas en \(folder.path)")
+                log.write("Contenido: no hay láminas en \(folder.path)")
                 DispatchQueue.main.async { completion([], 0) }
                 return
             }
             guard let chrome = CVRenderer.chromePath() else {
-                Log.write("Contenido: no encontré Google Chrome para crear las imágenes")
+                log.write("Contenido: no encontré Google Chrome para crear las imágenes")
                 DispatchQueue.main.async { completion([], sources.count) }
                 return
             }
@@ -51,7 +53,7 @@ public enum SlideRenderer {
                 let target = source.deletingPathExtension().appendingPathExtension("png")
                 if shoot(source, to: target, chrome: chrome, scratch: scratch) { made.append(target) }
             }
-            Log.write("Contenido (\(account.id)): \(made.count) de \(sources.count) láminas convertidas en PNG")
+            log.write("Contenido (\(account.id)): \(made.count) de \(sources.count) láminas convertidas en PNG")
             DispatchQueue.main.async { completion(made, sources.count - made.count) }
         }
     }

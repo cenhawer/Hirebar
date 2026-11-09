@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.notifications)
 
 public enum Notifier {
     public static var canUseTelegram: Bool {
@@ -28,7 +31,7 @@ public enum Notifier {
                 guard stored.status == .pending else { return }
                 stored.status = .discarded
                 BatchStore.upsert(stored)
-                Log.write("Telegram: la lista \(batch.id) no llegó completa y se descartó")
+                log.write("Telegram: la lista \(batch.id) no llegó completa y se descartó")
                 let notice = "No pude mostrarte completa la lista \(batch.id), así que la descarté para que no se apruebe a ciegas."
                 tell(notice)
                 return
@@ -97,7 +100,7 @@ public enum Notifier {
 
     public static func sendFile(_ file: URL, caption: String) {
         guard canUseTelegram else {
-            Log.write("Archivo listo sin canal para enviarlo: \(file.path)")
+            log.write("Archivo listo sin canal para enviarlo: \(file.path)")
             return
         }
         Telegram.shared.sendDocument(file, caption: caption, chatId: Config.load().chatId)
@@ -105,7 +108,9 @@ public enum Notifier {
 
     public static func sendPhotos(_ files: [URL], caption: String, completion: @escaping () -> Void) {
         guard canUseTelegram, !files.isEmpty else {
-            if !files.isEmpty { Log.write("Imágenes listas sin canal para enviarlas: \(files.first?.deletingLastPathComponent().path ?? "")") }
+            if let folder = files.first?.deletingLastPathComponent().path {
+                log.write("Imágenes listas sin canal para enviarlas: \(folder)")
+            }
             completion()
             return
         }
@@ -114,7 +119,7 @@ public enum Notifier {
 
     public static func sendVideo(_ file: URL, caption: String, completion: @escaping () -> Void) {
         guard canUseTelegram else {
-            Log.write("Video listo sin canal para enviarlo: \(file.path)")
+            log.write("Video listo sin canal para enviarlo: \(file.path)")
             completion()
             return
         }

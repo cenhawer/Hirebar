@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.telegram)
 
 public struct TelegramMessage: Sendable {
     public let chatId: Int64
@@ -223,7 +226,7 @@ public final class Telegram: @unchecked Sendable {
         DispatchQueue.global(qos: .utility).async { [weak self] in
             let result = self?.call("sendMessage", payload)
             let id = ((result?["result"] as? [String: Any])?["message_id"] as? NSNumber)?.intValue
-            if id == nil { Log.write("Telegram: no se pudo enviar (\(result?["description"] ?? "sin respuesta"))") }
+            if id == nil { log.write("Telegram: no se pudo enviar (\(result?["description"] ?? "sin respuesta"))") }
             DispatchQueue.main.async { completion?(id) }
         }
     }
@@ -235,7 +238,7 @@ public final class Telegram: @unchecked Sendable {
         DispatchQueue.global(qos: .utility).async {
             let result = Net.postMultipart(url, fields: fields, fileField: "document", file: file)
             if (result?["ok"] as? Bool) != true {
-                Log.write("Telegram: no se pudo enviar \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
+                log.write("Telegram: no se pudo enviar \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
             }
         }
     }
@@ -257,7 +260,8 @@ public final class Telegram: @unchecked Sendable {
                     result = Net.postMultipart(url, fields: fields, fileField: "photo", file: file)
                 }
                 if (result?["ok"] as? Bool) != true {
-                    Log.write("Telegram: no se pudo enviar la imagen \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
+                    let reason = result?["description"] ?? "sin respuesta"
+                    log.write("Telegram: no se pudo enviar la imagen \(file.lastPathComponent) (\(reason))")
                 }
             }
             DispatchQueue.main.async { completion?() }
@@ -278,7 +282,7 @@ public final class Telegram: @unchecked Sendable {
                 result = Net.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
             }
             if (result?["ok"] as? Bool) != true {
-                Log.write("Telegram: no se pudo enviar el video \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
+                log.write("Telegram: no se pudo enviar el video \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
             }
             DispatchQueue.main.async { completion?() }
         }

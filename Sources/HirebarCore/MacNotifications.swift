@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
 import UserNotifications
+
+private let log = Log(.notifications)
 
 public enum MacNotifications {
     static let bodyLimit = 900
@@ -10,7 +13,7 @@ public enum MacNotifications {
 
     public static func show(title: String, body: String) {
         guard isAvailable else {
-            Log.write("Aviso sin canal: \(title)")
+            log.write("Aviso sin canal: \(title)")
             return
         }
         let content = UNMutableNotificationContent()
@@ -20,13 +23,13 @@ public enum MacNotifications {
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         Task {
             guard await isAllowed() else {
-                Log.write("Aviso no mostrado: macOS no tiene permiso de notificaciones para Hirebar")
+                log.write("Aviso no mostrado: macOS no tiene permiso de notificaciones para Hirebar")
                 return
             }
             do {
                 try await UNUserNotificationCenter.current().add(request)
             } catch {
-                Log.write("Notificación de macOS no mostrada: \(error.localizedDescription)")
+                log.write("Notificación de macOS no mostrada: \(error.localizedDescription)")
             }
         }
     }

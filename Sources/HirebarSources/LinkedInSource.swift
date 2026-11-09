@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct LinkedInSource: JobSource {
     public let id = "linkedin"
@@ -59,7 +62,7 @@ public struct LinkedInSource: JobSource {
             }
             await Net.pause(1.5)
         }
-        Log.write("Empleo · LinkedIn: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
+        log.write("Empleo · LinkedIn: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
         return SourceResult(hits: hits)
     }
 

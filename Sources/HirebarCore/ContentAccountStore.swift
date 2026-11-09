@@ -1,5 +1,8 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
+
+private let log = Log(.storage)
 
 extension ContentAccount {
     public var folder: URL { Paths.content.appendingPathComponent(id, isDirectory: true) }
@@ -38,7 +41,7 @@ public enum ContentAccountStore {
             let accounts = try JSONDecoder().decode([ContentAccount].self, from: data)
             return accounts.isEmpty ? [defaultAccount()] : accounts
         } catch {
-            Log.write("contenido/cuentas.json tiene un error (\(error.localizedDescription)); se usa la cuenta por defecto")
+            log.write("contenido/cuentas.json tiene un error (\(error.localizedDescription)); se usa la cuenta por defecto")
             return [defaultAccount()]
         }
     }

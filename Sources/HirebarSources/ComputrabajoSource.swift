@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct ComputrabajoSource: JobSource {
     public let id = "computrabajo"
@@ -39,7 +42,7 @@ public struct ComputrabajoSource: JobSource {
             }
             await Net.pause(1)
         }
-        Log.write("Empleo · Computrabajo: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
+        log.write("Empleo · Computrabajo: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
         return SourceResult(hits: hits)
     }
 

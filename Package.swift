@@ -11,7 +11,7 @@ let package = Package(
         .target(name: "HirebarDomain"),
         .target(name: "HirebarApplication", dependencies: ["HirebarDomain"]),
         .target(name: "HirebarCore", dependencies: ["HirebarDomain", "HirebarApplication"]),
-        .target(name: "HirebarSources", dependencies: ["HirebarCore", "HirebarDomain"]),
+        .target(name: "HirebarSources", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain"]),
         .target(name: "HirebarEngine", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain", "HirebarSources"]),
         .executableTarget(name: "Hirebar", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain", "HirebarEngine"]),
         .testTarget(name: "HirebarCoreTests", dependencies: ["HirebarApplication", "HirebarCore", "HirebarDomain"]),

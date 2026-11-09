@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.media)
 
 public enum CVRenderer {
     public struct Result {
@@ -35,7 +38,7 @@ public enum CVRenderer {
             var result = Result()
             guard let chrome = chromePath() else {
                 result.failed = profile.cvVariants.map(\.id)
-                Log.write("Hojas de vida: no encontré Google Chrome para crear los PDF")
+                log.write("Hojas de vida: no encontré Google Chrome para crear los PDF")
                 DispatchQueue.main.async { completion(result) }
                 return
             }
@@ -53,7 +56,7 @@ public enum CVRenderer {
                     result.failed.append(variant.id)
                 }
             }
-            Log.write("Hojas de vida: \(result.made.count) PDF creados, faltan \(result.missing), fallaron \(result.failed)")
+            log.write("Hojas de vida: \(result.made.count) PDF creados, faltan \(result.missing), fallaron \(result.failed)")
             DispatchQueue.main.async { completion(result) }
         }
     }

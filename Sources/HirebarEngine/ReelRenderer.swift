@@ -2,15 +2,13 @@ import AVFoundation
 import AppKit
 import CoreGraphics
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 import ImageIO
 
-/// Arma el Short/Reel de una cuenta (1080×1920) en el Mac, en dos tiempos:
-/// 1. Vista previa sin voz: graba cada escena HTML ANIMADA cuadro por cuadro (30 por segundo) con el motor web de
-///    macOS, con la duración estimada de cada frase del guion. Va a Telegram junto con el guion para leerlo.
-/// 2. Video final: con la nota de voz que la persona manda por Telegram. Escucha la voz para saber en qué segundo se
-///    dice cada palabra, cuadra cada escena y cada subtítulo con la voz y mezcla la voz (y la música, si hay).
+private let log = Log(.media)
+
 public enum ReelRenderer {
     static let width = 1080
     static let height = 1920
@@ -95,7 +93,7 @@ public enum ReelRenderer {
             } catch {
                 result = (nil, error.localizedDescription)
             }
-            if let problem = result.1 { Log.write("Contenido (\(account.id)): no salió la vista previa: \(problem)") }
+            if let problem = result.1 { log.write("Contenido (\(account.id)): no salió la vista previa: \(problem)") }
             DispatchQueue.main.async { completion(result.0, result.1) }
         }
     }
@@ -113,18 +111,18 @@ public enum ReelRenderer {
                 let heard = VoiceListener.words(in: voice)
                 let texts = script.scenes.map { $0.texto ?? "" }
                 let timings = ScriptAligner.align(texts, heard: heard, pauses: AudioTools.pauses(in: voice), duration: duration)
-                Log.write("Contenido (\(account.id)): cortes de escena en "
-                          + timings.map { String(format: "%.1f", $0.start) }.joined(separator: ", ") + " s")
+                let cuts = timings.map { String(format: "%.1f", $0.start) }.joined(separator: ", ")
+                log.write("Contenido (\(account.id)): cortes de escena en \(cuts) s")
                 let clips = zip(script.scenes, timings).map { scene, timing in
                     Clip(page: account.videoFolder.appendingPathComponent(scene.archivo), seconds: timing.end - timing.start,
                          words: account.captions ? timing.words : [])
                 }
-                Log.write("Contenido (\(account.id)): tu voz dura \(Int(duration)) s")
+                log.write("Contenido (\(account.id)): tu voz dura \(Int(duration)) s")
                 result = (try finish(account, clips: clips, voice: voice, to: output(account)), nil)
             } catch {
                 result = (nil, error.localizedDescription)
             }
-            if let problem = result.1 { Log.write("Contenido (\(account.id)): no salió el video con tu voz: \(problem)") }
+            if let problem = result.1 { log.write("Contenido (\(account.id)): no salió el video con tu voz: \(problem)") }
             DispatchQueue.main.async { completion(result.0, result.1) }
         }
     }
@@ -135,7 +133,7 @@ public enum ReelRenderer {
         let silent = folder.appendingPathComponent("grabando.mp4")
         try? FileManager.default.removeItem(at: silent)
         try? FileManager.default.removeItem(at: target)
-        Log.write("Contenido (\(account.id)): grabando \(clips.count) escenas" + (voice == nil ? " (vista previa sin voz)" : " con tu voz"))
+        log.write("Contenido (\(account.id)): grabando \(clips.count) escenas" + (voice == nil ? " (vista previa sin voz)" : " con tu voz"))
         let animated = try writeVideo(clips, accent: color(account.palette.accent), to: silent)
         let music = account.music
         if voice != nil || music != nil {
@@ -145,8 +143,8 @@ public enum ReelRenderer {
             try FileManager.default.moveItem(at: silent, to: target)
         }
         let total = clips.reduce(0) { $0 + $1.seconds }
-        Log.write("Contenido (\(account.id)): video de \(clips.count) escenas (\(animated) animadas) y \(Int(total)) s listo"
-                  + (voice == nil ? " sin voz" : " con tu voz") + (music == nil ? "" : " y música"))
+        let extras = (voice == nil ? " sin voz" : " con tu voz") + (music == nil ? "" : " y música")
+        log.write("Contenido (\(account.id)): video de \(clips.count) escenas (\(animated) animadas) y \(Int(total)) s listo\(extras)")
         return target
     }
 
@@ -189,7 +187,11 @@ public enum ReelRenderer {
             var still: CGImage?
             if live, capture.frame(at: 0) == nil { live = false }
             if !live, let chrome { still = stillImage(clip.page, chrome: chrome, scratch: scratch) }
-            if live { animated += 1 } else { Log.write("Contenido: la escena \(clip.page.lastPathComponent) sale fija (no se pudo animar)") }
+            if live {
+                animated += 1
+            } else {
+                log.write("Contenido: la escena \(clip.page.lastPathComponent) sale fija (no se pudo animar)")
+            }
             for frame in 0..<count {
                 let elapsed = Double(frame) / Double(fps)
                 var image: CGImage?
@@ -199,7 +201,8 @@ public enum ReelRenderer {
                     if image == nil {
                         // Si el Mac deja de dar cuadros, la escena sigue fija para no quedarse esperando.
                         live = false
-                        Log.write("Contenido: la escena \(clip.page.lastPathComponent) dejó de animarse en el segundo \(String(format: "%.1f", elapsed))")
+                        let second = String(format: "%.1f", elapsed)
+                        log.write("Contenido: la escena \(clip.page.lastPathComponent) dejó de animarse en el segundo \(second)")
                     }
                 }
                 if image == nil {
@@ -217,8 +220,9 @@ public enum ReelRenderer {
                 adaptor.append(buffer, withPresentationTime: CMTime(value: frameIndex, timescale: fps))
                 frameIndex += 1
             }
-            Log.write("Contenido: escena \(number + 1) de \(clips.count) grabada (\(live ? "animada" : "fija"), "
-                      + "\(count) cuadros en \(Int(Date().timeIntervalSince(started))) s)")
+            let kind = live ? "animada" : "fija"
+            let seconds = Int(Date().timeIntervalSince(started))
+            log.write("Contenido: escena \(number + 1) de \(clips.count) grabada (\(kind), \(count) cuadros en \(seconds) s)")
         }
         input.markAsFinished()
         let done = DispatchSemaphore(value: 0)

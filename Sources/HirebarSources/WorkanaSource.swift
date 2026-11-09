@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct WorkanaSource: ListingSource {
     public let id = "workana"
@@ -55,7 +58,9 @@ public struct WorkanaSource: ListingSource {
             }
             await Net.pause(0.5)
         }
-        Log.write("Freelance · Workana: \(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h, \(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo")
+        let found = "\(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h"
+        let notified = "\(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo"
+        log.write("Freelance · Workana: \(found), \(notified)")
         return outcome
     }
 

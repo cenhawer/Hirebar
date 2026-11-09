@@ -1,6 +1,9 @@
 import Foundation
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
+
+private let log = Log(.portals)
 
 public struct GetOnBoardSource: JobSource {
     public let id = "getonboard"
@@ -50,7 +53,7 @@ public struct GetOnBoardSource: JobSource {
                 guard var fit = byTitle ?? (byText == .strong ? .stretch : nil) else { continue }
                 switch JobScreener.screen(body, profile: jobs) {
                 case .reject(let reason):
-                    Log.write("Empleo: descartada Get on Board · \(title): \(reason)")
+                    log.write("Empleo: descartada Get on Board · \(title): \(reason)")
                     continue
                 case .keep(let verdict):
                     if verdict == .stretch { fit = .stretch }
@@ -68,7 +71,7 @@ public struct GetOnBoardSource: JobSource {
             }
             await Net.pause(0.8)
         }
-        Log.write("Empleo · Get on Board: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
+        log.write("Empleo · Get on Board: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
         return SourceResult(hits: hits)
     }
 }

@@ -448,9 +448,9 @@ extension Controller {
             return
         }
         reply("Armando la vista previa del video de \(account.title); tarda unos minutos.")
-        ReelRenderer.renderPreview(account) { [weak self] video, problem in
+        media.renderVideoPreview(for: account) { [weak self] video, problem in
             let sendScript = {
-                if let script = ReelRenderer.readingScript(account) {
+                if let script = self?.media.readingScript(for: account) {
                     self?.stores.runState.setWaitingVoiceAccount(account.id)
                     self?.reply(script)
                 }
@@ -482,7 +482,7 @@ extension Controller {
 
     /// Arma el video con la grabación y lo manda con su descripción.
     private func deliverVoiced(_ account: ContentAccount, recording: URL) {
-        ReelRenderer.renderWithVoice(account, recording: recording) { [weak self] video, problem in
+        media.renderVideoWithVoice(for: account, recording: recording) { [weak self] video, problem in
             guard let video else {
                 self?.reply("No pude armar el video con tu voz: \(problem ?? "sin detalle"). Puedes mandar el audio otra vez.")
                 return
@@ -500,18 +500,16 @@ extension Controller {
 
     /// La persona mandó una nota de voz: se une con el video que está esperando voz.
     func audioProblem(bytes: Int?, seconds: Int?) -> String? {
-        guard let tools = try? SystemTools.bundled() else {
+        switch media.audioCheck(bytes: bytes, seconds: seconds) {
+        case .accepted:
+            return nil
+        case .toolsMissing:
             return "Falta herramientas.json dentro de la app; vuelve a instalarla con scripts/bundle.sh --install."
+        case .ffmpegMissing(let install):
+            return "Para armar el video con tu voz falta ffmpeg en el Mac. Instálalo con \(install) y vuelve a mandar el audio."
+        case .tooLong(let minutes, let megabytes):
+            return "Ese audio es muy largo: el máximo es \(minutes) minutos o \(megabytes) MB. Graba uno más corto."
         }
-        guard tools.ffmpegPath() != nil else {
-            return "Para armar el video con tu voz falta ffmpeg en el Mac. Instálalo con \(tools.ffmpeg.install) "
-                + "y vuelve a mandar el audio."
-        }
-        guard tools.acceptsAudio(bytes: bytes, seconds: seconds) else {
-            let minutes = tools.maxAudioSeconds / 60
-            return "Ese audio es muy largo: el máximo es \(minutes) minutos o \(tools.maxAudioMegabytes) MB. Graba uno más corto."
-        }
-        return nil
     }
 
     func handleRecording(fileId: String, ext: String, size: (bytes: Int?, seconds: Int?) = (nil, nil)) {
@@ -528,7 +526,7 @@ extension Controller {
         reply("Recibí tu audio. Armo el video de \(account.title) con tu voz; tarda unos minutos.")
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
-            let limit = (try? SystemTools.bundled())?.maxAudioBytes
+            let limit = self?.media.maxAudioBytes()
             guard self?.telegram.download(fileId: fileId, to: file, maxBytes: limit) == true else {
                 DispatchQueue.main.async { self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.") }
                 return

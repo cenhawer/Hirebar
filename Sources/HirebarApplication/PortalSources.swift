@@ -41,20 +41,19 @@ public extension JobSource {
     func owns(_ hit: Hit) -> Bool { hit.id.hasPrefix(hitPrefix + ":") }
 }
 
-public enum PageSlice {
-    public static func between(_ page: String, from start: String, to end: String?, max length: Int) -> String? {
-        guard let a = page.range(of: start) else { return nil }
-        var b = page.index(a.upperBound, offsetBy: length, limitedBy: page.endIndex) ?? page.endIndex
-        if let end, let e = page.range(of: end, range: a.upperBound..<page.endIndex), e.lowerBound < b {
-            b = e.lowerBound
-        }
-        return TextTools.clean(String(page[a.upperBound..<b]))
-    }
+public protocol WebPageFetcher: Sendable {
+    func text(_ address: String) async -> String?
+    func pause(_ seconds: Double) async
 }
 
-public enum Catalog {
-    public static let freelance: [ListingSource] = [WorkanaSource(), FreelancerSource()]
-    public static let jobs: [JobSource] = [
-        LinkedInSource(), GetOnBoardSource(), ComputrabajoSource(), ElempleoSource(), MagnetoSource(),
-    ]
+public struct PortalAccess: Sendable {
+    public let jobs: [JobSource]
+    public let freelance: [ListingSource]
+    public let fetcher: WebPageFetcher
+
+    public init(jobs: [JobSource], freelance: [ListingSource], fetcher: WebPageFetcher) {
+        self.jobs = jobs
+        self.freelance = freelance
+        self.fetcher = fetcher
+    }
 }

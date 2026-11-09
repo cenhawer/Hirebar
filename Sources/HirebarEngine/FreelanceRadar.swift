@@ -13,9 +13,11 @@ public final class FreelanceRadar: Radar {
     static let maxPerBatch = 5
 
     let stores: Repositories
+    let portals: PortalAccess
 
-    public init(stores: Repositories, clock: Clock) {
+    public init(stores: Repositories, clock: Clock, portals: PortalAccess) {
         self.stores = stores
+        self.portals = portals
         super.init(firstDelay: 60, seenKey: "radar.seen", seenDays: 14, runState: stores.runState, clock: clock)
     }
 
@@ -27,13 +29,13 @@ public final class FreelanceRadar: Radar {
             setStatus("apagado")
             return
         }
-        let active = Catalog.freelance.filter { config.isEnabled($0.id) && !stores.quotas.exhausted($0.id) }
+        let active = portals.freelance.filter { config.isEnabled($0.id) && !stores.quotas.exhausted($0.id) }
         guard !active.isEmpty else {
             setStatus("sin contactos ni ofertas hasta que se renueven")
             return
         }
         guard beginCheck() else { return }
-        let skipped = Catalog.freelance
+        let skipped = portals.freelance
             .filter { config.isEnabled($0.id) && stores.quotas.exhausted($0.id) }
             .map { "\($0.name) sin cupos" }
         let skip = Set(seen().keys)
@@ -53,7 +55,7 @@ public final class FreelanceRadar: Radar {
         checking = false
         let pool = found.filter { $0.fit == .strong || $0.fit == .stretch }.sorted(by: Hit.ranked)
         var room: [String: Int] = [:]
-        for source in Catalog.freelance {
+        for source in portals.freelance {
             if let left = stores.quotas.remaining(source.id) { room[source.name] = left }
         }
         var hits: [Hit] = []

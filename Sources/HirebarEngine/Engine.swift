@@ -19,9 +19,11 @@ public final class Engine {
         let stores = Repositories.files
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore())
-        controller = Controller(telegram: telegram, stores: stores, clock: clock, aiRunner: ProcessAIRunner())
-        jobRadar = JobRadar(stores: stores, clock: clock)
-        freelanceRadar = FreelanceRadar(stores: stores, clock: clock)
+        controller = Controller(
+            telegram: telegram, stores: stores, clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer())
+        let portals = PortalAccess.bundled
+        jobRadar = JobRadar(stores: stores, clock: clock, portals: portals)
+        freelanceRadar = FreelanceRadar(stores: stores, clock: clock, portals: portals)
         scheduler = Scheduler(stores: stores, clock: clock)
         jobRadar.controller = controller
         freelanceRadar.controller = controller

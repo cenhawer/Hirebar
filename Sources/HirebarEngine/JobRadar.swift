@@ -15,9 +15,11 @@ public final class JobRadar: Radar {
     static let maxStretchOnly = 2
 
     let stores: Repositories
+    let portals: PortalAccess
 
-    public init(stores: Repositories, clock: Clock) {
+    public init(stores: Repositories, clock: Clock, portals: PortalAccess) {
         self.stores = stores
+        self.portals = portals
         super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21, runState: stores.runState, clock: clock)
     }
 
@@ -32,35 +34,35 @@ public final class JobRadar: Radar {
         guard beginCheck() else { return }
         let skip = Set(seen().keys)
         let profile = stores.profile.effectiveSearch()
-        let active = Catalog.jobs.filter { config.isEnabled($0.id) }
+        let active = portals.jobs.filter { config.isEnabled($0.id) }
         Task {
             var found: [Hit] = []
             for source in active {
                 found += await source.search(skip: skip, profile: profile).hits
             }
-            let refined = await Self.refine(found, profile: profile.jobs)
+            let refined = await Self.refine(found, profile: profile.jobs, portals: self.portals)
             await MainActor.run { self.finish(refined.kept, examined: refined.examined) }
         }
     }
 
-    static func refine(_ hits: [Hit], profile: JobProfile) async -> (kept: [Hit], examined: [Hit]) {
+    static func refine(_ hits: [Hit], profile: JobProfile, portals: PortalAccess) async -> (kept: [Hit], examined: [Hit]) {
         var unique: [String: Hit] = [:]
         for hit in hits where unique[hit.id] == nil { unique[hit.id] = hit }
         let examined = Array(unique.values.sorted(by: Hit.ranked).prefix(maxReviewed))
         var kept: [Hit] = []
         for hit in examined {
-            guard let source = Catalog.jobs.first(where: { $0.owns(hit) }) else { continue }
+            guard let source = portals.jobs.first(where: { $0.owns(hit) }) else { continue }
             guard case .read(let address) = source.descriptionCheck(for: hit) else {
                 kept.append(hit)
                 continue
             }
-            guard let page = await Net.fetchText(address), let text = source.descriptionText(from: page) else {
-                await Net.pause(1)
+            guard let page = await portals.fetcher.text(address), let text = source.descriptionText(from: page) else {
+                await portals.fetcher.pause(1)
                 continue
             }
             if let reason = source.staleReason(page: page) {
                 log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
-                await Net.pause(1)
+                await portals.fetcher.pause(1)
                 continue
             }
             let verdict = JobScreener.screen(text, location: source.location(from: page),
@@ -72,7 +74,7 @@ public final class JobRadar: Radar {
                 let final: Fit = (hit.fit == .stretch || fit == .stretch) ? .stretch : .strong
                 kept.append(hit.with(fit: final, detail: hit.detail + " · descripción revisada"))
             }
-            await Net.pause(1.2)
+            await portals.fetcher.pause(1.2)
         }
         return (kept, examined)
     }

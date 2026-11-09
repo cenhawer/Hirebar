@@ -1,26 +1,22 @@
 import AppKit
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 import WebKit
 
 /// Graba una escena HTML animada cuadro por cuadro con el motor web de macOS.
 /// Las animaciones CSS se pausan y se llevan al instante exacto de cada cuadro, así el video sale fluido
 /// sin importar lo que tarde cada captura. Se llama desde un hilo de fondo; el trabajo web corre en el principal.
-final class WebFrameCapture: NSObject, WKNavigationDelegate {
+public final class WebFrameCapture: NSObject, WKNavigationDelegate {
     private let size: CGSize
     private var window: NSWindow?
     private var webView: WKWebView?
     private var onLoad: ((Bool) -> Void)?
 
-    init(width: Int, height: Int) {
+    public init(width: Int, height: Int) {
         size = CGSize(width: width, height: height)
     }
 
     /// Carga la escena con su duración (variable CSS --dur, en segundos). Devuelve false si no cargó.
-    func load(_ page: URL, seconds: Double) -> Bool {
+    public func load(_ page: URL, seconds: Double) -> Bool {
         let done = DispatchSemaphore(value: 0)
         var ok = false
         DispatchQueue.main.async {
@@ -72,7 +68,7 @@ final class WebFrameCapture: NSObject, WKNavigationDelegate {
         return image
     }
 
-    func close() {
+    public func close() {
         DispatchQueue.main.async {
             self.webView?.navigationDelegate = nil
             self.window?.contentView = nil
@@ -99,23 +95,23 @@ final class WebFrameCapture: NSObject, WKNavigationDelegate {
         return ok
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         onLoad?(true)
         onLoad = nil
     }
 
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         onLoad?(false)
         onLoad = nil
     }
 
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         onLoad?(false)
         onLoad = nil
     }
 
     /// Se inyecta antes que la página: deja --dur y la función que lleva todas las animaciones al instante t.
-    static func prelude(_ seconds: Double) -> String {
+    public static func prelude(_ seconds: Double) -> String {
         """
         document.documentElement.style.setProperty('--dur', '\(seconds)');
         window.__hirebarSeek = function (t) {

@@ -2,20 +2,16 @@ import AVFoundation
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 import Speech
 
 private let log = Log(.media)
 
 /// Escucha la nota de voz con el reconocimiento de voz de macOS (en el Mac, gratis) para saber en qué segundo
 /// se dice cada palabra. Si no hay permiso o no se reconoce, devuelve una lista vacía y el video se reparte por largo.
-enum VoiceListener {
-    static let locales = ["es-CO", "es-MX", "es-US", "es-419", "es-ES"]
+public enum VoiceListener {
+    public static let locales = ["es-CO", "es-MX", "es-US", "es-419", "es-ES"]
 
-    static func words(in audio: URL) -> [WordTiming] {
+    public static func words(in audio: URL) -> [WordTiming] {
         guard authorize() else {
             log.write("Contenido: sin permiso de reconocimiento de voz; el video se reparte por largo del texto")
             return []
@@ -55,7 +51,7 @@ enum VoiceListener {
         return words
     }
 
-    static func authorize() -> Bool {
+    public static func authorize() -> Bool {
         switch SFSpeechRecognizer.authorizationStatus() {
         case .authorized: return true
         case .denied, .restricted: return false
@@ -71,7 +67,7 @@ enum VoiceListener {
         }
     }
 
-    static func duration(_ file: URL) -> Double? {
+    public static func duration(_ file: URL) -> Double? {
         guard let audio = try? AVAudioFile(forReading: file), audio.fileFormat.sampleRate > 0 else { return nil }
         let seconds = Double(audio.length) / audio.fileFormat.sampleRate
         return seconds > 0.3 ? seconds : nil

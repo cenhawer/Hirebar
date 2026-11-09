@@ -6,7 +6,7 @@ import HirebarStorage
 import HirebarTelegram
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarMedia
 
 final class SystemToolsTests: XCTestCase {
     var tools: SystemTools!
@@ -30,7 +30,7 @@ final class SystemToolsTests: XCTestCase {
 
     func testNoToolIsInstalledWithPythonOrPip() throws {
         let source = try String(
-            contentsOf: EngineProfileTests.repositoryRoot.appendingPathComponent("Sources/HirebarEngine/AudioTools.swift"), encoding: .utf8)
+            contentsOf: EngineProfileTests.repositoryRoot.appendingPathComponent("Sources/HirebarMedia/AudioTools.swift"), encoding: .utf8)
         XCTAssertFalse(source.contains("pip install"))
         XCTAssertFalse(source.contains("-m venv"))
     }

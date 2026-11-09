@@ -1,17 +1,18 @@
 import Foundation
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
-struct ProtectedFiles {
-    typealias Snapshot = [String: Data]
+public struct ProtectedFiles {
+    public typealias Snapshot = [String: Data]
 
-    let folder: URL
-    let patterns: [String]
+    public let folder: URL
+    public let patterns: [String]
 
-    func snapshot() -> Snapshot {
+    public init(folder: URL, patterns: [String]) {
+        self.folder = folder
+        self.patterns = patterns
+    }
+
+    public func snapshot() -> Snapshot {
         var contents: Snapshot = [:]
         for path in matchingPaths() {
             contents[path] = try? Data(contentsOf: folder.appendingPathComponent(path))
@@ -19,7 +20,7 @@ struct ProtectedFiles {
         return contents
     }
 
-    func restoreChanges(since before: Snapshot) -> [String] {
+    public func restoreChanges(since before: Snapshot) -> [String] {
         let now = snapshot()
         var restored: [String] = []
         for path in Set(before.keys).union(now.keys).sorted() where before[path] != now[path] {
@@ -35,7 +36,7 @@ struct ProtectedFiles {
         return restored
     }
 
-    func matchingPaths() -> [String] {
+    public func matchingPaths() -> [String] {
         patterns.flatMap { pattern -> [String] in
             if pattern.hasSuffix("/**") {
                 return filesBelow(String(pattern.dropLast(3)))
@@ -50,7 +51,7 @@ struct ProtectedFiles {
         }
     }
 
-    func filesBelow(_ directory: String) -> [String] {
+    public func filesBelow(_ directory: String) -> [String] {
         let root = folder.appendingPathComponent(directory, isDirectory: true)
         guard let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey]) else { return [] }
         return walker.compactMap { $0 as? URL }

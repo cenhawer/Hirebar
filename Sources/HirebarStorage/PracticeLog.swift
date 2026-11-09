@@ -1,4 +1,5 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
 
 public struct PracticeLog: Codable, Equatable, Sendable {

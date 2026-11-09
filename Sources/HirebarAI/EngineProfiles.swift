@@ -1,13 +1,9 @@
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
-struct EngineProfiles: Decodable, Sendable {
-    struct ClaudePhase: Decodable, Sendable {
+public struct EngineProfiles: Decodable, Sendable {
+    public struct ClaudePhase: Decodable, Sendable {
         let permissionMode: String
         let restricted: Bool
         let tools: [String]
@@ -15,13 +11,13 @@ struct EngineProfiles: Decodable, Sendable {
         let denyPersonalFiles: Bool
     }
 
-    struct Claude: Decodable, Sendable {
+    public struct Claude: Decodable, Sendable {
         let personalFiles: [String]
         let read: ClaudePhase
         let draft: ClaudePhase
         let act: ClaudePhase
 
-        func phase(_ profile: RunProfile) -> ClaudePhase {
+        public func phase(_ profile: RunProfile) -> ClaudePhase {
             switch profile {
             case .read: return read
             case .draft: return draft
@@ -30,13 +26,13 @@ struct EngineProfiles: Decodable, Sendable {
         }
     }
 
-    struct CommandEngine: Decodable, Sendable {
+    public struct CommandEngine: Decodable, Sendable {
         let read: String
         let draft: String
         let act: String
         let browserInRead: Bool
 
-        func command(_ profile: RunProfile) -> String {
+        public func command(_ profile: RunProfile) -> String {
             switch profile {
             case .read: return read
             case .draft: return draft
@@ -45,28 +41,28 @@ struct EngineProfiles: Decodable, Sendable {
         }
     }
 
-    static let fileName = "perfiles-ia"
-    static let supportedSchemaVersion = 1
+    public static let fileName = "perfiles-ia"
+    public static let supportedSchemaVersion = 1
 
-    let schemaVersion: Int
-    let protectedFiles: [String]
-    let restoredFiles: [String]
-    let claude: Claude
-    let codex: CommandEngine
-    let gemini: CommandEngine
+    public let schemaVersion: Int
+    public let protectedFiles: [String]
+    public let restoredFiles: [String]
+    public let claude: Claude
+    public let codex: CommandEngine
+    public let gemini: CommandEngine
 
-    enum LoadFailure: Error {
+    public enum LoadFailure: Error {
         case missing
         case unsupportedVersion(Int)
     }
 
-    static func load(from url: URL) throws -> EngineProfiles {
+    public static func load(from url: URL) throws -> EngineProfiles {
         let profiles = try JSONDecoder().decode(EngineProfiles.self, from: Data(contentsOf: url))
         guard profiles.schemaVersion == supportedSchemaVersion else { throw LoadFailure.unsupportedVersion(profiles.schemaVersion) }
         return profiles
     }
 
-    static func bundled(in bundle: Bundle = .main) throws -> EngineProfiles {
+    public static func bundled(in bundle: Bundle = .main) throws -> EngineProfiles {
         guard let url = bundle.url(forResource: fileName, withExtension: "json") else { throw LoadFailure.missing }
         return try load(from: url)
     }

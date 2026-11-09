@@ -1,16 +1,13 @@
 import Foundation
+import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 public enum EngineCheck {
-    static let timeout: TimeInterval = 180
+    public static let timeout: TimeInterval = 180
 
     public static func run(_ engine: AIEngineSettings, completion: @escaping (Bool, String) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
-            Paths.ensure()
+            try? FileManager.default.createDirectory(at: Paths.workspace, withIntermediateDirectories: true)
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-check", isDirectory: true)
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let rules = folder.appendingPathComponent("instrucciones.md")

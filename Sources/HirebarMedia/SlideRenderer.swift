@@ -1,17 +1,13 @@
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 private let log = Log(.media)
 
 public enum SlideRenderer {
-    static let width = 1080
-    static let height = 1350
-    static let timeout: TimeInterval = 60
+    public static let width = 1080
+    public static let height = 1350
+    public static let timeout: TimeInterval = 60
 
     /// Deja la carpeta de láminas vacía antes de un borrador nuevo; lo anterior queda en laminas-anteriores/.
     public static func prepare(_ account: ContentAccount) {
@@ -30,7 +26,7 @@ public enum SlideRenderer {
         if account.video { try? fm.createDirectory(at: account.videoFolder, withIntermediateDirectories: true) }
     }
 
-    static func pages(in folder: URL) -> [URL] {
+    public static func pages(in folder: URL) -> [URL] {
         let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
         return files.filter { $0.pathExtension.lowercased() == "html" }
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }

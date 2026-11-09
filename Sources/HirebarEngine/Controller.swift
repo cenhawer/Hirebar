@@ -1,6 +1,8 @@
 import Foundation
+import HirebarAI
 import HirebarApplication
 import HirebarDomain
+import HirebarMedia
 import HirebarNotifications
 import HirebarPortals
 import HirebarStorage

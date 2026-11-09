@@ -3,6 +3,7 @@ import PackageDescription
 
 let adapters: [Target.Dependency] = [
     "HirebarDomain", "HirebarApplication", "HirebarStorage", "HirebarTelegram", "HirebarNotifications", "HirebarPortals",
+    "HirebarMedia", "HirebarAI",
 ]
 
 let package = Package(
@@ -18,6 +19,8 @@ let package = Package(
         .target(name: "HirebarTelegram", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarNotifications", dependencies: ["HirebarApplication"]),
         .target(name: "HirebarPortals", dependencies: ["HirebarDomain", "HirebarApplication"]),
+        .target(name: "HirebarMedia", dependencies: ["HirebarDomain", "HirebarApplication"]),
+        .target(name: "HirebarAI", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarEngine", dependencies: adapters),
         .executableTarget(name: "Hirebar", dependencies: adapters + ["HirebarEngine"]),
         .testTarget(name: "HirebarDomainTests", dependencies: ["HirebarDomain"]),

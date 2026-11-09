@@ -1,10 +1,6 @@
 import Foundation
 import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 private let log = Log(.media)
 
@@ -15,10 +11,10 @@ public enum CVRenderer {
         public var failed: [String] = []
     }
 
-    static let timeout: TimeInterval = 90
-    static var htmlFolder: URL { Paths.workspace.appendingPathComponent("hv", isDirectory: true) }
+    public static let timeout: TimeInterval = 90
+    public static var htmlFolder: URL { Paths.workspace.appendingPathComponent("hv", isDirectory: true) }
 
-    static func chromePath() -> String? {
+    public static func chromePath() -> String? {
         let home = Paths.home.path
         return [
             "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -64,7 +60,7 @@ public enum CVRenderer {
         }
     }
 
-    static func print(_ source: URL, to target: URL, chrome: String, scratch: URL) -> Bool {
+    public static func print(_ source: URL, to target: URL, chrome: String, scratch: URL) -> Bool {
         let temporary = target.deletingPathExtension().appendingPathExtension("tmp.pdf")
         try? FileManager.default.removeItem(at: temporary)
         let process = Process()

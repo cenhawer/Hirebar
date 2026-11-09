@@ -1,5 +1,4 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 
 public enum AIEngineKind: String, Codable, CaseIterable, Sendable {
@@ -95,19 +94,4 @@ public struct AIEngineSettings: Codable, Sendable, Equatable {
         $HIREBAR_WORKSPACE: carpeta de trabajo (también es la carpeta actual).
         $HIREBAR_PHASE: read (leer), draft (redactar en las rutas de $HIREBAR_WRITABLE_PATHS) o act (enviar).
         """
-
-    public static func environment(prompt: String, instructions: URL, profile: RunProfile) -> [String: String] {
-        let rules = (try? String(contentsOf: instructions, encoding: .utf8)) ?? ""
-        let full = rules.isEmpty ? prompt : "\(rules)\n\n---\n\n\(prompt)"
-        var writable: [String] = []
-        if case .draft(let paths) = profile { writable = paths }
-        return [
-            "HIREBAR_PROMPT": prompt,
-            "HIREBAR_INSTRUCTIONS": instructions.path,
-            "HIREBAR_FULL_PROMPT": full,
-            "HIREBAR_WORKSPACE": Paths.workspace.path,
-            "HIREBAR_PHASE": profile.phase,
-            "HIREBAR_WRITABLE_PATHS": writable.joined(separator: ":"),
-        ]
-    }
 }

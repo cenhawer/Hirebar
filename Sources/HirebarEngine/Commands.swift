@@ -38,19 +38,8 @@ extension Controller {
     static let emailVerbs: Set<String> = ["envia", "enviar", "envialos", "envie", "si", "dale", "ok", "no", "aprobado", "aprueba"]
 
     func handle(_ message: TelegramMessage) {
-        var config = Config.load()
-        if config.chatId == 0 {
-            config.chatId = message.chatId
-            config.save()
-            Telegram.shared.send("Listo, este chat quedó vinculado a Hirebar. Te avisaré aquí cada vez que aparezcan proyectos o vacantes para ti.\n\n" + Self.help,
-                                 chatId: message.chatId)
-            Log.write("Telegram: chat vinculado")
-            return
-        }
-        guard message.chatId == config.chatId else {
-            Log.write("Telegram: ignorado un mensaje de otro chat")
-            return
-        }
+        guard admits(message) else { return }
+        let config = Config.load()
         if let fileId = message.audioFileId {
             handleRecording(fileId: fileId, ext: message.audioExtension)
             return
@@ -137,6 +126,38 @@ extension Controller {
             reply("Buscando ahora; si encuentro algo te aviso.")
         default:
             reply(Self.help)
+        }
+    }
+
+    public static var welcome: String {
+        "Listo, este chat quedó vinculado a Hirebar y solo atiende tu cuenta. Te avisaré aquí cada vez que aparezcan "
+            + "proyectos o vacantes para ti.\n\n" + help
+    }
+
+    static let pairingReply = "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos."
+
+    func admits(_ message: TelegramMessage) -> Bool {
+        guard let sender = message.sender else {
+            Log.write("Telegram: ignorado un mensaje sin remitente")
+            return false
+        }
+        guard Config.load().channelOwner != nil else {
+            if channel.offer(sender) {
+                Telegram.shared.send(Self.pairingReply, chatId: sender.chatId)
+            } else {
+                Log.write("Telegram: ignorado un mensaje fuera de la vinculación")
+            }
+            return false
+        }
+        switch channel.admit(sender) {
+        case .allowed:
+            return true
+        case .notOwner:
+            Log.write("Telegram: ignorado un mensaje de otra cuenta")
+            return false
+        case .tooMany:
+            Log.write("Telegram: ignorado un mensaje por superar el límite por minuto")
+            return false
         }
     }
 

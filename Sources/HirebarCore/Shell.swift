@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Shell {
     @discardableResult

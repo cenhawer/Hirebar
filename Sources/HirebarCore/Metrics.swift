@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Metrics {
     public static var url: URL { Paths.workspaceFile("metricas-radar.json") }

@@ -1,5 +1,6 @@
 import AppKit
 import HirebarCore
+import HirebarDomain
 import HirebarEngine
 import SwiftUI
 

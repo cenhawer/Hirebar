@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct MagnetoSource: JobSource {
     public let id = "magneto"

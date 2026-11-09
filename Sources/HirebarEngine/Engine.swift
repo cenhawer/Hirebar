@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public enum Engine {
     public static func start(resources: URL?) {

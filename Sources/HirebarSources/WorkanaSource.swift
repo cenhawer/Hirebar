@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct WorkanaSource: ListingSource {
     public let id = "workana"

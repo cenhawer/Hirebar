@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public struct SourceResult: Sendable {
     public var hits: [Hit]

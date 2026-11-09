@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 import HirebarSources
 
 public final class JobRadar: Radar {

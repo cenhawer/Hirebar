@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum WeeklyStats {
     static let fields: [AgentKind: (section: String, items: [([String], String)])] = [

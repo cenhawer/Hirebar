@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 enum AudioTools {
     static var legacyFolder: URL { Paths.root.appendingPathComponent("herramientas", isDirectory: true) }
@@ -44,7 +45,7 @@ enum AudioTools {
         }
     }
 
-    static func pauses(in audio: URL) -> [(start: Double, end: Double)] {
+    static func pauses(in audio: URL) -> [VoicePause] {
         guard let tool = try? ffmpeg() else { return [] }
         let result = run(tool, ["-hide_banner", "-i", audio.path, "-af", "silencedetect=noise=-35dB:d=0.18", "-f", "null", "-"], timeout: 60)
         var found: [(Double, Double)] = []
@@ -58,7 +59,7 @@ enum AudioTools {
                 open = nil
             }
         }
-        return found.map { (start: $0.0, end: $0.1) }
+        return found.map { VoicePause(start: $0.0, end: $0.1) }
     }
 
     static func run(_ path: String, _ arguments: [String], timeout: TimeInterval) -> (ok: Bool, output: String) {

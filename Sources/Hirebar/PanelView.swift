@@ -1,4 +1,5 @@
 import HirebarCore
+import HirebarDomain
 import SwiftUI
 
 struct PanelView: View {

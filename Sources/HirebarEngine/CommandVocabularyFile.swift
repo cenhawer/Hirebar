@@ -1,5 +1,6 @@
 import Foundation
 import HirebarApplication
+import HirebarDomain
 
 enum CommandVocabularyFile {
     static let fileName = "comandos"

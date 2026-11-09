@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum Notifier {
     public static var canUseTelegram: Bool {

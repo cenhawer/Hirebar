@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public enum AI {
     public static var settings: AIEngineSettings { Config.load().aiEngine }

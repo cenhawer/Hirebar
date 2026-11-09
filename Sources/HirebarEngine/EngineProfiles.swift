@@ -1,6 +1,7 @@
 import Foundation
 import HirebarApplication
 import HirebarCore
+import HirebarDomain
 
 struct EngineProfiles: Decodable, Sendable {
     struct ClaudePhase: Decodable, Sendable {

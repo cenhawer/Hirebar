@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 /// Convierte las láminas HTML de la publicación (1080×1350) en PNG con Chrome sin ventana.
 public enum SlideRenderer {

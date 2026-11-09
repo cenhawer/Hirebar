@@ -1,4 +1,6 @@
+import HirebarDomain
 import XCTest
+
 @testable import HirebarCore
 
 final class AgentTests: XCTestCase {
@@ -52,9 +54,9 @@ final class AgentTests: XCTestCase {
         var config = Config()
         config.autoJobs = true
         config.autoEmails = true
-        XCTAssertTrue(AgentSettings.defaults(for: .jobs, config: config).autoApprove)
-        XCTAssertTrue(AgentSettings.defaults(for: .clients, config: config).autoApprove)
-        XCTAssertFalse(AgentSettings.defaults(for: .freelance, config: config).autoApprove)
+        XCTAssertTrue(AgentSettings.defaults(for: .jobs, legacy: config.agentDefaults).autoApprove)
+        XCTAssertTrue(AgentSettings.defaults(for: .clients, legacy: config.agentDefaults).autoApprove)
+        XCTAssertFalse(AgentSettings.defaults(for: .freelance, legacy: config.agentDefaults).autoApprove)
     }
 
     func testEveryModeHasOneOwner() {

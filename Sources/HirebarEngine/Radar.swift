@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 public class Radar {
     public var onStatusChange: ((String) -> Void)?

@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 struct SystemTools: Decodable, Equatable, Sendable {
     struct Tool: Decodable, Equatable, Sendable {

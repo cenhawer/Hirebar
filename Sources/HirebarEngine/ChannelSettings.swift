@@ -1,5 +1,6 @@
 import Foundation
 import HirebarCore
+import HirebarDomain
 
 struct ChannelSettings: Decodable, Equatable, Sendable {
     static let fileName = "canal"

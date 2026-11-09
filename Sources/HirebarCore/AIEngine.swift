@@ -1,5 +1,6 @@
 import Foundation
 import HirebarApplication
+import HirebarDomain
 
 public enum AIEngineKind: String, Codable, CaseIterable, Sendable {
     case claude

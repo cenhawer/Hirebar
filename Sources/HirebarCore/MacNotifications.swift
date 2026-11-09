@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 import UserNotifications
 
 public enum MacNotifications {

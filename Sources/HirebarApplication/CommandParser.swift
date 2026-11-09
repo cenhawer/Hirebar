@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum CommandKind: String, CaseIterable, Codable, Sendable {
     case approve

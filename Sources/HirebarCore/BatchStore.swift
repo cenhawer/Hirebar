@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public enum BatchStore {
     public static var url: URL { Paths.workspaceFile("lotes.json") }

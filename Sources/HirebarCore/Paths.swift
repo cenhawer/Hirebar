@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import HirebarDomain
 
 public enum Paths {
     public static var home: URL { FileManager.default.homeDirectoryForCurrentUser }

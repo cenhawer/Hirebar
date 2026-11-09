@@ -1,5 +1,7 @@
-import XCTest
 import HirebarCore
+import HirebarDomain
+import XCTest
+
 @testable import HirebarSources
 
 final class JobScreenerTests: XCTestCase {

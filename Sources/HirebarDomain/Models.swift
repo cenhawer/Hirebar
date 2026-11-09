@@ -1,5 +1,4 @@
 import Foundation
-import HirebarDomain
 
 public enum Fit: String, Codable, Sendable {
     case strong = "ENCAJA"

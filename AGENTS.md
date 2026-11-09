@@ -47,6 +47,7 @@ scripts/lint.sh origin/develop
 scripts/check-conventions.sh origin/develop
 scripts/bundle.sh --install
 graphify update .
+HIREBAR_LIVE_EVALS=1 swift test --filter LiveEvalTests   # evals contra la IA real (local, con sesión de Claude Code)
 ```
 
 ## SDD

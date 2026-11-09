@@ -179,7 +179,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             onOpenChannel?()
             return
         }
-        Notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + Controller.shared.statusReport())
+        Controller.shared.sendTestMessage()
     }
 
     func info(_ message: String) {

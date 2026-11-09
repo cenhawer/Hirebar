@@ -1,4 +1,5 @@
 import AppKit
+import HirebarApplication
 import HirebarCore
 import HirebarDomain
 import HirebarEngine
@@ -29,6 +30,7 @@ final class ChannelSettingsModel: ObservableObject {
     }
 
     func checkToken() {
+        guard !checking else { return }
         let candidate = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard Telegram.looksLikeToken(candidate) else {
             problem = "Ese token no tiene el formato de @BotFather (123456789:AA…). Cópialo completo."
@@ -51,6 +53,8 @@ final class ChannelSettingsModel: ObservableObject {
             problem = "Telegram no reconoce ese token. Revísalo en @BotFather (/mybots → tu bot → API Token)."
         case .unreachable:
             problem = "No pude hablar con Telegram. Revisa la conexión a internet y vuelve a intentar."
+        case .notSaved:
+            problem = "No pude guardar el token en el Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar."
         }
         reload()
     }
@@ -59,10 +63,13 @@ final class ChannelSettingsModel: ObservableObject {
     func confirm() { Controller.shared.channel.confirm(welcome: Controller.welcome) }
     func decline() { Controller.shared.channel.decline() }
     func changeAccount() { Controller.shared.channel.changeAccount() }
-    func sendTest() { Notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + Controller.shared.statusReport()) }
+    func cancelPairing() { Controller.shared.channel.cancelPairing() }
+    func sendTest() { Controller.shared.sendTestMessage() }
 
     func removeBot() {
-        Controller.shared.channel.removeBot()
+        if Controller.shared.channel.removeBot() == .keychainFailed {
+            problem = "No pude borrar el token del Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar."
+        }
         reload()
     }
 
@@ -113,6 +120,8 @@ struct ChannelSettingsView: View {
     @ViewBuilder
     private var telegram: some View {
         switch model.state {
+        case .misconfigured:
+            Label(Self.misconfiguredText, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
         case .notConfigured, .tokenRejected:
             tokenEntry
         case .unlinked(let bot), .expired(let bot):
@@ -120,25 +129,27 @@ struct ChannelSettingsView: View {
                 Text("No llegó ningún mensaje a tiempo.").foregroundStyle(.secondary)
             }
             Text("Bot @\(bot) listo. Falta anclarlo a tu cuenta de Telegram.")
-            Button("Vincular mi cuenta") { model.startPairing() }
-                .buttonStyle(.borderedProminent)
+            HStack {
+                Button("Vincular mi cuenta") { model.startPairing() }
+                    .buttonStyle(.borderedProminent)
+                Spacer()
+                Button("Usar otro token", role: .destructive) { model.removeBot() }
+            }
         case .waitingForHello(let bot):
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
                 Text("Escríbele \"hola\" a @\(bot) desde tu Telegram.")
             }
-            Text("Solo cuenta un mensaje de tu chat privado con el bot, enviado desde ahora.")
+            Text("Solo cuenta un mensaje de texto de tu chat privado con el bot, enviado desde ahora.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-        case .confirming(let owner, let bot):
-            Text("Le escribió a @\(bot):")
-            Text(Self.describe(owner)).font(.headline)
-            Text("Si confirmas, el bot solo atenderá a esta cuenta.").font(.callout).foregroundStyle(.secondary)
             HStack {
-                Button("Sí, soy yo") { model.confirm() }
-                    .buttonStyle(.borderedProminent)
-                Button("No soy yo") { model.decline() }
+                Button("Cancelar") { model.cancelPairing() }
+                Spacer()
+                Button("Usar otro token", role: .destructive) { model.removeBot() }
             }
+        case .confirming(let candidate, let bot):
+            confirmation(candidate, bot: bot)
         case .connected(let owner, let bot):
             LabeledContent("Conectado como") { Text(Self.describe(owner)) }
             if !bot.isEmpty { LabeledContent("Bot") { Text("@\(bot)") } }
@@ -148,6 +159,27 @@ struct ChannelSettingsView: View {
                 Spacer()
                 Button("Quitar bot", role: .destructive) { model.removeBot() }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func confirmation(_ candidate: PairingCandidate, bot: String) -> some View {
+        Text("Le escribió a @\(bot):")
+        Text(Self.describe(candidate.owner)).font(.headline)
+        LabeledContent("ID de Telegram") { Text(String(candidate.owner.userId)).textSelection(.enabled) }
+        LabeledContent("Mensaje") { Text("\"\(candidate.text)\"") }
+        if !candidate.hasUsername {
+            Label(Self.noUsernameWarning, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+        }
+        Text("Confirma solo si el mensaje es el que acabas de escribir. El bot atenderá únicamente a esta cuenta.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        HStack {
+            Button("Sí, soy yo") { model.confirm() }
+                .buttonStyle(.borderedProminent)
+            Button("No soy yo") { model.decline() }
+            Spacer()
+            Button("Cancelar") { model.cancelPairing() }
         }
     }
 
@@ -170,6 +202,10 @@ struct ChannelSettingsView: View {
         }
     }
 
+    static let misconfiguredText =
+        "Faltan los ajustes del canal dentro de la app (canal.json). Vuelve a instalarla con scripts/bundle.sh --install."
+    static let noUsernameWarning =
+        "Esta cuenta no tiene usuario de Telegram, así que el nombre se puede copiar: revisa que el mensaje sea el tuyo."
     static let fallbackExplanation =
         "Si Telegram no está configurado o un mensaje no llega, el aviso aparece como notificación y al tocarlo se abre el panel."
 
@@ -182,6 +218,7 @@ struct ChannelSettingsView: View {
 enum ChannelStatusText {
     static func describe(_ state: ChannelState) -> String {
         switch state {
+        case .misconfigured: return "Falta reinstalar la app"
         case .notConfigured: return "Telegram sin configurar"
         case .tokenRejected: return "El token ya no sirve"
         case .unlinked, .expired: return "Falta vincular tu cuenta"

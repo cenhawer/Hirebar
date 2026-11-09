@@ -16,5 +16,7 @@ Preparas la lista del día de correos en frío a empresas donde la persona podr�
 {"fecha": "AAAA-MM-DD", "correos": [{"n": 1, "tipo": "EMPRESA" | "NEGOCIO" | "SEGUIMIENTO" | "RESPUESTA", "nombre": "...", "web": "...", "correo": "...", "asunto": "...", "cuerpo": "..."}]}
 Si no hay nada que proponer, no crees el archivo.
 
-## Respuesta final (Telegram, texto plano, máximo 3.500 caracteres)
-La lista numerada: n · tipo · nombre · asunto. Las respuestas de interés van primero.
+Cada correo lleva `n` único, `correo` con una dirección válida, `asunto` y `cuerpo`: Hirebar muestra a la persona exactamente ese destinatario, asunto y texto, y descarta la lista si a alguno le falta.
+
+## Respuesta final (Telegram, texto plano, máximo 800 caracteres)
+Un resumen: cuántas empresas, negocios, seguimientos y respuestas de interés preparaste. La lista completa la muestra Hirebar desde `prospeccion/pendientes.json`.

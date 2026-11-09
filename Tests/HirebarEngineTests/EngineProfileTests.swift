@@ -50,6 +50,13 @@ final class EngineProfileTests: XCTestCase {
         XCTAssertEqual(Set(denied), ["Read(./perfil.json)", "Read(./perfil.md)", "Read(./hv/**)"])
     }
 
+    func testReadingAndDraftingCannotFetchArbitraryAddresses() {
+        for profile in [RunProfile.read, .draft(writablePaths: ["informes/"])] {
+            let arguments = claudeArguments(profile)
+            XCTAssertFalse((values(after: "--tools", in: arguments) + values(after: "--allowedTools", in: arguments)).contains("WebFetch"))
+        }
+    }
+
     func testWithoutBrowserNoBrowserToolIsAllowed() {
         let arguments = claudeArguments(.read, browser: false)
         XCTAssertFalse(arguments.contains("--chrome"))

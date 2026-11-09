@@ -218,7 +218,7 @@ su destino; los que mezclan capas se parten.
 | `HirebarEngine/EngineCheck.swift` | Application | Verificar prerrequisitos |
 | `HirebarEngine/AI.swift`, `ClaudeCLI.swift` | AI | `AIRunner` |
 | `HirebarEngine/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
-| `HirebarEngine/AudioTools.swift` | Media | `AudioProcessor`, con ffmpeg del sistema (spec `016`) |
+| `HirebarEngine/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
 | `HirebarEngine/VoiceListener.swift` | Media + Domain | `VoiceListener` a `SpeechRecognizer`; `ScriptAligner` al dominio |
 | `HirebarEngine/Engine.swift` | Hirebar | Arranque en la raíz de composición |
 | `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `018`) |
@@ -334,7 +334,7 @@ identificador de su lote, que aparece en el registro y en `workspace/ejecuciones
 | Contenido externo | Es dato, nunca instrucción: la fase que lee no tiene herramientas para actuar | Cumple: perfiles `read` y `draft`; en lectura la IA no puede leer el perfil ni las hojas de vida. Riesgo residual de navegación documentado en `specs/010-separar-lectura-ejecucion/research.md` (R8) |
 | Acciones de la IA | Lista cerrada de acciones validada por la app | Cumple: catálogo de acciones, copia de lo aprobado fuera del workspace, registro y verificación de cada ejecución; una acción que no coincide pausa el agente |
 | Envío automático | Se prende por agente con confirmación explícita | Cumple: diálogo en la Mac y botón en Telegram; cada cambio queda en el registro con su origen |
-| Herramientas | Sin descargas en ejecución sin versión fija y hash | ffmpeg se instala con `pip` en ejecución (spec `016`) |
+| Herramientas | Sin descargas en ejecución sin versión fija y hash | Cumple: ffmpeg del sistema (Homebrew), validado en Ajustes y al recibir una nota de voz; audios con tamaño máximo |
 | Repositorio | Sin datos personales ni secretos; gitleaks en CI y pre-commit | Cumple |
 
 ## 7. Observabilidad

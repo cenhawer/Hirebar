@@ -1,0 +1,3 @@
+Logros reales de la persona:
+- Bajé 20% el costo de AWS en Acme (Backend Senior en Acme).
+- Llevé el tiempo de despliegue de 2 horas a 15 minutos (DevOps en Beta).

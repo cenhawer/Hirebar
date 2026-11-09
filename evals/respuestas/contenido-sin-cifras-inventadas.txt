@@ -1,0 +1,5 @@
+¿Tu factura de la nube crece cada mes? En Acme bajamos 20% el costo de AWS revisando qué corría sin usarse.
+Tres cosas que revisaría primero: instancias encendidas de noche, discos sin dueño y entornos de prueba olvidados.
+Guárdalo para tu próxima revisión.
+
+#nube #aws #costos

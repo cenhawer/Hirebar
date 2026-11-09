@@ -46,8 +46,17 @@ public final class Controller {
     }
 
     var replies: (String) -> Void = Notifier.tell
+    var questions: (String, [[(String, String)]]) -> Void = Controller.ask
 
     func reply(_ text: String) { replies(text) }
+
+    static func ask(_ text: String, buttons: [[(String, String)]]) {
+        guard Notifier.canUseTelegram else {
+            Notifier.tell(text)
+            return
+        }
+        Telegram.shared.send(text, chatId: Config.load().chatId, buttons: buttons)
+    }
 
     public func autoApprove(_ batch: Batch) {
         approve(batch, picks: [], approvedBy: .autoSend)

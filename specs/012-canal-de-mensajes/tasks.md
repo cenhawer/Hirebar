@@ -48,4 +48,4 @@ description: "Tareas de implementación: canal de mensajes"
 ## Phase 7: Polish
 
 - [x] T015 [P] README, `GUIA.md` (crear el bot y vincularlo), `CHANGELOG.md`; specs `008` y `009` al producto actual
-- [ ] T016 `swift-code-reviewer` y `/security-review` sobre el diff; resolver cada hallazgo
+- [x] T016 `swift-code-reviewer` y `/security-review` sobre el diff; resolver cada hallazgo

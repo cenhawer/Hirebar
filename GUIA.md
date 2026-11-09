@@ -212,7 +212,7 @@ Cualquier otra cosa: el bot responde con la lista completa.
 |---|---|
 | Llega "La sesión de Claude Code se venció" | Abre Terminal, escribe `claude` y luego `/login`. Después `si` para reintentar la última lista: no se pierde. |
 | No llegan avisos | Ajustes → Telegram y avisos → Enviar aviso de prueba. Si dice "El token ya no sirve", pega uno nuevo de @BotFather. Si te cambiaste de cuenta de Telegram, usa "Cambiar de cuenta". |
-| Alguien más le escribe a tu bot | No pasa nada: el bot solo atiende la cuenta que confirmaste; los demás mensajes se ignoran y quedan anotados en el registro. |
+| Alguien más le escribe a tu bot | No pasa nada: el bot solo atiende la cuenta que confirmaste; los demás mensajes se ignoran y quedan anotados en el registro. Al vincular, confirma solo si el mensaje que muestra la Mac es el que acabas de escribir. |
 | Un agente no corre a su hora | Mira que esté prendido y su horario en Ajustes. Si el Mac estaba dormido, corre al despertar dentro de su tolerancia. Revisa el **Registro**. |
 | Claude dice que no pudo enviar algo | Revisa que Chrome esté abierto, con la extensión Claude in Chrome y con sesión en ese portal. Hirebar nunca resuelve CAPTCHAs ni escribe contraseñas. |
 | No salen los PDF de la hoja de vida | Hace falta Google Chrome instalado en `/Applications`. El mensaje de Telegram dice cuál falló. |

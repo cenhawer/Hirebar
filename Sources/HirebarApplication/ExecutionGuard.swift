@@ -63,6 +63,10 @@ public struct ExecutionGuard: Sendable {
         return ExecutionPlan(now: plan.now, deferred: plan.deferred, held: held)
     }
 
+    public func approvedItems(batch: String) -> [ApprovedItem] {
+        store.approvedItems(batch: batch)
+    }
+
     public func release(batch: String) throws {
         try store.releaseApproval(batch: batch)
     }

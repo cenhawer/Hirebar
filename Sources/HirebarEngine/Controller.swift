@@ -194,6 +194,10 @@ public final class Controller {
             runNext()
             return
         }
+        if profile.canAct && simulateIfPracticing(batch) {
+            runNext()
+            return
+        }
         if profile.canAct {
             do {
                 try executionGuard.prepareRun(batch: batch.id)
@@ -315,6 +319,39 @@ public final class Controller {
         guard !restored.isEmpty else { return }
         Log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
         reply("\(AI.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
+    }
+
+    static let practiceSummaryLimit = 15
+
+    func simulateIfPracticing(_ batch: Batch) -> Bool {
+        let kind = AgentKind.owner(of: batch.mode)
+        let agent = AgentStore.load(kind)
+        guard agent.practice else { return false }
+        let items = executionGuard.approvedItems(batch: batch.id).map(\.proposal)
+        do {
+            try PracticeLog(batch: batch.id, agent: kind.rawValue, at: Date(), wouldSend: items).save()
+        } catch {
+            Log.write("Práctica: no pude guardar lo que habría enviado \(batch.id): \(error.localizedDescription)")
+        }
+        releaseApproval(of: batch.id)
+        var finished = batch
+        finished.status = .done
+        finished.result = Self.practiceResult
+        BatchStore.upsert(finished)
+        Metrics.bump(batch.mode, Self.practiceMetric, items.count)
+        Log.write("Práctica: \(kind.rawValue) simuló \(items.count) acción(es) del lote \(batch.id)")
+        reply(Self.practiceSummary(agentName: agent.name, items: items))
+        return true
+    }
+
+    static let practiceResult = "práctica"
+    static let practiceMetric = "practica"
+
+    static func practiceSummary(agentName: String, items: [Proposal]) -> String {
+        let lines = items.prefix(practiceSummaryLimit).map { "• \($0.action.rawValue) · \($0.title) · \($0.target.displayText)" }
+        let more = items.count > practiceSummaryLimit ? ["… y \(items.count - practiceSummaryLimit) más."] : []
+        return (["Modo práctica: \(agentName) no envió nada. Habría hecho \(items.count):"] + lines + more)
+            .joined(separator: "\n")
     }
 
     func activePause(of agent: AgentID) -> AgentPause? {

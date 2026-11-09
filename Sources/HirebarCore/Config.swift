@@ -1,4 +1,5 @@
 import Foundation
+import HirebarDomain
 
 public struct Config: Codable, Sendable {
     public static let freelanceSources = ["workana", "freelancer"]
@@ -6,8 +7,8 @@ public struct Config: Codable, Sendable {
 
     public var ownerName = "el usuario"
     public var sources: [String: Bool] = [:]
-    public var chatId: Int64 = 0
-    public var ntfyTopic = ""
+    public var channelOwner: ChannelOwner?
+    public var botUsername = ""
     public var autoFreelance = false
     public var autoJobs = false
     public var autoEmails = false
@@ -19,7 +20,8 @@ public struct Config: Codable, Sendable {
     public init() {}
 
     enum CodingKeys: String, CodingKey {
-        case ownerName, sources, chatId, ntfyTopic, autoFreelance, autoJobs, autoEmails, freelanceMinutes, jobMinutes, aiEngine, updated
+        case ownerName, sources, channelOwner, botUsername, autoFreelance, autoJobs, autoEmails
+        case freelanceMinutes, jobMinutes, aiEngine, updated
     }
 
     struct LegacyKey: CodingKey {
@@ -33,8 +35,8 @@ public struct Config: Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         ownerName = try c.decodeIfPresent(String.self, forKey: .ownerName) ?? "el usuario"
         sources = try c.decodeIfPresent([String: Bool].self, forKey: .sources) ?? [:]
-        chatId = try c.decodeIfPresent(Int64.self, forKey: .chatId) ?? 0
-        ntfyTopic = try c.decodeIfPresent(String.self, forKey: .ntfyTopic) ?? ""
+        channelOwner = try c.decodeIfPresent(ChannelOwner.self, forKey: .channelOwner)
+        botUsername = try c.decodeIfPresent(String.self, forKey: .botUsername) ?? ""
         autoFreelance = try c.decodeIfPresent(Bool.self, forKey: .autoFreelance) ?? false
         autoJobs = try c.decodeIfPresent(Bool.self, forKey: .autoJobs) ?? false
         autoEmails = try c.decodeIfPresent(Bool.self, forKey: .autoEmails) ?? false
@@ -49,13 +51,16 @@ public struct Config: Codable, Sendable {
                 sources[id] = value
             }
         }
-        if ntfyTopic.isEmpty {
-            ntfyTopic = try legacy.decodeIfPresent(String.self, forKey: LegacyKey(stringValue: "topic")) ?? ""
+        let linkedChat = try legacy.decodeIfPresent(Int64.self, forKey: LegacyKey(stringValue: "chatId")) ?? 0
+        if channelOwner == nil && linkedChat > 0 {
+            channelOwner = ChannelOwner(userId: linkedChat, chatId: linkedChat, name: "")
         }
         if let value = try legacy.decodeIfPresent(Bool.self, forKey: LegacyKey(stringValue: "autoCorreos")) {
             autoEmails = value
         }
     }
+
+    public var chatId: Int64 { channelOwner?.chatId ?? 0 }
 
     public func isEnabled(_ source: String) -> Bool { sources[source] ?? true }
 

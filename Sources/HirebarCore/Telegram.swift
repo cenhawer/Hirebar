@@ -1,25 +1,69 @@
 import Foundation
+import HirebarDomain
 
 public struct TelegramMessage: Sendable {
     public let chatId: Int64
     public let text: String
     public let replyTo: Int?
     public let callbackId: String?
+    public var sender: ChannelSender?
     /// Nota de voz o archivo de audio que mandó la persona (identificador de Telegram para descargarlo).
     public var audioFileId: String? = nil
     /// Extensión del audio recibido (oga para notas de voz).
     public var audioExtension: String = "oga"
 }
 
+public enum BotCheck: Equatable, Sendable {
+    case valid(username: String)
+    case rejected
+    case unreachable
+}
+
 public final class Telegram: @unchecked Sendable {
     public static let shared = Telegram()
     static let keychainAccount = "telegram-bot"
     static let offsetKey = "telegram.offset"
+    static let tokenPattern = "^\\d{5,}:[A-Za-z0-9_-]{30,}$"
+    static let unauthorizedCode = 401
 
     public var onMessage: ((TelegramMessage) -> Void)?
     private var polling = false
     private let lock = NSLock()
     private var cachedToken: String?
+    private var rejected = false
+
+    public var tokenRejected: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return rejected
+    }
+
+    public static func looksLikeToken(_ token: String) -> Bool {
+        token.range(of: tokenPattern, options: .regularExpression) != nil
+    }
+
+    public static func check(token: String) async -> BotCheck {
+        guard looksLikeToken(token), let url = URL(string: "https://api.telegram.org/bot\(token)/getMe") else { return .rejected }
+        guard let (data, _) = try? await URLSession.shared.data(from: url),
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return .unreachable }
+        guard (json["ok"] as? Bool) == true, let username = (json["result"] as? [String: Any])?["username"] as? String else {
+            return .rejected
+        }
+        return .valid(username: username)
+    }
+
+    public func removeToken() {
+        Keychain.delete(account: Self.keychainAccount)
+        UserDefaults.standard.set(0, forKey: Self.offsetKey)
+        reloadToken()
+    }
+
+    private func markRejected(_ value: Bool) {
+        lock.lock()
+        rejected = value
+        lock.unlock()
+    }
 
     public var isConfigured: Bool { currentToken() != nil }
 
@@ -40,6 +84,7 @@ public final class Telegram: @unchecked Sendable {
     public func saveToken(_ token: String) -> Bool {
         let ok = Keychain.save(token, account: Self.keychainAccount)
         UserDefaults.standard.set(0, forKey: Self.offsetKey)
+        markRejected(false)
         reloadToken()
         return ok
     }
@@ -70,11 +115,13 @@ public final class Telegram: @unchecked Sendable {
                 offset = 0
             }
             let params: [String: Any] = ["offset": offset, "timeout": 50, "allowed_updates": ["message", "callback_query"]]
-            guard let json = call("getUpdates", params, timeout: 70), (json["ok"] as? Bool) == true,
-                  let updates = json["result"] as? [[String: Any]] else {
+            let response = call("getUpdates", params, timeout: 70)
+            guard let json = response, (json["ok"] as? Bool) == true, let updates = json["result"] as? [[String: Any]] else {
+                if (response?["error_code"] as? NSNumber)?.intValue == Self.unauthorizedCode { markRejected(true) }
                 Thread.sleep(forTimeInterval: 15)
                 continue
             }
+            markRejected(false)
             for update in updates {
                 let updateId = (update["update_id"] as? NSNumber)?.intValue ?? 0
                 offset = max(offset, updateId + 1)
@@ -89,28 +136,48 @@ public final class Telegram: @unchecked Sendable {
     public static func parse(_ update: [String: Any]) -> TelegramMessage? {
         if let callback = update["callback_query"] as? [String: Any] {
             let message = callback["message"] as? [String: Any]
-            let chat = (message?["chat"] as? [String: Any])?["id"] as? NSNumber
-            return TelegramMessage(chatId: chat?.int64Value ?? 0,
-                                   text: callback["data"] as? String ?? "",
-                                   replyTo: (message?["message_id"] as? NSNumber)?.intValue,
-                                   callbackId: callback["id"] as? String)
+            let chat = message?["chat"] as? [String: Any]
+            var result = TelegramMessage(
+                chatId: (chat?["id"] as? NSNumber)?.int64Value ?? 0,
+                text: callback["data"] as? String ?? "",
+                replyTo: (message?["message_id"] as? NSNumber)?.intValue,
+                callbackId: callback["id"] as? String)
+            result.sender = sender(from: callback["from"] as? [String: Any], chat: chat, sentAt: Date())
+            return result
         }
-        guard let message = update["message"] as? [String: Any],
-              let chat = (message["chat"] as? [String: Any])?["id"] as? NSNumber else { return nil }
+        guard let message = update["message"] as? [String: Any], let chat = message["chat"] as? [String: Any] else { return nil }
+        guard let chatId = (chat["id"] as? NSNumber)?.int64Value else { return nil }
         let reply = (message["reply_to_message"] as? [String: Any])?["message_id"] as? NSNumber
+        let sentAt = (message["date"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) } ?? Date()
+        let from = sender(from: message["from"] as? [String: Any], chat: chat, sentAt: sentAt)
         if let audio = (message["voice"] ?? message["audio"] ?? message["video_note"]) as? [String: Any],
            let fileId = audio["file_id"] as? String {
             let name = (audio["file_name"] as? String) ?? ""
             let ext = message["voice"] != nil ? "oga" : (message["video_note"] != nil ? "mp4"
                 : (name.contains(".") ? String(name.split(separator: ".").last ?? "m4a") : "m4a"))
-            var result = TelegramMessage(chatId: chat.int64Value, text: message["caption"] as? String ?? "",
-                                         replyTo: reply?.intValue, callbackId: nil)
+            var result = TelegramMessage(
+                chatId: chatId, text: message["caption"] as? String ?? "", replyTo: reply?.intValue, callbackId: nil)
             result.audioFileId = fileId
             result.audioExtension = ext
+            result.sender = from
             return result
         }
         guard let text = message["text"] as? String else { return nil }
-        return TelegramMessage(chatId: chat.int64Value, text: text, replyTo: reply?.intValue, callbackId: nil)
+        var result = TelegramMessage(chatId: chatId, text: text, replyTo: reply?.intValue, callbackId: nil)
+        result.sender = from
+        return result
+    }
+
+    static let privateChatType = "private"
+
+    static func sender(from user: [String: Any]?, chat: [String: Any]?, sentAt: Date) -> ChannelSender? {
+        guard let user, let userId = (user["id"] as? NSNumber)?.int64Value,
+            let chatId = (chat?["id"] as? NSNumber)?.int64Value
+        else { return nil }
+        let name = [user["first_name"] as? String, user["last_name"] as? String].compactMap { $0 }.joined(separator: " ")
+        return ChannelSender(
+            userId: userId, chatId: chatId, name: name, username: user["username"] as? String,
+            isPrivateChat: (chat?["type"] as? String) == privateChatType, sentAt: sentAt)
     }
 
     public func send(_ text: String, chatId: Int64, buttons: [[(String, String)]] = [], completion: ((Int?) -> Void)? = nil) {

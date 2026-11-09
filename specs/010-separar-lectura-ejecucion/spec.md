@@ -187,9 +187,11 @@ termina con una lista de seguimientos propuestos y ningún mensaje enviado.
   siempre aprobación, con o sin envío automático.
 - **FR-016**: Con el envío automático de un agente prendido, sus listas MUST aprobarse solas y su
   ejecución MUST verificarse igual que una aprobada a mano.
-- **FR-016a**: El envío automático MUST aprobar un seguimiento solo si su destino ya recibió antes una
-  acción verificada del mismo agente; un seguimiento a un destino nuevo espera la aprobación de la
-  persona.
+- **FR-016a**: El envío automático MUST aprobar un seguimiento o un correo solo si su destino ya
+  recibió antes una acción verificada del mismo agente; un correo en frío o un seguimiento a un
+  destino nuevo espera la aprobación de la persona.
+- **FR-016b**: La fase de ejecución MUST NOT cambiar las reglas de la IA ni el perfil: con cualquier
+  motor, lo que cambie se restaura al terminar y se avisa a la persona.
 
 ### Key Entities
 

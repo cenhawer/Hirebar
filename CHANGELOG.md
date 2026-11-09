@@ -26,7 +26,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Con Codex o Gemini, las tareas que leen con el navegador no corren.
 - En las tareas que leen páginas, la IA no tiene acceso a tu perfil ni a tus hojas de vida, ni descarga direcciones con `WebFetch`.
 - El cupo diario cuenta también lo aprobado que todavía no terminó y todo lo que se envió.
-- Con envío automático, un seguimiento a un destino nuevo espera tu aprobación.
+- Con envío automático, un correo en frío o un seguimiento a un destino nuevo espera tu aprobación.
+- Mientras ejecuta, la IA no puede cambiar sus reglas ni tu perfil; si algo cambia, Hirebar lo restaura y te avisa.
+- Con Gemini, la lectura corre en su modo de solo lectura (`--approval-mode plan`).
 - Los enlaces se comparan conservando los parámetros que identifican la vacante o el proyecto.
 - CI corre en `macos-26` (`macos-14` se retiró de GitHub Actions el 2 de noviembre de 2026).
 - Los ejemplos de la documentación ya no usan datos personales.

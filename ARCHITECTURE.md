@@ -160,7 +160,9 @@ Las tareas `read` y `draft` que proponen envíos devuelven sus propuestas en el 
 `workspace/ejecuciones/<lote>.acciones.json` (esquema en `contracts/registro-acciones.schema.json`), y la
 app verifica cada acción contra la copia de lo aprobado. Toda lista para aprobar se arma desde la copia
 que la app guarda al mostrarla, con destino y texto completos, también los correos de prospección:
-la ejecución nunca relee un archivo que escribió la IA para decidir qué enviar. Codex y Gemini CLI no tienen perfil `read`
+la ejecución nunca relee un archivo que escribió la IA para decidir qué enviar. La fase `act` no puede
+cambiar las reglas ni el perfil: Claude Code tiene negada la escritura sobre esas rutas y, con
+cualquier motor, la app restaura al terminar lo que haya cambiado. Codex y Gemini CLI no tienen perfil `read`
 con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 ### 3.2 Casos de uso

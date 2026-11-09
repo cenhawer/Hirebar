@@ -160,8 +160,7 @@ defecto.
   una vez por hora, y la lista queda para reintentar con `si`.
 - Una ejecución pasa de una hora: se detiene y se reporta.
 - La app se reinicia con una lista en curso: la lista vuelve a pendiente.
-- Telegram no está configurado: la lista sale por ntfy.sh si hay un tema configurado; si no, solo
-  queda en el registro.
+- Telegram no está configurado: aparece una notificación de macOS que lleva a configurarlo.
 - La persona responde citando un aviso viejo: la respuesta aplica a esa lista y no a la última.
 
 ## Requirements *(mandatory)*
@@ -284,7 +283,6 @@ defecto.
 |---|---|---|
 | El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
 | Sin modo práctica | II | `014-modo-practica` |
-| Sin Telegram, la lista completa sale por un tema público de ntfy.sh | IV | `012-canal-de-mensajes`: se elimina ntfy.sh y el respaldo pasa a notificaciones de macOS |
 | Las vacantes vistas se guardan en `UserDefaults` | IV | `022-version-datos` |
 | Intervalos, máximos, ventanas y listas de idioma escritos en el código | VI | `024-textos-y-valores-fuera-del-codigo` |
 | El motor del agente no tiene tests | VII | `019-tests-engine` |

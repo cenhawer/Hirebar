@@ -16,11 +16,12 @@ public final class Engine {
 
     public init() {
         let stores = Repositories.files
+        let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore())
-        controller = Controller(telegram: telegram, stores: stores)
-        jobRadar = JobRadar(stores: stores)
-        freelanceRadar = FreelanceRadar(stores: stores)
-        scheduler = Scheduler(stores: stores)
+        controller = Controller(telegram: telegram, stores: stores, clock: clock)
+        jobRadar = JobRadar(stores: stores, clock: clock)
+        freelanceRadar = FreelanceRadar(stores: stores, clock: clock)
+        scheduler = Scheduler(stores: stores, clock: clock)
         jobRadar.controller = controller
         freelanceRadar.controller = controller
         scheduler.controller = controller

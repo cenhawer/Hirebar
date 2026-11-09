@@ -10,20 +10,25 @@ public class Radar {
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = "sin buscar todavía"
     var checking = false
-    private var clock: Timer?
+    private var ticker: ScheduledWork?
     private var firstRun: Date?
     private var lastStart: Date?
     private let firstDelay: TimeInterval
     private let seenKey: String
     private let seenDays: Double
     private let runState: RunStateRepository
+    let clock: Clock
 
-    init(firstDelay: TimeInterval, seenKey: String, seenDays: Double, runState: RunStateRepository) {
+    init(firstDelay: TimeInterval, seenKey: String, seenDays: Double, runState: RunStateRepository, clock: Clock) {
         self.runState = runState
+        self.clock = clock
         self.firstDelay = firstDelay
         self.seenKey = seenKey
         self.seenDays = seenDays
     }
+
+    static let tickInterval: TimeInterval = 30
+    static let tickTolerance: TimeInterval = 5
 
     var intervalMinutes: Int { 60 }
 
@@ -33,17 +38,14 @@ public class Radar {
     }
 
     public func start() {
-        clock?.invalidate()
-        firstRun = Date().addingTimeInterval(firstDelay)
-        let timer = Timer(timeInterval: 30, repeats: true) { [weak self] _ in self?.tick() }
-        timer.tolerance = 5
-        RunLoop.main.add(timer, forMode: .common)
-        clock = timer
+        ticker?.cancel()
+        firstRun = clock.now().addingTimeInterval(firstDelay)
+        ticker = clock.every(Self.tickInterval, tolerance: Self.tickTolerance) { [weak self] in self?.tick() }
         setStatus(status)
     }
 
     private func tick() {
-        guard !checking, let due = nextRun, Date() >= due else { return }
+        guard !checking, let due = nextRun, clock.now() >= due else { return }
         checkNow()
     }
 
@@ -52,7 +54,7 @@ public class Radar {
     func beginCheck() -> Bool {
         guard !checking else { return false }
         checking = true
-        lastStart = Date()
+        lastStart = clock.now()
         setStatus("buscando…")
         return true
     }
@@ -67,7 +69,7 @@ public class Radar {
     }
 
     func remember(_ hits: [Hit]) {
-        let now = Date()
+        let now = clock.now()
         var map = seen()
         for hit in hits { map[hit.id] = now }
         map = map.filter { now.timeIntervalSince($0.value) < seenDays * 86400 }

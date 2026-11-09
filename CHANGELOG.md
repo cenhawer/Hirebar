@@ -24,6 +24,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 
 ### Cambiado
 - Se quitó el envío de avisos a ntfy.sh.
+- Prender el envío automático muestra qué hará cada agente sin esperarte y pide confirmar, en la Mac y en Telegram; apagarlo es inmediato.
 - Una instalación con el chat ya vinculado queda anclada a esa misma cuenta sin pedir nada.
 - La búsqueda en redes ya no postula sola y los seguimientos ya no se envían solos: necesitan tu aprobación o el envío automático del agente.
 - Las respuestas a clientes y las publicaciones nunca se aprueban solas.

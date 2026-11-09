@@ -47,8 +47,8 @@ exactamente como estaban en la lista.
 
 **Why this priority**: convierte la lista en contactos reales.
 
-**Independent Test**: con un doble de `AIRunner`, `envia correos 1 3` deja `aprobados.json` con esos
-números y lanza el envío; `no correos` aparta la lista y no lanza nada.
+**Independent Test**: `envia correos 1 3` aprueba esos números de la copia que la app guardó al
+mostrar la lista y lanza el envío solo con ellos; `no correos` aparta la lista y no lanza nada.
 
 **Acceptance Scenarios**:
 
@@ -67,24 +67,26 @@ números y lanza el envío; `no correos` aparta la lista y no lanza nada.
 
 ---
 
-### User Story 3 - Envío automático de correos en frío (Priority: P2)
+### User Story 3 - Envío automático de seguimientos (Priority: P2)
 
-Con el envío automático del agente prendido, los correos en frío se envían solos apenas está lista,
-pero las respuestas a personas interesadas siempre esperan la aprobación.
+Con el envío automático del agente prendido (con confirmación, spec `011`), los seguimientos a
+empresas que ya recibieron un correo verificado se envían solos; los correos en frío y las respuestas
+siempre esperan la aprobación.
 
-**Why this priority**: ahorra el paso de aprobar cada día una vez que la persona confía en las listas.
+**Why this priority**: ahorra el paso de aprobar seguimientos a contactos conocidos sin dejar salir
+solo un correo a alguien nuevo.
 
 **Independent Test**: con el envío automático prendido y una lista con tipos EMPRESA, NEGOCIO,
-SEGUIMIENTO y RESPUESTA, solo se aprueban automáticamente los que no son RESPUESTA.
+SEGUIMIENTO y RESPUESTA, solo se aprueban solos los SEGUIMIENTO a destinos ya contactados.
 
 **Acceptance Scenarios**:
 
-1. **Given** el envío automático prendido, **When** la lista está lista, **Then** se envían solos
-   todos los correos que no son RESPUESTA y se avisa cuántos.
-2. **Given** el envío automático prendido y respuestas en la lista, **When** se envía lo demás,
-   **Then** las respuestas esperan un `envia correos <números>`.
-3. **Given** el envío automático apagado, **When** la lista está lista, **Then** se pregunta si se
-   envían y no se envía nada sin respuesta.
+1. **Given** el envío automático prendido, **When** la lista está lista, **Then** se envían solos los
+   seguimientos a destinos que ya recibieron un correo verificado del agente.
+2. **Given** el envío automático prendido, **When** la lista trae correos en frío o respuestas,
+   **Then** llegan en una lista aparte que espera tu "si".
+3. **Given** el envío automático apagado, **When** la lista está lista, **Then** llega con
+   destinatario, asunto y texto completos y no se envía nada sin `envia correos`.
 
 ---
 
@@ -141,20 +143,22 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 
 - **FR-008**: La persona MUST poder aprobar todos los correos (`envia correos`), algunos
   (`envia correos 1 3`) o ninguno (`no correos`).
-- **FR-009**: Al aprobar, la app MUST escribir los números en `prospeccion/aprobados.json` y lanzar
-  la tarea "Enviar correos aprobados".
+- **FR-009**: Al aprobar, la app MUST guardar lo aprobado de la copia que mostró (destinatario, asunto
+  y texto) fuera del workspace y lanzar la tarea "Enviar correos aprobados" con esos correos en el
+  pedido.
 - **FR-010**: Al descartar, la app MUST guardar la lista como `prospeccion/descartados-<marca>.json`
   y no lanzar ningún envío.
 - **FR-011**: La IA MUST enviar solo los aprobados, desde el Gmail de la persona, exactamente con el
   destinatario, asunto y cuerpo de la lista.
 - **FR-012**: La IA MUST registrar cada envío en `prospeccion/prospectos.md`, vaciar
-  `pendientes.json` y `aprobados.json` al terminar y sumar los envíos en `metricas-claude.json`.
+  `pendientes.json` al terminar y sumar los envíos en `metricas-claude.json`.
 
 **Envío automático**
 
-- **FR-013**: Con el envío automático prendido, la app MUST aprobar sola todos los correos que no
-  son RESPUESTA y lanzar el envío.
-- **FR-014**: Los correos de tipo RESPUESTA MUST esperar siempre la aprobación de la persona.
+- **FR-013**: Con el envío automático prendido, la app MUST aprobar solos solo los seguimientos a
+  destinos con un correo verificado previo del agente.
+- **FR-014**: Los correos en frío y los de tipo RESPUESTA MUST esperar siempre la aprobación de la
+  persona.
 - **FR-014a**: El envío MUST incluir solo los correos aprobados que caben en el cupo diario de Clientes
   (10 por defecto); los demás quedan sin enviar.
 
@@ -167,7 +171,8 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 
 - **Correo propuesto**: número, tipo (EMPRESA, NEGOCIO, SEGUIMIENTO, RESPUESTA), nombre, web, correo,
   asunto y cuerpo; vive en `prospeccion/pendientes.json` hasta que se envía o se descarta.
-- **Aprobación**: "todos" o la lista de números aprobados; vive en `prospeccion/aprobados.json`.
+- **Aprobación**: los correos aprobados de la lista mostrada; viven en `estado/aprobados/<lote>.json`,
+  fuera del workspace.
 - **Prospecto contactado**: fecha, empresa, correo y tipo; vive en `prospeccion/prospectos.md`.
 - **Ajustes del agente (AgentSettings)**: como en la spec `001-agente-empleo`.
 
@@ -197,8 +202,7 @@ La persona prende o apaga el agente, cambia el horario y el envío automático.
 
 | Comportamiento actual | Principio | Se corrige en |
 |---|---|---|
-| La aprobación de correos no queda como lista con historia: `pendientes.json` y `aprobados.json` se sobrescriben y se vacían | II | `028-vista-actividad` |
-| El envío automático se prende con una casilla, sin confirmación | II | `011-confirmar-envio-automatico` |
+| La aprobación de correos no tiene una vista de historia para la persona | II | `028-vista-actividad` |
 | Sin modo práctica | II | `014-modo-practica` |
 | Las listas descartadas (`descartados-<marca>.json`) no tienen retención | IV | `029-politica-datos` |
 | El motor del agente no tiene tests | VII | `019-tests-engine` |

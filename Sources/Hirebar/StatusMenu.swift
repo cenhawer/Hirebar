@@ -1,7 +1,10 @@
 import AppKit
-import HirebarCore
 import HirebarDomain
 import HirebarEngine
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 final class StatusMenu: NSObject, NSMenuDelegate {
     static let shared = StatusMenu()

@@ -1,7 +1,7 @@
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarStorage
 
 final class TextToolsTests: XCTestCase {
     func testAgeMinutes() {

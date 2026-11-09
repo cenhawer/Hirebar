@@ -1,6 +1,9 @@
 import Foundation
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 public enum EngineCheck {
     static let timeout: TimeInterval = 180

@@ -1,5 +1,8 @@
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import SwiftUI
 
 struct PanelView: View {

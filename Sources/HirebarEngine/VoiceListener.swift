@@ -1,8 +1,11 @@
 import AVFoundation
 import Foundation
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import Speech
 
 private let log = Log(.media)

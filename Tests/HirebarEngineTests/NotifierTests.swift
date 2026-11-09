@@ -1,7 +1,11 @@
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarEngine
 
 final class NotifierTests: XCTestCase {
     func testLongAnnouncementsAreSplitWithoutLosingAnyItem() {

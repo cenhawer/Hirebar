@@ -2,7 +2,7 @@ import HirebarApplication
 import HirebarDomain
 import XCTest
 
-@testable import HirebarCore
+@testable import HirebarStorage
 
 final class AIEngineTests: XCTestCase {
     func testOldConfigDefaultsToClaude() throws {

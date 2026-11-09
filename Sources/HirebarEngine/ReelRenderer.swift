@@ -3,8 +3,11 @@ import AppKit
 import CoreGraphics
 import Foundation
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import ImageIO
 
 private let log = Log(.media)

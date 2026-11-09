@@ -1,7 +1,10 @@
 import Foundation
 import HirebarApplication
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 enum AgentPrompts {
     static func prompt(for batch: Batch, items: [BatchItem], owner: String) -> String {

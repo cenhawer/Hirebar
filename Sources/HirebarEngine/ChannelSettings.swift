@@ -1,6 +1,9 @@
 import Foundation
-import HirebarCore
 import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 struct ChannelSettings: Decodable, Equatable, Sendable {
     static let fileName = "canal"

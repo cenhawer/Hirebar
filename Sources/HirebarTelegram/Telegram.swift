@@ -25,8 +25,20 @@ public enum BotCheck: Equatable, Sendable {
     case notSaved
 }
 
+struct NoSecrets: SecretStore {
+    func secret(for account: String) -> String? { nil }
+    func save(_ secret: String, for account: String) -> Bool { false }
+    func delete(_ account: String) -> Bool { false }
+}
+
 public final class Telegram: @unchecked Sendable {
-    public static let shared = Telegram()
+    nonisolated(unsafe) public static var shared = Telegram(secrets: NoSecrets())
+    let secrets: SecretStore
+
+    public init(secrets: SecretStore) {
+        self.secrets = secrets
+    }
+
     static let keychainAccount = "telegram-bot"
     static let offsetKey = "telegram.offset"
     static let tokenPattern = "^\\d{5,}:[A-Za-z0-9_-]{30,}$"
@@ -80,7 +92,7 @@ public final class Telegram: @unchecked Sendable {
 
     @discardableResult
     public func removeToken() -> Bool {
-        guard Keychain.delete(account: Self.keychainAccount) else { return false }
+        guard secrets.delete(Self.keychainAccount) else { return false }
         UserDefaults.standard.set(0, forKey: Self.offsetKey)
         markRejected(false)
         reloadToken()
@@ -105,7 +117,7 @@ public final class Telegram: @unchecked Sendable {
     }
 
     public func reloadToken() {
-        let value = Keychain.read(account: Self.keychainAccount)
+        let value = secrets.secret(for: Self.keychainAccount)
         lock.lock()
         cachedToken = value
         lock.unlock()
@@ -113,7 +125,7 @@ public final class Telegram: @unchecked Sendable {
 
     @discardableResult
     public func saveToken(_ token: String) -> Bool {
-        guard Keychain.save(token, account: Self.keychainAccount) else { return false }
+        guard secrets.save(token, for: Self.keychainAccount) else { return false }
         UserDefaults.standard.set(0, forKey: Self.offsetKey)
         markRejected(false)
         reloadToken()
@@ -130,7 +142,7 @@ public final class Telegram: @unchecked Sendable {
     private func call(_ method: String, _ params: [String: Any], timeout: TimeInterval = 30) -> [String: Any]? {
         guard let token = currentToken(),
               let url = URL(string: "https://api.telegram.org/bot\(token)/\(method)") else { return nil }
-        return Net.postJSON(url, params, timeout: timeout)
+        return TelegramHTTP.postJSON(url, params, timeout: timeout)
     }
 
     private func pollLoop() {
@@ -236,7 +248,7 @@ public final class Telegram: @unchecked Sendable {
               let url = URL(string: "https://api.telegram.org/bot\(token)/sendDocument") else { return }
         let fields = ["chat_id": String(chatId), "caption": String(caption.prefix(1000))]
         DispatchQueue.global(qos: .utility).async {
-            let result = Net.postMultipart(url, fields: fields, fileField: "document", file: file)
+            let result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "document", file: file)
             if (result?["ok"] as? Bool) != true {
                 log.write("Telegram: no se pudo enviar \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
             }
@@ -254,10 +266,10 @@ public final class Telegram: @unchecked Sendable {
             for (index, file) in files.enumerated() {
                 var fields = ["chat_id": String(chatId)]
                 if index == 0 && !caption.isEmpty { fields["caption"] = String(caption.prefix(1000)) }
-                var result = Net.postMultipart(url, fields: fields, fileField: "photo", file: file)
+                var result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "photo", file: file)
                 for _ in 0..<2 where (result?["ok"] as? Bool) != true {
                     Thread.sleep(forTimeInterval: 3)
-                    result = Net.postMultipart(url, fields: fields, fileField: "photo", file: file)
+                    result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "photo", file: file)
                 }
                 if (result?["ok"] as? Bool) != true {
                     let reason = result?["description"] ?? "sin respuesta"
@@ -276,10 +288,10 @@ public final class Telegram: @unchecked Sendable {
         }
         let fields = ["chat_id": String(chatId), "caption": String(caption.prefix(1000)), "supports_streaming": "true"]
         DispatchQueue.global(qos: .utility).async {
-            var result = Net.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
+            var result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
             if (result?["ok"] as? Bool) != true {
                 Thread.sleep(forTimeInterval: 5)
-                result = Net.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
+                result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
             }
             if (result?["ok"] as? Bool) != true {
                 log.write("Telegram: no se pudo enviar el video \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")

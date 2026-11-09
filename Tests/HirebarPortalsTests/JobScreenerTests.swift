@@ -1,8 +1,7 @@
-import HirebarCore
 import HirebarDomain
 import XCTest
 
-@testable import HirebarSources
+@testable import HirebarPortals
 
 final class JobScreenerTests: XCTestCase {
     let profile = JobProfile.defaults

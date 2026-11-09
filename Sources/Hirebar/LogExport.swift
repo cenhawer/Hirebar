@@ -1,6 +1,9 @@
 import AppKit
 import HirebarApplication
-import HirebarCore
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 
 enum LogExport {
     static let tool = "/usr/bin/log"

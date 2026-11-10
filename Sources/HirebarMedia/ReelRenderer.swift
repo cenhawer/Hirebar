@@ -49,10 +49,10 @@ public enum ReelRenderer {
         public var errorDescription: String? { message }
     }
     public static func output(_ account: ContentAccount) -> URL {
-        account.videoFolder.appendingPathComponent("reel.mp4")
+        account.finalVideo
     }
     public static func preview(_ account: ContentAccount) -> URL {
-        account.videoFolder.appendingPathComponent("vista-previa.mp4")
+        account.previewVideo
     }
 
     public static func loadScript(_ account: ContentAccount) throws -> (scenes: [Scene], tone: String?) {

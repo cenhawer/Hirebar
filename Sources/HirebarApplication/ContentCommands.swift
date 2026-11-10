@@ -178,7 +178,6 @@ extension Controller {
             runScheduled(.linkedInDraft, manual: true, account: account.id)
             return
         }
-        stores.contentAccounts.discardDraft(account, at: Date())
-        reply(String(localized: "Listo, no se publica en \(account.title). Escribe \"post \(account.id)\" cuando quieras otra."))
+        skipDraft(account)
     }
 }

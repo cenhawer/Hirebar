@@ -1,14 +1,15 @@
 import Foundation
 import HirebarApplication
 
-final class TestClock: Clock, @unchecked Sendable {
+@MainActor
+final class TestClock: Clock {
     final class Work: ScheduledWork {
         var cancelled = false
         func cancel() { cancelled = true }
     }
 
     var moment: Date
-    private(set) var pending: [(at: Date, action: () -> Void)] = []
+    private(set) var pending: [(at: Date, action: @MainActor () -> Void)] = []
 
     init(_ moment: Date = Date(timeIntervalSince1970: 1_800_000_000)) {
         self.moment = moment
@@ -16,9 +17,9 @@ final class TestClock: Clock, @unchecked Sendable {
 
     func now() -> Date { moment }
 
-    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping () -> Void) -> ScheduledWork { Work() }
+    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) -> ScheduledWork { Work() }
 
-    func after(_ delay: TimeInterval, _ action: @escaping () -> Void) {
+    func after(_ delay: TimeInterval, _ action: @escaping @MainActor () -> Void) {
         pending.append((moment.addingTimeInterval(delay), action))
     }
 

@@ -6,8 +6,9 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class AIRunnerFlowTests: XCTestCase {
-    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-runner-\(UUID().uuidString)")
+    nonisolated static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-runner-\(UUID().uuidString)")
     var runner: TestAIRunner!
     var controller: Controller!
     var replies: [String] = []
@@ -20,7 +21,7 @@ final class AIRunnerFlowTests: XCTestCase {
         try? FileManager.default.removeItem(at: home)
     }
 
-    override func setUp() {
+    override func setUp() async throws {
         runner = TestAIRunner()
         controller = Controller.forTests(aiRunner: runner)
         replies = []

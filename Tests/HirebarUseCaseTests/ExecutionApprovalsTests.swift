@@ -8,17 +8,18 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class ExecutionApprovalsTests: XCTestCase {
     var folder: URL!
     var rules: TargetRules!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         rules = try TargetRulesFile.load(from: EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/destinos.json"))
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: folder)
     }
 

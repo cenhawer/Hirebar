@@ -7,15 +7,21 @@ final class TestMediaRenderer: MediaRenderer {
     private(set) var preparedSlides: [String] = []
 
     func prepareSlides(for account: ContentAccount) { preparedSlides.append(account.id) }
-    func renderSlides(for account: ContentAccount, completion: @escaping (_ made: [URL], _ failed: Int) -> Void) { completion([], 0) }
-    func renderVideoPreview(for account: ContentAccount, completion: @escaping (_ video: URL?, _ problem: String?) -> Void) {
+    func renderSlides(for account: ContentAccount, completion: @escaping SlidesCompletion) {
+        completion([], 0)
+    }
+    func renderVideoPreview(
+        for account: ContentAccount, completion: @escaping VideoCompletion
+    ) {
         completion(nil, nil)
     }
     func renderVideoWithVoice(
-        for account: ContentAccount, recording: URL, completion: @escaping (_ video: URL?, _ problem: String?) -> Void
+        for account: ContentAccount, recording: URL, completion: @escaping VideoCompletion
     ) { completion(nil, nil) }
     func readingScript(for account: ContentAccount) -> String? { nil }
-    func renderCVs(for profile: Profile, completion: @escaping (CVRenderResult) -> Void) { completion(CVRenderResult()) }
+    func renderCVs(for profile: Profile, completion: @escaping CVCompletion) {
+        completion(CVRenderResult())
+    }
     func audioCheck(bytes: Int?, seconds: Int?) -> AudioCheck { audio }
     func maxAudioBytes() -> Int? { nil }
 }

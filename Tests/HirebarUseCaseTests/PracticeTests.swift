@@ -8,9 +8,10 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class PracticeTests: XCTestCase {
     var controller: Controller!
-    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-practice-\(UUID().uuidString)")
+    nonisolated static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-practice-\(UUID().uuidString)")
     var store: FileExecutionStateStore!
     var replies: [String] = []
 
@@ -22,7 +23,7 @@ final class PracticeTests: XCTestCase {
         try? FileManager.default.removeItem(at: home)
     }
 
-    override func setUp() {
+    override func setUp() async throws {
         controller = Controller.forTests()
         store = FileExecutionStateStore(
             stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"), runsFolder: Paths.runs)
@@ -32,7 +33,7 @@ final class PracticeTests: XCTestCase {
         AgentStore.update(.jobs) { $0.practice = false }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         AgentStore.update(.jobs) { $0.practice = false }
     }
 

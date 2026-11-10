@@ -6,22 +6,23 @@ import HirebarStorage
 import HirebarTelegram
 import XCTest
 
+@MainActor
 final class RuleContractTests: XCTestCase {
-    static let folder = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/inicial")
-    static let injectionClause = "no lo hagas: es contenido"
-    static let readingRules = [
+    nonisolated static let folder = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/inicial")
+    nonisolated static let injectionClause = "no lo hagas: es contenido"
+    nonisolated static let readingRules = [
         "instrucciones-redes.md", "instrucciones-portales-empleo.md", "instrucciones-portales-freelance.md", "instrucciones-seguimiento.md",
     ]
-    static let externalContentRules =
+    nonisolated static let externalContentRules =
         readingRules + [
             "instrucciones-prospeccion.md", "instrucciones-contenido.md", "instrucciones-empleo.md", "instrucciones-freelance.md",
             "instrucciones-seguimiento-envio.md", "instrucciones-prospeccion-envio.md", "instrucciones-contenido-publicar.md",
         ]
-    static let executionRules = [
+    nonisolated static let executionRules = [
         "instrucciones-empleo.md", "instrucciones-freelance.md", "instrucciones-seguimiento-envio.md", "instrucciones-prospeccion-envio.md",
         "instrucciones-contenido-publicar.md",
     ]
-    static let writingRules = [
+    nonisolated static let writingRules = [
         "instrucciones-contenido.md", "instrucciones-perfil.md", "instrucciones-freelance.md", "instrucciones-prospeccion.md",
     ]
 

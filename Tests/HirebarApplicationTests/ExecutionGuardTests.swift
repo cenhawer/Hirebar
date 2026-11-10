@@ -56,6 +56,7 @@ final class RecordingAlerts: ExecutionAlerts, @unchecked Sendable {
     }
 }
 
+@MainActor
 final class ExecutionGuardTests: XCTestCase {
     let jobs = AgentID(rawValue: "empleo")
     let moment = Date(timeIntervalSince1970: 1_800_000_000)
@@ -63,7 +64,7 @@ final class ExecutionGuardTests: XCTestCase {
     var alerts: RecordingAlerts!
     var executionGuard: ExecutionGuard!
 
-    override func setUp() {
+    override func setUp() async throws {
         store = InMemoryExecutionStateStore()
         alerts = RecordingAlerts()
         let moment = self.moment

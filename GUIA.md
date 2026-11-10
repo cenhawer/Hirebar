@@ -10,6 +10,9 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 - **Claude en espera / trabajando:** qué está haciendo Claude. Punto verde = libre; naranja = trabajando. Claude hace una cosa a la vez porque todos los agentes usan el mismo Chrome; lo demás espera en fila.
 - **Avión de papel:** Telegram. Azul = conectado. Si falta algo, en su lugar aparece qué pasa ("Telegram sin configurar", "Esperando tu hola", "El token ya no sirve"); tócalo para ir a Ajustes → Telegram y avisos.
 
+### Falta configurar
+Mientras falte algo (tu nombre, la IA probada, Telegram, un agente prendido o un permiso de macOS), arriba de los agentes aparece la lista con lo pendiente. Toca un paso o **Abrir asistente** para terminarlo. El asistente también está en el engranaje → **Asistente de configuración…** y en el menú de clic derecho.
+
 ### Cada agente
 - **Nombre y descripción:** qué hace.
 - **"en 5 min", "en 19 h", "a pedido", "trabajando":** cuándo vuelve a correr solo.

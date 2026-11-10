@@ -70,6 +70,8 @@ public struct FileProfileRepository: ProfileRepository {
     public func appendChangeRequest(_ kind: String, _ text: String, at date: Date) { ProfileRequests.append(kind, text, at: date) }
     public func changeRequests() -> String { ProfileRequests.read() }
     public func clearChangeRequests() { ProfileRequests.clear() }
+    public func document() -> ProfileDocument { ProfileDocumentStore.load(from: url) }
+    public func saveDocument(_ document: ProfileDocument) throws { try ProfileDocumentStore.save(document, to: url) }
 }
 
 public struct FileQuotaRepository: QuotaRepository {

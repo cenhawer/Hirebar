@@ -56,6 +56,8 @@ public protocol ProfileRepository: Sendable {
     func appendChangeRequest(_ kind: String, _ text: String, at date: Date)
     func changeRequests() -> String
     func clearChangeRequests()
+    func document() -> ProfileDocument
+    func saveDocument(_ document: ProfileDocument) throws
 }
 
 public protocol ProspectingRepository: Sendable {

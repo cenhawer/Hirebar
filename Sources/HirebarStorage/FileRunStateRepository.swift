@@ -3,7 +3,6 @@ import HirebarApplication
 
 public final class FileRunStateRepository: RunStateRepository, ChatOffsetStore, @unchecked Sendable {
     static let lock = NSLock()
-    static let claimRetention: TimeInterval = 14 * 86400
 
     struct Snapshot: Codable {
         var schemaVersion = WorkspaceSchema.current
@@ -15,10 +14,15 @@ public final class FileRunStateRepository: RunStateRepository, ChatOffsetStore, 
 
     let file: URL
     let now: @Sendable () -> Date
+    let claimRetention: TimeInterval
 
-    public init(file: URL = Paths.state.appendingPathComponent("corrida.json"), now: @escaping @Sendable () -> Date = Date.init) {
+    public init(
+        file: URL = Paths.state.appendingPathComponent("corrida.json"), now: @escaping @Sendable () -> Date = Date.init,
+        claimRetention: TimeInterval
+    ) {
         self.file = file
         self.now = now
+        self.claimRetention = claimRetention
     }
 
     func read() -> Snapshot {
@@ -57,7 +61,7 @@ public final class FileRunStateRepository: RunStateRepository, ChatOffsetStore, 
     public func claim(_ key: String) -> Bool {
         let moment = now()
         return change { snapshot in
-            snapshot.claimed = snapshot.claimed.filter { moment.timeIntervalSince($0.value) < Self.claimRetention }
+            snapshot.claimed = snapshot.claimed.filter { moment.timeIntervalSince($0.value) < claimRetention }
             guard snapshot.claimed[key] == nil else { return false }
             snapshot.claimed[key] = moment
             return true

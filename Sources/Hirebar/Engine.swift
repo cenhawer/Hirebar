@@ -15,12 +15,14 @@ public final class Engine {
     public let freelanceRadar: FreelanceRadar
     public let scheduler: Scheduler
     public let activity: ActivityRepository
+    let runState: FileRunStateRepository
 
     public init(resources: EngineResources) {
-        let stores = Repositories.files(searchDefaults: resources.searchDefaults)
+        let stores = Repositories.files(searchDefaults: resources.searchDefaults, retention: resources.retention)
         activity = FileExecutionStateStore.standard
         let clock = SystemClock()
-        telegram = Telegram(secrets: KeychainSecretStore(), offsets: FileRunStateRepository())
+        runState = FileRunStateRepository(claimRetention: resources.retention.claims)
+        telegram = Telegram(secrets: KeychainSecretStore(), offsets: runState)
         let adapters = EngineAdapters(
             chat: telegram, desktop: MacDesktopNotifications(), clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer(),
             resources: resources)
@@ -40,7 +42,7 @@ public final class Engine {
     }
 
     public func start(resources: URL?) {
-        WorkspaceMigration.run()
+        WorkspaceMigration.run(runState: runState)
         Paths.installTemplates(from: resources)
         AudioTools.removeLegacyCopy()
         controller.stores.agents.writeMissingDefaults()

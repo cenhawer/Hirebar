@@ -25,6 +25,8 @@ struct SettingsView: View {
                     }
                 }
                 Section("Perfil") {
+                    Label("Datos y experiencia", systemImage: "person.text.rectangle")
+                        .tag(SettingsPage.profile)
                     Label("Habilidades", systemImage: "star.fill")
                         .tag(SettingsPage.skills)
                 }
@@ -59,6 +61,8 @@ struct SettingsView: View {
                 AgentEditor(agent: agent, model: model)
                     .id(kind)
             }
+        case .profile:
+            ProfileEditorView(document: $model.profileDocument)
         case .skills:
             SkillsEditor(skills: $model.skills)
         case .content:

@@ -133,14 +133,16 @@ public enum ClaudeCLI {
     }
 
     public static let missingClaudeMessage =
-        "No encontré Claude Code en el Mac. Instálalo con: curl -fsSL https://claude.ai/install.sh | bash, "
-        + "inicia sesión con 'claude' y vuelve a responder si. O elige otra IA en Ajustes → Motor de IA."
+        String(localized: "No encontré Claude Code en el Mac. Instálalo con: curl -fsSL https://claude.ai/install.sh | bash, ")
+        + String(localized: "inicia sesión con 'claude' y vuelve a responder si. O elige otra IA en Ajustes → Motor de IA.")
     public static let missingProfilesMessage =
-        "No encontré los perfiles de permisos de la IA dentro de la app. Vuelve a instalarla con scripts/bundle.sh --install."
+        String(
+            localized:
+                "No encontré los perfiles de permisos de la IA dentro de la app. Vuelve a instalarla con scripts/bundle.sh --install.")
 
     public static func browserReadingMessage(_ kind: AIEngineKind) -> String {
-        "Esta tarea lee con el navegador y con \(kind.title) no puede hacerlo sin poder actuar. "
-            + "Corre solo con Claude Code: elígelo en Ajustes → Motor de IA."
+        String(localized: "Esta tarea lee con el navegador y con \(kind.title) no puede hacerlo sin poder actuar. ")
+            + String(localized: "Corre solo con Claude Code: elígelo en Ajustes → Motor de IA.")
     }
 
     public static func launch(
@@ -156,7 +158,7 @@ public enum ClaudeCLI {
         switch engine.kind {
         case .claude:
             guard let claude = claudePath() else {
-                return .failure(LaunchProblem(message: missingClaudeMessage, status: "falta instalar Claude Code"))
+                return .failure(LaunchProblem(message: missingClaudeMessage, status: String(localized: "falta instalar Claude Code")))
             }
             return .success(
                 .executable(
@@ -167,7 +169,9 @@ public enum ClaudeCLI {
         case .codex, .gemini:
             let commands = engine.kind == .codex ? profiles.codex : profiles.gemini
             if browser && !profile.canAct && !commands.browserInRead {
-                return .failure(LaunchProblem(message: browserReadingMessage(engine.kind), status: "esta tarea necesita Claude Code"))
+                return .failure(
+                    LaunchProblem(message: browserReadingMessage(engine.kind), status: String(localized: "esta tarea necesita Claude Code"))
+                )
             }
             return .success(
                 .shell(
@@ -176,11 +180,11 @@ public enum ClaudeCLI {
         case .custom:
             let command = engine.customCommand(for: profile)
             guard !command.isEmpty else {
-                let which = profile.canAct ? "de ejecución" : "de lectura"
+                let which = profile.canAct ? String(localized: "de ejecución") : String(localized: "de lectura")
                 return .failure(
                     LaunchProblem(
-                        message: "Falta el comando \(which) de tu IA. Escríbelo en Ajustes → Motor de IA.",
-                        status: "falta configurar la IA"))
+                        message: String(localized: "Falta el comando \(which) de tu IA. Escríbelo en Ajustes → Motor de IA."),
+                        status: String(localized: "falta configurar la IA")))
             }
             return .success(.shell(command, AIEngineSettings.environment(prompt: prompt, instructions: playbook, profile: profile)))
         }
@@ -196,7 +200,7 @@ public enum ClaudeCLI {
         do {
             profiles = try EngineProfiles.bundled()
         } catch {
-            return .failure(LaunchProblem(message: missingProfilesMessage, status: "faltan los perfiles de la IA"))
+            return .failure(LaunchProblem(message: missingProfilesMessage, status: String(localized: "faltan los perfiles de la IA")))
         }
         return launch(engine: engine, request: request, profiles: profiles).map {
             switch $0 {
@@ -210,10 +214,10 @@ public enum ClaudeCLI {
 
     public static func loginHint(_ kind: AIEngineKind) -> String {
         switch kind {
-        case .claude: return "Abre Terminal, escribe claude y luego /login."
-        case .codex: return "Abre Terminal y escribe codex login."
-        case .gemini: return "Abre Terminal, escribe gemini y vuelve a iniciar sesión."
-        case .custom: return "Vuelve a iniciar sesión en tu IA desde la Terminal."
+        case .claude: return String(localized: "Abre Terminal, escribe claude y luego /login.")
+        case .codex: return String(localized: "Abre Terminal y escribe codex login.")
+        case .gemini: return String(localized: "Abre Terminal, escribe gemini y vuelve a iniciar sesión.")
+        case .custom: return String(localized: "Vuelve a iniciar sesión en tu IA desde la Terminal.")
         }
     }
 

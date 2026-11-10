@@ -5,7 +5,7 @@ public struct Config: Codable, Sendable {
     public static let freelanceSources = ["workana", "freelancer"]
     public static let jobSources = ["linkedin", "getonboard", "computrabajo", "elempleo", "magneto"]
 
-    public var ownerName = "el usuario"
+    public var ownerName = String(localized: "el usuario")
     public var sources: [String: Bool] = [:]
     public var channelOwner: ChannelOwner?
     public var botUsername = ""

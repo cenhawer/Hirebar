@@ -22,7 +22,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     private var actions: [() -> Void] = []
     private let telegramHeader = NSMenuItem(title: "Telegram", action: nil, keyEquivalent: "")
     private let telegramState = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-    private let claudeItem = NSMenuItem(title: "Claude: en espera", action: nil, keyEquivalent: "")
+    private let claudeItem = NSMenuItem(title: String(localized: "Claude: en espera"), action: nil, keyEquivalent: "")
     private var ticker: Timer?
 
     static let sourceTitles = [
@@ -44,16 +44,16 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         telegramState.isEnabled = false
         telegram.addItem(telegramState)
         telegram.addItem(.separator())
-        telegram.addItem(action("Telegram y avisos…") { [weak self] in self?.onOpenChannel?() })
-        telegram.addItem(action("Enviar aviso de prueba") { [weak self] in self?.sendTest() })
+        telegram.addItem(action(String(localized: "Telegram y avisos…")) { [weak self] in self?.onOpenChannel?() })
+        telegram.addItem(action(String(localized: "Enviar aviso de prueba")) { [weak self] in self?.sendTest() })
         telegramHeader.submenu = telegram
         menu.addItem(telegramHeader)
 
         claudeItem.isEnabled = false
         menu.addItem(claudeItem)
-        menu.addItem(action("Abrir informes") { Self.open(Paths.reports) })
-        menu.addItem(action("Ver registro") { LogExport.openRecent() })
-        menu.addItem(action("Abrir carpeta de datos") { Self.open(Paths.root) })
+        menu.addItem(action(String(localized: "Abrir informes")) { Self.open(Paths.reports) })
+        menu.addItem(action(String(localized: "Ver registro")) { LogExport.openRecent() })
+        menu.addItem(action(String(localized: "Abrir carpeta de datos")) { Self.open(Paths.root) })
         menu.delegate = self
 
         engine.freelanceRadar.onStatusChange = { [weak self] _ in self?.refresh() }
@@ -71,26 +71,23 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         purpose.isEnabled = false
         menu.addItem(purpose)
         menu.addItem(.separator())
-        menu.addItem(check("Prendido", { AgentStore.load(kind).enabled }) {
-            AgentStore.update(kind) { $0.enabled.toggle() }
-        })
+        menu.addItem(
+            check(String(localized: "Prendido"), { AgentStore.load(kind).enabled }, { AgentStore.update(kind) { $0.enabled.toggle() } }))
         if [.jobs, .freelance, .clients].contains(kind) {
             let agents = engine.controller.stores.agents
             let autoSend = check(
-                "Envío automático", { AgentStore.load(kind).autoApprove }, { AutoSendConfirmation.toggle(kind, agents: agents) })
+                String(localized: "Envío automático"), { AgentStore.load(kind).autoApprove },
+                { AutoSendConfirmation.toggle(kind, agents: agents) })
             menu.addItem(autoSend)
         }
-        let practice = check("Modo práctica", { AgentStore.load(kind).practice }, { [weak self] in self?.togglePractice(kind) })
+        let practice = check(
+            String(localized: "Modo práctica"), { AgentStore.load(kind).practice }, { [weak self] in self?.togglePractice(kind) })
         menu.addItem(practice)
         let sources = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
         if !sources.isEmpty {
             menu.addItem(.separator())
             for source in sources {
-                menu.addItem(check(Self.sourceTitles[source] ?? source, { Config.load().isEnabled(source) }) {
-                    var config = Config.load()
-                    config.setEnabled(source, !config.isEnabled(source))
-                    config.save()
-                })
+                menu.addItem(check(Self.sourceTitles[source] ?? source, { Config.load().isEnabled(source) }, { Self.toggleSource(source) }))
             }
         }
         if kind == .freelance {
@@ -106,13 +103,13 @@ final class StatusMenu: NSObject, NSMenuDelegate {
             }
         }
         menu.addItem(.separator())
-        let runTitle = kind == .profile ? "Regenerar hojas de vida" : "Correr ahora"
+        let runTitle = kind == .profile ? String(localized: "Regenerar hojas de vida") : String(localized: "Correr ahora")
         menu.addItem(action(runTitle) { [weak self] in self?.engine.controller.runAgentNow(kind) })
-        menu.addItem(action("Ajustes…") { [weak self] in self?.onOpenSettings?(kind) })
+        menu.addItem(action(String(localized: "Ajustes…")) { [weak self] in self?.onOpenSettings?(kind) })
         return menu
     }
 
-    static let menuOrigin = "el menú"
+    static let menuOrigin = String(localized: "el menú")
 
     func togglePractice(_ kind: AgentKind) {
         Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.menuOrigin, agents: engine.controller.stores.agents)
@@ -133,14 +130,14 @@ final class StatusMenu: NSObject, NSMenuDelegate {
 
     private func headerTitle(_ kind: AgentKind) -> String {
         let agent = AgentStore.load(kind)
-        guard agent.enabled else { return "\(agent.name): apagado" }
+        guard agent.enabled else { return String(localized: "\(agent.name): apagado") }
         var title = agent.name
         switch kind {
         case .jobs: title += ": \(engine.jobRadar.status)"
         case .freelance: title += ": \(engine.freelanceRadar.status)"
         default: break
         }
-        if let next = engine.scheduler.nextRun(of: kind) { title += " · próxima \(TextTools.countdown(next))" }
+        if let next = engine.scheduler.nextRun(of: kind) { title += String(localized: " · próxima \(TextTools.countdown(next))") }
         return title
     }
 
@@ -153,6 +150,12 @@ final class StatusMenu: NSObject, NSMenuDelegate {
 
     private func action(_ title: String, _ handler: @escaping () -> Void) -> NSMenuItem {
         register(NSMenuItem(title: title, action: #selector(runMenuAction(_:)), keyEquivalent: ""), handler)
+    }
+
+    static func toggleSource(_ source: String) {
+        var config = Config.load()
+        config.setEnabled(source, !config.isEnabled(source))
+        config.save()
     }
 
     private func check(_ title: String, _ isOn: @escaping () -> Bool, _ toggle: @escaping () -> Void) -> NSMenuItem {

@@ -60,10 +60,10 @@ public enum ReelRenderer {
         guard let data = try? Data(contentsOf: folder.appendingPathComponent("guion.json")),
             let script = try? JSONDecoder().decode(Script.self, from: data)
         else {
-            throw Problem(message: "La IA no dejó el guion del video (video/guion.json)")
+            throw Problem(message: String(localized: "La IA no dejó el guion del video (video/guion.json)"))
         }
         let scenes = script.escenas.filter { FileManager.default.fileExists(atPath: folder.appendingPathComponent($0.archivo).path) }
-        guard !scenes.isEmpty else { throw Problem(message: "no encontré las escenas del video") }
+        guard !scenes.isEmpty else { throw Problem(message: String(localized: "no encontré las escenas del video")) }
         return (scenes, script.tono)
     }
     public static func readingScript(_ account: ContentAccount) -> String? {
@@ -72,14 +72,14 @@ public enum ReelRenderer {
         guard !texts.isEmpty else { return nil }
         let words = texts.map { $0.split(whereSeparator: \.isWhitespace).count }.reduce(0, +)
         let seconds = Int((Double(words) / wordsPerSecond).rounded())
-        var lines = ["Guion para grabar (\(account.title)), unos \(seconds) segundos:", ""]
-        if let tone = script.tone, !tone.isEmpty { lines += ["Tono: \(tone)", ""] }
+        var lines = [String(localized: "Guion para grabar (\(account.title)), unos \(seconds) segundos:"), ""]
+        if let tone = script.tone, !tone.isEmpty { lines += [String(localized: "Tono: \(tone)"), ""] }
         for (index, text) in texts.enumerated() { lines.append("\(index + 1). \(text)") }
         lines += [
             "",
-            "Léelo de corrido, sin decir los números, con energía y sonriendo (se nota en la voz). "
-                + "Si te equivocas, sigue: Hirebar acomoda las escenas a tu ritmo.",
-            "Responde a este chat con una nota de voz y te devuelvo el video con tu voz, listo para subir.",
+            String(localized: "Léelo de corrido, sin decir los números, con energía y sonriendo (se nota en la voz). ")
+                + String(localized: "Si te equivocas, sigue: Hirebar acomoda las escenas a tu ritmo."),
+            String(localized: "Responde a este chat con una nota de voz y te devuelvo el video con tu voz, listo para subir."),
         ]
         return lines.joined(separator: "\n")
     }
@@ -128,7 +128,7 @@ public enum ReelRenderer {
         let script = try loadScript(account)
         let voice = account.videoFolder.appendingPathComponent("mi-voz.m4a")
         try AudioTools.prepareVoice(recording, to: voice)
-        guard let duration = VoiceListener.duration(voice) else { throw Problem(message: "el audio llegó vacío") }
+        guard let duration = VoiceListener.duration(voice) else { throw Problem(message: String(localized: "el audio llegó vacío")) }
         let heard = VoiceListener.words(in: voice)
         let texts = script.scenes.map { $0.texto ?? "" }
         let timings = ScriptAligner.align(texts, heard: heard, pauses: AudioTools.pauses(in: voice), duration: duration)
@@ -158,7 +158,9 @@ public enum ReelRenderer {
             try FileManager.default.moveItem(at: silent, to: target)
         }
         let total = clips.reduce(0) { $0 + $1.seconds }
-        let extras = (voice == nil ? " sin voz" : " con tu voz") + (music == nil ? "" : " y música")
+        let extras =
+            (voice == nil ? String(localized: " sin voz") : String(localized: " con tu voz"))
+            + (music == nil ? "" : String(localized: " y música"))
         log.write("Contenido (\(account.id)): video de \(clips.count) escenas (\(animated) animadas) y \(Int(total)) s listo\(extras)")
         return target
     }

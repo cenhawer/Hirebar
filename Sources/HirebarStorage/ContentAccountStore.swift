@@ -6,7 +6,6 @@ private let log = Log(.storage)
 
 extension ContentAccount {
 
-
     public var needsPerformanceCheck: Bool {
         guard let date = (try? FileManager.default.attributesOfItem(atPath: performance.path))?[.modificationDate] as? Date else {
             return true
@@ -43,7 +42,7 @@ public enum ContentAccountStore {
 
     public static func defaultAccount() -> ContentAccount {
         let owner = Config.load().ownerName
-        return ContentAccount(id: ContentAccount.defaultIdentifier, name: owner == "el usuario" ? "" : owner)
+        return ContentAccount(id: ContentAccount.defaultIdentifier, name: owner == String(localized: "el usuario") ? "" : owner)
     }
 
     public static func enabled() -> [ContentAccount] { load().filter(\.enabled) }

@@ -37,7 +37,7 @@ final class SettingsWindowController {
         if window == nil {
             let controller = NSHostingController(rootView: SettingsView(model: model, channel: channel))
             let window = NSWindow(contentViewController: controller)
-            window.title = "Ajustes de Hirebar"
+            window.title = String(localized: "Ajustes de Hirebar")
             window.setContentSize(NSSize(width: 820, height: 560))
             window.isReleasedWhenClosed = false
             window.center()
@@ -100,7 +100,7 @@ final class SettingsModel {
     func save() {
         let invalid = portals.filter { !$0.isValid }
         guard invalid.isEmpty else {
-            message = "Revisa los portales: cada uno necesita nombre y un enlace que empiece por https://"
+            message = String(localized: "Revisa los portales: cada uno necesita nombre y un enlace que empiece por https://")
             return
         }
         guard let accounts = validatedAccounts() else { return }
@@ -114,9 +114,9 @@ final class SettingsModel {
             try PortalStore.save(portals)
             try ContentAccountStore.save(accounts)
             try ProfileEditor.saveSkills(skills.map(\.skill))
-            result = "Guardado. Aplica desde la próxima búsqueda."
+            result = String(localized: "Guardado. Aplica desde la próxima búsqueda.")
         } catch {
-            result = "Los agentes se guardaron, pero no pude guardar las habilidades: \(error.localizedDescription)"
+            result = String(localized: "Los agentes se guardaron, pero no pude guardar las habilidades: \(error.localizedDescription)")
         }
         reload()
         message = result
@@ -131,7 +131,7 @@ final class SettingsModel {
             if account.id.isEmpty { account.id = ContentAccountStore.slug(account.name) }
             if account.id.isEmpty { account.id = "cuenta-\(index + 1)" }
             guard !accounts.contains(where: { $0.id == account.id }) else {
-                message = "Dos cuentas de contenido tienen el identificador \"\(account.id)\"; cambia uno."
+                message = String(localized: "Dos cuentas de contenido tienen el identificador \"\(account.id)\"; cambia uno.")
                 return nil
             }
             let colors = [
@@ -139,7 +139,7 @@ final class SettingsModel {
                 account.palette.text, account.palette.muted,
             ]
             guard colors.allSatisfy(Color.isHex) else {
-                message = "Revisa los colores de \(account.title): deben ser como #F07C32."
+                message = String(localized: "Revisa los colores de \(account.title): deben ser como #F07C32.")
                 return nil
             }
             accounts.append(account)
@@ -196,7 +196,7 @@ final class SettingsModel {
 
     func checkEngine() {
         checkingEngine = true
-        engineCheck = "Probando… puede tardar hasta un minuto."
+        engineCheck = String(localized: "Probando… puede tardar hasta un minuto.")
         EngineCheck.run(engine) { [weak self] ok, text in
             self?.checkingEngine = false
             self?.engineCheckOK = ok

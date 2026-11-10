@@ -65,7 +65,7 @@ final class PanelModel {
     }
 
     var agents: [AgentCardData] = []
-    var claude = "en espera"
+    var claude = String(localized: "en espera")
     var aiName = "Claude"
     var claudeBusy = false
     var telegram = ""
@@ -94,10 +94,12 @@ final class PanelModel {
         let working = running == kind
         var status: String
         switch kind {
-        case .jobs: status = "Última búsqueda: \(engine.jobRadar.status)"
-        case .freelance: status = "Última búsqueda: \(engine.freelanceRadar.status)"
-        case .profile: status = "\(Profile.load().cvVariants.count) hojas de vida · escribe \"logro\" o \"hv\" en Telegram"
-        case .clients, .content, .analyst: status = agent.tasks.first.map { "Corre \($0.scheduleText)" } ?? "Sin horario"
+        case .jobs: status = String(localized: "Última búsqueda: \(engine.jobRadar.status)")
+        case .freelance: status = String(localized: "Última búsqueda: \(engine.freelanceRadar.status)")
+        case .profile:
+            status = String(localized: "\(Profile.load().cvVariants.count) hojas de vida · escribe \"logro\" o \"hv\" en Telegram")
+        case .clients, .content, .analyst:
+            status = agent.tasks.first.map { String(localized: "Corre \($0.scheduleText)") } ?? String(localized: "Sin horario")
         }
         if working { status = Self.capitalized(engine.controller.status) }
         let next = nextText(kind, enabled: agent.enabled, working: working, paused: pauseReason != nil)
@@ -125,10 +127,10 @@ final class PanelModel {
     }
 
     private func nextText(_ kind: AgentKind, enabled: Bool, working: Bool, paused: Bool) -> String {
-        if paused { return "en pausa" }
+        if paused { return String(localized: "en pausa") }
         if !enabled { return "apagado" }
         if working { return "trabajando" }
-        return engine.scheduler.nextRun(of: kind).map(TextTools.countdown) ?? "a pedido"
+        return engine.scheduler.nextRun(of: kind).map(TextTools.countdown) ?? String(localized: "a pedido")
     }
 
     static func capitalized(_ text: String) -> String {
@@ -145,7 +147,7 @@ final class PanelModel {
         refresh()
     }
 
-    static let panelOrigin = "el panel"
+    static let panelOrigin = String(localized: "el panel")
 
     func toggleAutoApprove(_ kind: AgentKind) {
         AutoSendConfirmation.toggle(kind, agents: engine.controller.stores.agents)
@@ -189,7 +191,7 @@ final class PanelModel {
                 try SMAppService.mainApp.register()
             }
         } catch {
-            StatusMenu.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
+            StatusMenu.info(String(localized: "No pude cambiar el inicio automático: \(error.localizedDescription)"))
         }
         refresh()
     }

@@ -36,7 +36,7 @@ public struct ElempleoSource: JobSource {
                 if JobScreener.lowPay(offer.salary, profile: jobs) { continue }
                 let age = TextTools.ageMinutes(offer.posted) ?? 600
                 guard age <= Self.maxAgeMinutes else { continue }
-                var detail = "elempleo · \(offer.company) · \(TextTools.ageText(age)) · remoto"
+                var detail = String(localized: "elempleo · \(offer.company) · \(TextTools.ageText(age)) · remoto")
                 if !offer.salary.isEmpty { detail += " · \(offer.salary)" }
                 hits.append(
                     Hit(

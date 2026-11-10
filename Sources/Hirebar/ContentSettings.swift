@@ -13,9 +13,15 @@ struct ContentAccountsEditor: View {
     var body: some View {
         Form {
             Section {
-                Text("Cada cuenta recibe sus propias publicaciones con imágenes, con su nombre y sus colores. Por ejemplo, una para tu empresa en Instagram y otra para ti en LinkedIn. En Telegram: \"post <identificador>\" y \"publica <identificador>\".")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    """
+                    Cada cuenta recibe sus propias publicaciones con imágenes, con su nombre y sus colores. Por \
+                    ejemplo, una para tu empresa en Instagram y otra para ti en LinkedIn. En Telegram: \"post \
+                    <identificador>\" y \"publica <identificador>\".
+                    """
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 Button {
                     accounts.append(EditableAccount(account: ContentAccount(id: "cuenta-\(accounts.count + 1)")))
                 } label: {
@@ -54,20 +60,27 @@ struct ContentAccountSection: View {
             if account.video {
                 FfmpegRequirement()
                 Toggle("Subtítulos palabra por palabra", isOn: $account.captions)
-                Text("Te llega una vista previa sin voz y el guion. Respondes en Telegram con una nota de voz leyéndolo y Hirebar te devuelve el video con tu voz, cuadrado escena por escena. Música de fondo (opcional): pon un archivo musica.mp3 en la carpeta de la cuenta (workspace/contenido/\(account.id)/).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    """
+                    Te llega una vista previa sin voz y el guion. Respondes en Telegram con una nota de voz \
+                    leyéndolo y Hirebar te devuelve el video con tu voz, cuadrado escena por escena. Música de \
+                    fondo (opcional): pon un archivo musica.mp3 en la carpeta de la cuenta \
+                    (workspace/contenido/\(account.id)/).
+                    """
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Picker("Paleta", selection: preset) {
                 Text("Personalizada").tag("")
                 ForEach(PalettePreset.all) { Text($0.title).tag($0.id) }
             }
-            ColorField(title: "Fondo", hex: $account.palette.background)
-            ColorField(title: "Tarjetas y bloques", hex: $account.palette.surface)
-            ColorField(title: "Acento", hex: $account.palette.accent)
-            ColorField(title: "Texto", hex: $account.palette.text)
-            ColorField(title: "Texto secundario", hex: $account.palette.muted)
+            ColorField(title: String(localized: "Fondo"), hex: $account.palette.background)
+            ColorField(title: String(localized: "Tarjetas y bloques"), hex: $account.palette.surface)
+            ColorField(title: String(localized: "Acento"), hex: $account.palette.accent)
+            ColorField(title: String(localized: "Texto"), hex: $account.palette.text)
+            ColorField(title: String(localized: "Texto secundario"), hex: $account.palette.muted)
             TextField("Estilo de las imágenes", text: $account.style, axis: .vertical)
                 .lineLimit(2...5)
             PalettePreview(account: account)
@@ -78,9 +91,15 @@ struct ContentAccountSection: View {
         } header: {
             Label(account.title, systemImage: account.network == .instagram ? "camera" : "person.crop.rectangle")
         } footer: {
-            Text("La IA usa estos colores y este estilo en cada imagen. Al escoger una paleta se llenan los colores y el estilo; después puedes cambiarlos. Con el video prendido llega también un video vertical de 15 a 30 segundos.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                """
+                La IA usa estos colores y este estilo en cada imagen. Al escoger una paleta se llenan los \
+                colores y el estilo; después puedes cambiarlos. Con el video prendido llega también un video \
+                vertical de 15 a 30 segundos.
+                """
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -116,11 +135,13 @@ struct DaysPicker: View {
     }
 
     private func binding(_ key: String) -> Binding<Bool> {
-        Binding(get: { selected.contains(key) }, set: { on in
-            var chosen = selected
-            if on { chosen.insert(key) } else { chosen.remove(key) }
-            days = chosen.count == 7 ? ["todos"] : TaskEditor.days.map(\.id).filter { chosen.contains($0) }
-        })
+        Binding(
+            get: { selected.contains(key) },
+            set: { on in
+                var chosen = selected
+                if on { chosen.insert(key) } else { chosen.remove(key) }
+                days = chosen.count == 7 ? ["todos"] : TaskEditor.days.map(\.id).filter { chosen.contains($0) }
+            })
     }
 }
 
@@ -162,7 +183,7 @@ struct PalettePreview: View {
             Text("\(lead)\(accent)")
                 .font(.system(size: 22, weight: .bold))
             HStack {
-                Text(account.name.isEmpty ? "Tu nombre" : account.name)
+                Text(account.name.isEmpty ? String(localized: "Tu nombre") : account.name)
                 Spacer()
                 Text("1/5")
             }
@@ -190,11 +211,12 @@ extension Color {
     init(hex: String) {
         let clean = hex.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "#", with: "")
         let value = UInt32(clean, radix: 16) ?? 0
-        self.init(.sRGB,
-                  red: Double((value >> 16) & 0xFF) / 255,
-                  green: Double((value >> 8) & 0xFF) / 255,
-                  blue: Double(value & 0xFF) / 255,
-                  opacity: 1)
+        self.init(
+            .sRGB,
+            red: Double((value >> 16) & 0xFF) / 255,
+            green: Double((value >> 8) & 0xFF) / 255,
+            blue: Double(value & 0xFF) / 255,
+            opacity: 1)
     }
 
     var hexString: String {

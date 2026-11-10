@@ -4,7 +4,7 @@ import HirebarDomain
 @MainActor
 public class Radar {
     public var onStatusChange: ((String) -> Void)?
-    public private(set) var status = "sin buscar todavía"
+    public private(set) var status = String(localized: "sin buscar todavía")
     var checking = false
     private var ticker: ScheduledWork?
     private var firstRun: Date?
@@ -51,7 +51,7 @@ public class Radar {
         guard !checking else { return false }
         checking = true
         lastStart = clock.now()
-        setStatus("buscando…")
+        setStatus(String(localized: "buscando…"))
         return true
     }
 

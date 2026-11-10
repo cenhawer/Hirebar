@@ -61,7 +61,9 @@ public struct LinkedInSource: JobSource {
                 let age = TextTools.ageMinutes(when) ?? 600
                 let cardPlace = TextTools.clean(TextTools.first(card, "job-search-card__location\">\\s*([^<]+)<") ?? "")
                 if TextTools.normalize(cardPlace).contains(" brasil ") { continue }
-                var detail = "LinkedIn · \(company) · \(TextTools.ageText(age)) · remoto" + (jobType.isEmpty ? "" : " · CONTRATO FREELANCE")
+                var detail =
+                    String(localized: "LinkedIn · \(company) · \(TextTools.ageText(age)) · remoto")
+                    + (jobType.isEmpty ? "" : String(localized: " · CONTRATO FREELANCE"))
                 if !cardPlace.isEmpty && !cardPlace.contains(home) { detail += " · \(cardPlace)" }
                 if !salary.isEmpty { detail += " · \(salary)" }
                 if hits.contains(where: { $0.id == "li:" + jobId }) { continue }

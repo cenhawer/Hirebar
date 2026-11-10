@@ -11,7 +11,8 @@ import UserNotifications
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
-    private let loginItem = NSMenuItem(title: "Abrir al iniciar sesión", action: #selector(toggleLogin), keyEquivalent: "")
+    private let loginItem = NSMenuItem(
+        title: String(localized: "Abrir al iniciar sesión"), action: #selector(toggleLogin), keyEquivalent: "")
     private let popover = NSPopover()
     private let engine = Engine()
     private lazy var statusMenu = StatusMenu(engine: engine)
@@ -22,14 +23,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let notificationRouter = NotificationRouter()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiatedAllowingIdleSystemSleep],
-                                                         reason: "Hirebar busca proyectos y vacantes durante el día")
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep],
+            reason: String(localized: "Hirebar busca proyectos y vacantes durante el día"))
         engine.start(resources: Bundle.main.resourceURL)
         statusMenu.install(in: menu)
         menu.addItem(.separator())
         loginItem.target = self
         menu.addItem(loginItem)
-        let quit = NSMenuItem(title: "Salir de Hirebar", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "Salir de Hirebar"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
 
@@ -118,7 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private func render(busy: Bool) {
         statusItem.button?.image = StatusIcon.make(dot: busy ? .systemOrange : .systemGreen)
         let state = "\(engine.controller.ai.capitalizedName): \(engine.controller.status)"
-        statusItem.button?.toolTip = "Hirebar · \(state)\nClic: panel · Clic derecho: menú"
+        statusItem.button?.toolTip = String(localized: "Hirebar · \(state)\nClic: panel · Clic derecho: menú")
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
@@ -130,7 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
                 try SMAppService.mainApp.register()
             }
         } catch {
-            StatusMenu.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
+            StatusMenu.info(String(localized: "No pude cambiar el inicio automático: \(error.localizedDescription)"))
         }
         render(busy: !engine.controller.isIdle)
     }

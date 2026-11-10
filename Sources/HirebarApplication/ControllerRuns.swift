@@ -50,7 +50,14 @@ extension Controller {
             batch.status = .failed
             stores.batches.upsert(batch)
             releaseApproval(of: batch.id)
-            reply("No pude limpiar el registro anterior de la lista \(batch.id), así que no la ejecuto: \(error.localizedDescription)")
+            reply(
+                String(
+                    localized:
+                        """
+                        No pude limpiar el registro anterior de la lista \(batch.id), así que no la ejecuto: \
+                        \(error.localizedDescription)
+                        """
+                ))
             return false
         }
     }
@@ -77,7 +84,14 @@ extension Controller {
         runStarted = Date()
         setStatus(AgentPrompts.statusText(for: mode, count: items.count, since: TextTools.shortTime()))
         if mode == .freelance || mode == .jobs {
-            reply("\(ai.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine (suele tardar 5–20 min).")
+            reply(
+                String(
+                    localized:
+                        """
+                        \(ai.capitalizedName) empezó: \(items.count) \(Self.noun(for: mode)). Te aviso cuando termine \
+                        (suele tardar 5–20 min).
+                        """
+                ))
         }
         let phase = request.profile.phase
         Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(phase)")
@@ -94,7 +108,7 @@ extension Controller {
             reply(message)
             setStatus(status)
         case .couldNotOpen(let detail):
-            reply("No pude abrir \(ai.name): \(detail)")
+            reply(String(localized: "No pude abrir \(ai.name): \(detail)"))
         }
     }
 
@@ -120,7 +134,7 @@ extension Controller {
             report(batchId, mode: mode, code: code, output: output)
             if acts { verify(batchId, mode: mode) }
         }
-        setStatus(queue.isEmpty ? "en espera" : "siguiente lista…")
+        setStatus(queue.isEmpty ? String(localized: "en espera") : String(localized: "siguiente lista…"))
         runNext()
     }
 
@@ -145,6 +159,13 @@ extension Controller {
     func reportRestoredFiles(_ restored: [String], after batchId: String) {
         guard !restored.isEmpty else { return }
         log.write("Ejecución \(batchId): restauré archivos protegidos que cambió la IA (\(restored.joined(separator: ", ")))")
-        reply("\(ai.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
+        reply(
+            String(
+                localized:
+                    """
+                    \(ai.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); \
+                    los dejé como estaban.
+                    """
+            ))
     }
 }

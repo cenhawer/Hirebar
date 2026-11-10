@@ -27,13 +27,15 @@ extension Controller {
         return true
     }
 
-    nonisolated static let practiceResult = "práctica"
+    nonisolated static let practiceResult = String(localized: "práctica")
     nonisolated static let practiceMetric = "practica"
 
     static func practiceSummary(agentName: String, items: [Proposal]) -> String {
-        let lines = items.prefix(practiceSummaryLimit).map { "• \($0.action.rawValue) · \($0.title) · \($0.target.displayText)" }
-        let more = items.count > practiceSummaryLimit ? ["… y \(items.count - practiceSummaryLimit) más."] : []
-        return (["Modo práctica: \(agentName) no envió nada. Habría hecho \(items.count):"] + lines + more)
+        let lines = items.prefix(practiceSummaryLimit).map {
+            String(localized: "• \($0.action.rawValue) · \($0.title) · \($0.target.displayText)")
+        }
+        let more = items.count > practiceSummaryLimit ? [String(localized: "… y \(items.count - practiceSummaryLimit) más.")] : []
+        return ([String(localized: "Modo práctica: \(agentName) no envió nada. Habría hecho \(items.count):")] + lines + more)
             .joined(separator: "\n")
     }
 
@@ -70,8 +72,13 @@ extension Controller {
         let now = Date()
         if lastAuthAlert.map({ now.timeIntervalSince($0) > Self.authAlertEvery }) ?? true {
             lastAuthAlert = now
-            let expired = "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(aiRunner.loginHint(ai.settings.kind))"
-            reply(expired + " Las listas de propuestas y postulaciones quedaron guardadas: responde \"si\" para reintentar la última.")
+            let expired = String(
+                localized: "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(aiRunner.loginHint(ai.settings.kind))")
+            reply(
+                expired
+                    + String(
+                        localized:
+                            " Las listas de propuestas y postulaciones quedaron guardadas: responde \"si\" para reintentar la última."))
         }
     }
 }

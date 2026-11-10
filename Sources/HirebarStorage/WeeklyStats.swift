@@ -3,9 +3,24 @@ import HirebarDomain
 
 public enum WeeklyStats {
     static let fields: [AgentKind: (section: String, items: [([String], String)])] = [
-        .jobs: ("empleo", [(["enviadas"], "postuladas"), (["vistas"], "vistas"), (["respuestas"], "respuestas"), (["entrevistas"], "entrevistas")]),
-        .freelance: ("freelance", [(["enviadas"], "enviadas"), (["leidas"], "leídas"), (["respuestas"], "respuestas"), (["ganados"], "ganados")]),
-        .clients: ("prospeccion", [(["enviados_empresas", "enviados_negocios"], "correos"), (["seguimientos"], "seguimientos"), (["respuestas"], "respuestas"), (["rebotes"], "rebotes")]),
+        .jobs: (
+            "empleo",
+            [(["enviadas"], "postuladas"), (["vistas"], "vistas"), (["respuestas"], "respuestas"), (["entrevistas"], "entrevistas")]
+        ),
+        .freelance: (
+            "freelance",
+            [
+                (["enviadas"], "enviadas"), (["leidas"], String(localized: "leídas")), (["respuestas"], "respuestas"),
+                (["ganados"], "ganados"),
+            ]
+        ),
+        .clients: (
+            "prospeccion",
+            [
+                (["enviados_empresas", "enviados_negocios"], "correos"), (["seguimientos"], "seguimientos"), (["respuestas"], "respuestas"),
+                (["rebotes"], "rebotes"),
+            ]
+        ),
     ]
 
     public static func lines(for kind: AgentKind, week: String = Metrics.weekKey(), source: URL = Metrics.agentURL) -> [String] {

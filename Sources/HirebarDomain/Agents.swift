@@ -66,7 +66,8 @@ public struct AgentTask: Codable, Sendable, Equatable {
     public func dueSlot(at now: Date, calendar: Calendar = .current) -> (day: Date, hour: Int)? {
         for offset in 0...1 {
             guard let day = calendar.date(byAdding: .day, value: -offset, to: calendar.startOfDay(for: now)),
-                  runs(onWeekday: calendar.component(.weekday, from: day)) else { continue }
+                runs(onWeekday: calendar.component(.weekday, from: day))
+            else { continue }
             for hour in hours.sorted(by: >) {
                 guard let start = calendar.date(byAdding: .hour, value: hour, to: day) else { continue }
                 let end = start.addingTimeInterval(TimeInterval(windowHours * 3600))
@@ -80,7 +81,8 @@ public struct AgentTask: Codable, Sendable, Equatable {
         let today = calendar.startOfDay(for: now)
         for offset in 0...7 {
             guard let day = calendar.date(byAdding: .day, value: offset, to: today),
-                  runs(onWeekday: calendar.component(.weekday, from: day)) else { continue }
+                runs(onWeekday: calendar.component(.weekday, from: day))
+            else { continue }
             for hour in hours.sorted() {
                 if let start = calendar.date(byAdding: .hour, value: hour, to: day), start > now { return start }
             }
@@ -91,9 +93,9 @@ public struct AgentTask: Codable, Sendable, Equatable {
     public var scheduleText: String {
         let dayText: String
         if days.contains("todos") {
-            dayText = "todos los días"
+            dayText = String(localized: "todos los días")
         } else if days.contains("habiles") {
-            dayText = "lun a vie"
+            dayText = String(localized: "lun a vie")
         } else {
             dayText = days.joined(separator: ", ")
         }
@@ -113,8 +115,10 @@ public struct AgentSettings: Codable, Sendable {
     public var dailyLimit: Int?
     public var tasks: [AgentTask]
 
-    public init(id: AgentKind, name: String, purpose: String, enabled: Bool = true, autoApprove: Bool = false,
-                searchEveryMinutes: Int? = nil, dailyLimit: Int? = nil, tasks: [AgentTask] = []) {
+    public init(
+        id: AgentKind, name: String, purpose: String, enabled: Bool = true, autoApprove: Bool = false,
+        searchEveryMinutes: Int? = nil, dailyLimit: Int? = nil, tasks: [AgentTask] = []
+    ) {
         self.id = id
         self.name = name
         self.purpose = purpose
@@ -166,42 +170,51 @@ public struct AgentSettings: Codable, Sendable {
     public static func defaults(for kind: AgentKind, legacy config: AgentDefaults = AgentDefaults()) -> AgentSettings {
         switch kind {
         case .jobs:
-            return AgentSettings(id: .jobs, name: "Empleo",
-                                 purpose: "Busca vacantes en portales de empleo, postula y revisa publicaciones en redes.",
-                                 enabled: config.jobsOn, autoApprove: config.autoJobs,
-                                 searchEveryMinutes: config.jobMinutes, dailyLimit: 20,
-                                 tasks: [AgentTask(mode: .social, hours: [8, 10, 12, 14, 16, 18, 20]),
-                                         AgentTask(mode: .portalScanJobs, hours: [9, 13, 17])])
+            return AgentSettings(
+                id: .jobs, name: String(localized: "Empleo"),
+                purpose: String(localized: "Busca vacantes en portales de empleo, postula y revisa publicaciones en redes."),
+                enabled: config.jobsOn, autoApprove: config.autoJobs,
+                searchEveryMinutes: config.jobMinutes, dailyLimit: 20,
+                tasks: [
+                    AgentTask(mode: .social, hours: [8, 10, 12, 14, 16, 18, 20]),
+                    AgentTask(mode: .portalScanJobs, hours: [9, 13, 17]),
+                ])
         case .freelance:
-            return AgentSettings(id: .freelance, name: "Freelance",
-                                 purpose: "Busca proyectos en portales freelance, envía propuestas y hace seguimientos.",
-                                 enabled: config.freelanceOn, autoApprove: config.autoFreelance,
-                                 searchEveryMinutes: config.freelanceMinutes, dailyLimit: 5,
-                                 tasks: [AgentTask(mode: .followUp, hours: [10, 16], windowHours: 3),
-                                         AgentTask(mode: .portalScanFreelance, hours: [9, 13, 17])])
+            return AgentSettings(
+                id: .freelance, name: String(localized: "Freelance"),
+                purpose: String(localized: "Busca proyectos en portales freelance, envía propuestas y hace seguimientos."),
+                enabled: config.freelanceOn, autoApprove: config.autoFreelance,
+                searchEveryMinutes: config.freelanceMinutes, dailyLimit: 5,
+                tasks: [
+                    AgentTask(mode: .followUp, hours: [10, 16], windowHours: 3),
+                    AgentTask(mode: .portalScanFreelance, hours: [9, 13, 17]),
+                ])
         case .clients:
-            return AgentSettings(id: .clients, name: "Clientes",
-                                 purpose: "Busca empresas y negocios que necesitan software y les escribe por correo.",
-                                 enabled: true, autoApprove: config.autoEmails, dailyLimit: 10,
-                                 tasks: [AgentTask(mode: .prospecting, hours: [7], days: ["habiles"], windowHours: 12)])
+            return AgentSettings(
+                id: .clients, name: String(localized: "Clientes"),
+                purpose: String(localized: "Busca empresas y negocios que necesitan software y les escribe por correo."),
+                enabled: true, autoApprove: config.autoEmails, dailyLimit: 10,
+                tasks: [AgentTask(mode: .prospecting, hours: [7], days: ["habiles"], windowHours: 12)])
         case .content:
-            return AgentSettings(id: .content, name: "Contenido",
-                                 purpose: "Prepara publicaciones para redes; nada se publica sin tu aprobación.",
-                                 enabled: true, autoApprove: false,
-                                 tasks: [AgentTask(mode: .linkedInDraft, hours: [9], days: ["todos"], windowHours: 12)])
+            return AgentSettings(
+                id: .content, name: String(localized: "Contenido"),
+                purpose: String(localized: "Prepara publicaciones para redes; nada se publica sin tu aprobación."),
+                enabled: true, autoApprove: false,
+                tasks: [AgentTask(mode: .linkedInDraft, hours: [9], days: ["todos"], windowHours: 12)])
         case .profile:
-            return AgentSettings(id: .profile, name: "Perfil",
-                                 purpose: "Mantiene tu perfil al día y regenera tus hojas de vida cuando se lo pides.",
-                                 enabled: true, autoApprove: false)
+            return AgentSettings(
+                id: .profile, name: String(localized: "Perfil"),
+                purpose: String(localized: "Mantiene tu perfil al día y regenera tus hojas de vida cuando se lo pides."),
+                enabled: true, autoApprove: false)
         case .analyst:
-            return AgentSettings(id: .analyst, name: "Analista",
-                                 purpose: "Entrega el análisis semanal con las métricas de cada agente; no cambia nada.",
-                                 enabled: true, autoApprove: false,
-                                 tasks: [AgentTask(mode: .weeklyReport, hours: [18], days: ["dom"], windowHours: 30)])
+            return AgentSettings(
+                id: .analyst, name: String(localized: "Analista"),
+                purpose: String(localized: "Entrega el análisis semanal con las métricas de cada agente; no cambia nada."),
+                enabled: true, autoApprove: false,
+                tasks: [AgentTask(mode: .weeklyReport, hours: [18], days: ["dom"], windowHours: 30)])
         }
     }
 }
-
 
 public struct AgentDefaults: Sendable {
     public var jobsOn = true

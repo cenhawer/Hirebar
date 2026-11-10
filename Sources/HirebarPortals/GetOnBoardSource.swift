@@ -75,8 +75,11 @@ public struct GetOnBoardSource: JobSource {
                     ((((attributes["company"] as? [String: Any])?["data"] as? [String: Any])?["attributes"]
                         as? [String: Any])?["name"] as? String) ?? ""
                 let applicants = (attributes["applications_count"] as? NSNumber)?.intValue ?? 0
-                var detail = "Get on Board · \(company) · \(TextTools.ageText(age)) · \(applicants) postulantes · remoto"
-                if maxSalary > 0 { detail += " · USD \(minSalary)–\(maxSalary)" }
+                var detail = String(
+                    localized: """
+                        Get on Board · \(company) · \(TextTools.ageText(age)) · \(applicants) postulantes · remoto
+                        """)
+                if maxSalary > 0 { detail += String(localized: " · USD \(minSalary)–\(maxSalary)") }
                 let link = (job["links"] as? [String: Any])?["public_url"] as? String ?? "https://www.getonbrd.com/jobs/\(slug)"
                 hits.append(Hit(id: "gob:" + slug, platform: name, fit: fit, title: title, url: link, detail: detail, score: age))
             }

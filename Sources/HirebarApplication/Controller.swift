@@ -42,7 +42,7 @@ public final class Controller {
     nonisolated static let authAlertEvery: TimeInterval = 3600
 
     public var onStatusChange: ((String) -> Void)?
-    public private(set) var status = "en espera"
+    public private(set) var status = String(localized: "en espera")
     var queue: [(Batch, [BatchItem])] = []
     var running: AIRun?
     var runningBatch: String?
@@ -100,11 +100,11 @@ public final class Controller {
 
     func approve(_ found: Batch?, picks: [Int], approvedBy: Approver = .person) {
         guard var batch = found else {
-            reply("No tengo listas pendientes de las últimas 24 horas.")
+            reply(String(localized: "No tengo listas pendientes de las últimas 24 horas."))
             return
         }
         guard batch.status == .pending else {
-            reply("Esa lista ya está \(batch.status.rawValue).")
+            reply(String(localized: "Esa lista ya está \(batch.status.rawValue)."))
             return
         }
         let chosen =
@@ -112,7 +112,7 @@ public final class Controller {
             ? batch.items
             : picks.filter { $0 >= 1 && $0 <= batch.items.count }.map { batch.items[$0 - 1] }
         guard !chosen.isEmpty else {
-            reply("Esos números no están en la lista (van del 1 al \(batch.items.count)).")
+            reply(String(localized: "Esos números no están en la lista (van del 1 al \(batch.items.count))."))
             return
         }
         guard let ready = approvedWithinQuota(chosen, from: batch, approvedBy: approvedBy) else { return }
@@ -125,7 +125,7 @@ public final class Controller {
         if running == nil {
             runNext()
         } else {
-            reply("Anotado: \(ai.capitalizedName) está terminando otra lista y sigue con esta.")
+            reply(String(localized: "Anotado: \(ai.capitalizedName) está terminando otra lista y sigue con esta."))
         }
     }
 
@@ -134,19 +134,19 @@ public final class Controller {
             let today = Date()
             let accounts = stores.contentAccounts.enabled().filter { manual || $0.runs(on: today) }
             if accounts.isEmpty && manual {
-                reply("No tienes cuentas de contenido prendidas. Agrégalas en Ajustes → Cuentas de contenido.")
+                reply(String(localized: "No tienes cuentas de contenido prendidas. Agrégalas en Ajustes → Cuentas de contenido."))
             }
             for item in accounts { runScheduled(mode, manual: manual, account: item.id) }
             return
         }
         if Scheduler.isIdlePortalScan(mode, portals: stores.portals) {
             let agentName = stores.agents.load(AgentKind.owner(of: mode)).name
-            if manual { reply("No tienes portales propios activos. Agrégalos en Ajustes → \(agentName).") }
+            if manual { reply(String(localized: "No tienes portales propios activos. Agrégalos en Ajustes → \(agentName).")) }
             return
         }
         let alreadyRunning = runningMode == mode && runningAccount == account
         if alreadyRunning || queue.contains(where: { $0.0.mode == mode && $0.0.account == account }) {
-            if manual { reply("Eso ya está en curso.") }
+            if manual { reply(String(localized: "Eso ya está en curso.")) }
             return
         }
         let batch = Batch(mode: mode, status: .running, manual: manual, account: account)
@@ -160,20 +160,25 @@ public final class Controller {
         } else {
             queue.append((batch, []))
         }
-        let accountTitle = stores.contentAccounts.find(account)?.title ?? "tu cuenta"
+        let accountTitle = stores.contentAccounts.find(account)?.title ?? String(localized: "tu cuenta")
         if manual {
             switch mode {
-            case .weeklyReport: reply("Preparando el informe semanal; te lo mando al terminar.")
+            case .weeklyReport: reply(String(localized: "Preparando el informe semanal; te lo mando al terminar."))
             case .linkedInDraft:
                 reply(
-                    "Armando la publicación para \(accountTitle) con sus imágenes; te la mando antes de publicar nada."
-                        + (running == nil ? "" : " Empieza apenas termine lo que está corriendo ahora."))
-            case .linkedInPublish: reply("Publicando en \(accountTitle) la publicación que aprobaste; te confirmo al terminar.")
-            case .followUp: reply("Revisando seguimientos ahora; te aviso si escribo a algún cliente.")
-            case .prospectingSend: reply("Enviando los correos aprobados; te confirmo al terminar.")
-            case .social: reply("Buscando vacantes publicadas en redes; te aviso si encuentro algo.")
-            case .prospecting: reply("Buscando empresas y negocios para escribirles; te mando la lista al terminar.")
-            case .profileUpdate: reply("Actualizando tu perfil y tus hojas de vida; te mando los PDF al terminar.")
+                    String(
+                        localized: """
+                            Armando la publicación para \(accountTitle) con sus imágenes; te la mando antes de publicar \
+                            nada.
+                            """)
+                        + (running == nil ? "" : String(localized: " Empieza apenas termine lo que está corriendo ahora.")))
+            case .linkedInPublish:
+                reply(String(localized: "Publicando en \(accountTitle) la publicación que aprobaste; te confirmo al terminar."))
+            case .followUp: reply(String(localized: "Revisando seguimientos ahora; te aviso si escribo a algún cliente."))
+            case .prospectingSend: reply(String(localized: "Enviando los correos aprobados; te confirmo al terminar."))
+            case .social: reply(String(localized: "Buscando vacantes publicadas en redes; te aviso si encuentro algo."))
+            case .prospecting: reply(String(localized: "Buscando empresas y negocios para escribirles; te mando la lista al terminar."))
+            case .profileUpdate: reply(String(localized: "Actualizando tu perfil y tus hojas de vida; te mando los PDF al terminar."))
             default: break
             }
         }
@@ -194,8 +199,9 @@ public final class Controller {
             if !batch.items.isEmpty && batch.created > since && batch.mode.hasItems {
                 batch.status = .pending
                 stores.batches.upsert(batch)
-                let title = "Quedaron sin terminar estas \(Self.noun(for: batch.mode)) (la Mac se durmió o se cerró la app)"
-                let footer = "Responde \"si\" para reintentar, \"si 1 3\" para elegir o \"no\" para descartar."
+                let title = String(
+                    localized: "Quedaron sin terminar estas \(Self.noun(for: batch.mode)) (la Mac se durmió o se cerró la app)")
+                let footer = String(localized: "Responde \"si\" para reintentar, \"si 1 3\" para elegir o \"no\" para descartar.")
                 notifier.announce(batch, title: title, footer: footer)
             } else {
                 batch.status = .interrupted

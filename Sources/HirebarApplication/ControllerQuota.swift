@@ -7,8 +7,8 @@ extension Controller {
     func pausedNotice(_ mode: Mode, _ pause: AgentPause) -> String {
         let kind = AgentKind.owner(of: mode)
         let name = stores.agents.load(kind).name
-        return "\(name) está en pausa desde la lista \(pause.batch) porque algo no coincidió con lo aprobado. "
-            + "No ejecuto nada de \(name) hasta que escribas \"reanudar \(kind.rawValue)\"."
+        return String(localized: "\(name) está en pausa desde la lista \(pause.batch) porque algo no coincidió con lo aprobado. ")
+            + String(localized: "No ejecuto nada de \(name) hasta que escribas \"reanudar \(kind.rawValue)\".")
     }
 
     func approvedWithinQuota(_ chosen: [BatchItem], from batch: Batch, approvedBy: Approver) -> [BatchItem]? {
@@ -28,14 +28,22 @@ extension Controller {
                 dailyLimit: agentSettings.dailyLimit
             )
         } catch {
-            reply("No pude guardar la copia de lo aprobado, así que no ejecuto la lista: \(error.localizedDescription)")
+            reply(
+                String(
+                    localized: """
+                        No pude guardar la copia de lo aprobado, así que no ejecuto la lista: \
+                        \(error.localizedDescription)
+                        """))
             return nil
         }
         if !plan.held.isEmpty { holdForPerson(plan.held, from: batch) }
         guard !plan.now.isEmpty else {
             if !plan.held.isEmpty { remove(plan.held.map(\.proposal.id), from: batch.id) }
             if plan.held.isEmpty {
-                reply("Hoy ya se cumplió el cupo diario de \(agentSettings.name). La lista sigue pendiente: apruébala mañana.")
+                reply(
+                    String(
+                        localized: "Hoy ya se cumplió el cupo diario de \(agentSettings.name). La lista sigue pendiente: apruébala mañana.")
+                )
             }
             return nil
         }
@@ -53,13 +61,24 @@ extension Controller {
         do {
             try stores.executionState.saveProposals(held.map(\.proposal), batch: rest.id)
         } catch {
-            reply("No pude separar los mensajes que necesitan tu revisión; quedan en la lista \(batch.id): \(error.localizedDescription)")
+            reply(
+                String(
+                    localized:
+                        """
+                        No pude separar los mensajes que necesitan tu revisión; quedan en la lista \(batch.id): \
+                        \(error.localizedDescription)
+                        """
+                ))
             return
         }
         stores.batches.upsert(rest)
         notifier.announce(
-            rest, title: "Estos mensajes no se envían solos",
-            footer: "Revisa el texto y responde \"si\" para enviarlos, \"si 1 3\" para elegir o \"no\" para descartar.")
+            rest, title: String(localized: "Estos mensajes no se envían solos"),
+            footer: String(
+                localized: """
+                    Revisa el texto y responde \"si\" para enviarlos, \"si 1 3\" para elegir o \"no\" para \
+                    descartar.
+                    """))
     }
 
     func remove(_ ids: [String], from batchId: String) {
@@ -80,11 +99,18 @@ extension Controller {
         do {
             if !proposals.isEmpty { try stores.executionState.saveProposals(proposals, batch: rest.id) }
         } catch {
-            reply("Hoy queda cupo para \(count). No pude guardar los otros \(items.count) para mañana: vuelve a pedirlos cuando aparezcan.")
+            reply(
+                String(
+                    localized:
+                        """
+                        Hoy queda cupo para \(count). No pude guardar los otros \(items.count) para mañana: vuelve a \
+                        pedirlos cuando aparezcan.
+                        """
+                ))
             return
         }
         stores.batches.upsert(rest)
-        reply("Hoy queda cupo para \(count): ejecuto esos y dejo \(items.count) en una lista pendiente para mañana.")
+        reply(String(localized: "Hoy queda cupo para \(count): ejecuto esos y dejo \(items.count) en una lista pendiente para mañana."))
     }
 
     func prepareScheduledExecution(_ batch: Batch, manual: Bool) -> Bool {
@@ -97,7 +123,7 @@ extension Controller {
             let proposal = stores.contentAccounts.find(batch.account).flatMap(ExecutionApprovals.publishProposal)
         else {
             log.write("\(batch.mode.rawValue): no se ejecuta sin una lista aprobada")
-            if manual { reply("Eso solo se ejecuta sobre una lista que hayas aprobado; no ejecuto nada.") }
+            if manual { reply(String(localized: "Eso solo se ejecuta sobre una lista que hayas aprobado; no ejecuto nada.")) }
             return false
         }
         let agentSettings = stores.agents.load(AgentKind.owner(of: batch.mode))
@@ -107,13 +133,13 @@ extension Controller {
             guard !plan.now.isEmpty else {
                 reply(
                     plan.held.isEmpty
-                        ? "Hoy ya se cumplió el cupo diario de \(agentSettings.name); no publico nada más hoy."
-                        : "Las publicaciones solo salen cuando respondes \"publica\".")
+                        ? String(localized: "Hoy ya se cumplió el cupo diario de \(agentSettings.name); no publico nada más hoy.")
+                        : String(localized: "Las publicaciones solo salen cuando respondes \"publica\"."))
                 return false
             }
             return true
         } catch {
-            reply("No pude guardar la copia de lo aprobado, así que no ejecuto nada: \(error.localizedDescription)")
+            reply(String(localized: "No pude guardar la copia de lo aprobado, así que no ejecuto nada: \(error.localizedDescription)"))
             return false
         }
     }

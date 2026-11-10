@@ -21,18 +21,18 @@ public final class FreelanceRadar: Radar {
     public override func checkNow() {
         let config = stores.config.load()
         guard config.freelanceOn, stores.agents.load(.freelance).enabled else {
-            setStatus("apagado")
+            setStatus(String(localized: "apagado"))
             return
         }
         let active = portals.freelance.filter { config.isEnabled($0.id) && !stores.quotas.exhausted($0.id) }
         guard !active.isEmpty else {
-            setStatus("sin contactos ni ofertas hasta que se renueven")
+            setStatus(String(localized: "sin contactos ni ofertas hasta que se renueven"))
             return
         }
         guard beginCheck() else { return }
         let skipped = portals.freelance
             .filter { config.isEnabled($0.id) && stores.quotas.exhausted($0.id) }
-            .map { "\($0.name) sin cupos" }
+            .map { String(localized: "\($0.name) sin cupos") }
         let skip = Set(seen().keys)
         let profile = stores.profile.effectiveSearch()
         Task {
@@ -66,11 +66,11 @@ public final class FreelanceRadar: Radar {
         let hour = TextTools.shortTime()
         let suffix = note.isEmpty ? "" : " (\(note))"
         guard !hits.isEmpty else {
-            setStatus("\(hour), nada nuevo\(suffix)")
+            setStatus(String(localized: "\(hour), nada nuevo\(suffix)"))
             log.write("Freelance: nada nuevo\(suffix)")
             return
         }
-        setStatus("\(hour), \(hits.count) avisado(s)\(suffix)")
+        setStatus(String(localized: "\(hour), \(hits.count) avisado(s)\(suffix)"))
         stores.metrics.bump(.freelance, "avisados", hits.count)
         stores.metrics.bump(.freelance, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
         log.write("Freelance: \(hits.count) proyecto(s) avisado(s)")
@@ -78,14 +78,15 @@ public final class FreelanceRadar: Radar {
         let batch = Batch(mode: .freelance, items: hits.map(BatchItem.init), status: .pending)
         stores.batches.upsert(batch)
         let auto = stores.agents.load(.freelance).autoApprove
-        let title = "Radar freelance: \(hits.count) proyecto(s) para ti" + (auto ? " (envío automático)" : "")
+        let title =
+            String(localized: "Radar freelance: \(hits.count) proyecto(s) para ti") + (auto ? String(localized: " (envío automático)") : "")
         let ai = controller?.ai ?? AI(settings: stores.config.load().aiEngine)
-        let quotas = "Cupos: \(stores.quotas.summary())\n\n"
+        let quotas = String(localized: "Cupos: \(stores.quotas.summary())\n\n")
         let footer =
             auto
-            ? quotas + "\(ai.capitalizedName) ya está analizando y enviando las propuestas; te aviso al terminar."
-            : quotas + "Responde \"si\" y \(ai.name) analiza la competencia, redacta y envía las propuestas. "
-                + "\"si 1 3\" para elegir, \"no\" para descartar."
+            ? quotas + String(localized: "\(ai.capitalizedName) ya está analizando y enviando las propuestas; te aviso al terminar.")
+            : quotas + String(localized: "Responde \"si\" y \(ai.name) analiza la competencia, redacta y envía las propuestas. ")
+                + String(localized: "\"si 1 3\" para elegir, \"no\" para descartar.")
         controller?.notifier.announce(batch, title: title, footer: footer)
         if auto {
             Task { [weak self] in self?.controller?.autoApprove(self?.stores.batches.find(id: batch.id) ?? batch) }

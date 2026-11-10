@@ -30,9 +30,10 @@ public struct FreelancerSource: ListingSource {
                 URLQueryItem(name: "upgrade_details", value: "true"),
                 URLQueryItem(name: "languages[]", value: "es"),
             ]
-            if let url = components.url, let data = await fetcher.data(url),
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let result = json["result"] as? [String: Any] {
+            var data: Data?
+            if let url = components.url { data = await fetcher.data(url) }
+            let json = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            if let result = json?["result"] as? [String: Any] {
                 for project in (result["projects"] as? [[String: Any]]) ?? [] {
                     if let id = (project["id"] as? NSNumber)?.intValue { projects[id] = project }
                 }
@@ -42,7 +43,8 @@ public struct FreelancerSource: ListingSource {
         }
         let now = now().timeIntervalSince1970
         var outcome = SourceResult()
-        var recent = 0, matching = 0
+        var recent = 0
+        var matching = 0
         for (projectId, project) in projects {
             guard !skip.contains("f:\(projectId)") else { continue }
             let submitted = (project["time_submitted"] as? NSNumber)?.doubleValue ?? 0
@@ -56,8 +58,11 @@ public struct FreelancerSource: ListingSource {
             let title = project["title"] as? String ?? ""
             let description = project["description"] as? String ?? (project["preview_description"] as? String ?? "")
             let jobs = ((project["jobs"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }
-            guard let fit = FreelanceClassifier.classify(head: "\(title) \(jobs.joined(separator: " "))", body: description,
-                                                         title: title, profile: profile.freelance) else { continue }
+            guard
+                let fit = FreelanceClassifier.classify(
+                    head: "\(title) \(jobs.joined(separator: " "))", body: description,
+                    title: title, profile: profile.freelance)
+            else { continue }
             matching += 1
             let stats = project["bid_stats"] as? [String: Any] ?? [:]
             let bids = (stats["bid_count"] as? NSNumber)?.intValue ?? 0
@@ -70,19 +75,20 @@ public struct FreelancerSource: ListingSource {
             if hourly && top < profile.freelance.minHourlyUSD { continue }
             if !hourly && top < profile.freelance.minFixedUSD { continue }
             var verified = false
-            if let owner = (project["owner_id"] as? NSNumber)?.intValue,
-               let user = users["\(owner)"] as? [String: Any],
-               let state = user["status"] as? [String: Any] {
+            let owner = (project["owner_id"] as? NSNumber)?.intValue
+            if let state = owner.flatMap({ (users["\($0)"] as? [String: Any])?["status"] as? [String: Any] }) {
                 verified = (state["payment_verified"] as? Bool) ?? false
             }
             let average = ((stats["bid_avg"] as? NSNumber)?.doubleValue ?? 0) * rate
             let seo = project["seo_url"] as? String ?? "\(projectId)"
             let range = maxUSD > 0 ? "USD \(Int(minUSD))–\(Int(maxUSD))" : "USD \(Int(minUSD))+"
-            var detail = "Freelancer · \(TextTools.ageText(age)) · \(bids) ofertas (prom. USD \(Int(average))) · \(range)"
-            if hourly { detail += " por hora" }
-            if verified { detail += " · pago verificado" }
-            let hit = Hit(id: "f:\(projectId)", platform: name, fit: fit, title: title,
-                          url: "https://www.freelancer.com/projects/" + seo, detail: detail, score: bids)
+            var detail = String(
+                localized: "Freelancer · \(TextTools.ageText(age)) · \(bids) ofertas (prom. USD \(Int(average))) · \(range)")
+            if hourly { detail += String(localized: " por hora") }
+            if verified { detail += String(localized: " · pago verificado") }
+            let hit = Hit(
+                id: "f:\(projectId)", platform: name, fit: fit, title: title,
+                url: "https://www.freelancer.com/projects/" + seo, detail: detail, score: bids)
             if fit == .strong && bids <= 80 {
                 outcome.hits.append(hit)
             } else if fit == .stretch && bids <= 60 {
@@ -91,7 +97,8 @@ public struct FreelancerSource: ListingSource {
                 outcome.backup.append(hit.with(fit: .stretch, score: bids + (verified ? 0 : 10)))
             }
         }
-        let found = "\(projects.count) proyectos leídos, \(recent) de menos de 24 h y no vistos, \(matching) de tu perfil"
+        let found = String(
+            localized: "\(projects.count) proyectos leídos, \(recent) de menos de 24 h y no vistos, \(matching) de tu perfil")
         log.write("Freelance · Freelancer: \(found), \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo")
         return outcome
     }

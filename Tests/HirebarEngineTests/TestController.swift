@@ -7,8 +7,9 @@ import HirebarTelegram
 
 extension Controller {
     static func forTests(aiRunner: AIRunner = TestAIRunner(), media: MediaRenderer = TestMediaRenderer()) -> Controller {
-        Controller(
-            telegram: Telegram(secrets: NoTestSecrets()), stores: .files, clock: TestClock(), aiRunner: aiRunner, media: media,
+        let adapters = EngineAdapters(
+            chat: TestChatChannel(), desktop: TestDesktopNotifications(), clock: TestClock(), aiRunner: aiRunner, media: media,
             resources: .bundled())
+        return Controller(stores: .files, adapters: adapters)
     }
 }

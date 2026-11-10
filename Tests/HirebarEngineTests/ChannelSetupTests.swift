@@ -31,7 +31,7 @@ final class ChannelSetupTests: XCTestCase {
     }
 
     func makeSetup(settings: ChannelSettings?) -> ChannelSetup {
-        let telegram = ChannelTelegram(
+        let telegram = TestChatChannel(
             isConfigured: { true },
             tokenRejected: { [unowned self] in self.tokenRejected },
             send: { [unowned self] text, chat in self.sent.append((text, chat)) },
@@ -39,7 +39,7 @@ final class ChannelSetupTests: XCTestCase {
             removeToken: { [unowned self] in self.tokenSaved },
             start: {}
         )
-        return ChannelSetup(settings: settings, telegram: telegram, configs: FileConfigRepository(), clock: clock)
+        return ChannelSetup(settings: settings, chat: telegram, configs: FileConfigRepository(), clock: clock)
     }
 
     override func setUpWithError() throws {

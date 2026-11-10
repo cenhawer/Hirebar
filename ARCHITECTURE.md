@@ -197,7 +197,9 @@ por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. La
 temporizadores entran por `Clock`. La IA corre a través de `AIRunner`: `ProcessAIRunner` arma el proceso por
 perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos antes de entregar el
 resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
-radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. El paso 3 de la spec
+radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. Los recursos del
+bundle (`destinos.json`, `comandos.json`, `canal.json`) se validan en la aplicación y llegan al
+motor en `EngineResources`. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

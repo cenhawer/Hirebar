@@ -18,6 +18,8 @@ final class TestAIRunner: AIRunner {
         return .success(Run())
     }
 
+    func loginHint(_ kind: AIEngineKind) -> String { "" }
+
     func finish(_ result: AIRunResult) {
         guard !completions.isEmpty else { return }
         completions.removeFirst()(result)

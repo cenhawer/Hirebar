@@ -19,6 +19,22 @@ final class SourceShapeTests: XCTestCase {
         }
     }
 
+    func testPersonFacingTextGoesThroughTheStringCatalog() throws {
+        let sinks = try NSRegularExpression(
+            pattern: [
+                #"(reply|tell|setStatus|askPerson|\.problem|\.failed)\(""#,
+                #"(message|problem|messageText|informativeText) = "(?!Hirebar")"#,
+                #"addButton\(withTitle: ""#, #"Problem\(message: ""#,
+            ].joined(separator: "|"))
+        for file in sourceFiles() {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            for line in source.split(separator: "\n").map(String.init) {
+                let range = NSRange(line.startIndex..., in: line)
+                XCTAssertNil(sinks.firstMatch(in: line, range: range), "\(file.lastPathComponent): \(line)")
+            }
+        }
+    }
+
     func testSourceFilesCarryNoComments() throws {
         for file in sourceFiles() {
             let source = try String(contentsOf: file, encoding: .utf8)

@@ -49,6 +49,7 @@ jobs:
           python3 -m json.tool Resources/herramientas.json > /dev/null
           python3 -m json.tool Resources/comandos.json > /dev/null
           python3 -m json.tool Resources/motor.json > /dev/null
+          python3 -m json.tool Resources/perfil-busqueda.json > /dev/null
           python3 -m json.tool Resources/Localizable.xcstrings > /dev/null
 
   build:

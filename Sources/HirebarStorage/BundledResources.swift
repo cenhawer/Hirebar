@@ -47,6 +47,7 @@ extension EngineResources {
     public static func bundled(in bundle: Bundle = .main) throws -> EngineResources {
         EngineResources(
             targetRules: TargetRulesFile.bundled(in: bundle), commands: try? CommandVocabularyFile.bundled(in: bundle),
-            channel: try? ChannelSettings.bundled(in: bundle), policy: try EnginePolicy.bundled(in: bundle))
+            channel: try? ChannelSettings.bundled(in: bundle), policy: try EnginePolicy.bundled(in: bundle),
+            searchDefaults: try SearchProfile.bundledDefaults(in: bundle))
     }
 }

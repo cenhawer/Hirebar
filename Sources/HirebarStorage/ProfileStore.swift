@@ -80,8 +80,8 @@ public enum ProfileEditor {
 }
 
 extension SearchProfile {
-    public static func loadEffective() -> SearchProfile {
-        load().applying(Profile.load())
+    public static func loadEffective(defaults: SearchProfile) -> SearchProfile {
+        load(defaults: defaults).applying(Profile.load())
     }
 }
 

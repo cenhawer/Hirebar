@@ -79,8 +79,13 @@ public struct EngineResources: Sendable {
     public let commands: CommandVocabulary?
     public let channel: ChannelSettings?
     public let policy: EnginePolicy
+    public let searchDefaults: SearchProfile
 
-    public init(targetRules: TargetRules, commands: CommandVocabulary?, channel: ChannelSettings?, policy: EnginePolicy) {
+    public init(
+        targetRules: TargetRules, commands: CommandVocabulary?, channel: ChannelSettings?, policy: EnginePolicy,
+        searchDefaults: SearchProfile
+    ) {
+        self.searchDefaults = searchDefaults
         self.targetRules = targetRules
         self.commands = commands
         self.channel = channel

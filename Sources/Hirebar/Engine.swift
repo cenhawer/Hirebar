@@ -16,7 +16,7 @@ public final class Engine {
     public let scheduler: Scheduler
 
     public init(resources: EngineResources) {
-        let stores = Repositories.files
+        let stores = Repositories.files(searchDefaults: resources.searchDefaults)
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore(), offsets: FileRunStateRepository())
         let adapters = EngineAdapters(

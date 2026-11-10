@@ -188,6 +188,27 @@ Quedan guardadas en `workspace/contenido/cuentas.json`.
 
 **Guardar** (⌘S) aplica desde la próxima búsqueda. **Descartar** deshace lo que no guardaste. **Mostrar archivo** te lleva al JSON de ese agente.
 
+## Qué guarda Hirebar y cuándo lo borra
+
+Todo vive en tu Mac, en `~/Library/Application Support/Hirebar/`. Cada domingo a partir de las 19 h,
+si no hay nada corriendo, Hirebar borra lo vencido:
+
+| Qué | Se borra a los |
+|---|---|
+| Grabaciones de tu voz (`grabacion.*`, `mi-voz.*`) | 14 días |
+| Videos armados (`reel.mp4`, `vista-previa.mp4`) | 30 días |
+| Salidas y registros de cada ejecución de la IA | 30 días |
+| Listas de Telegram | 14 días |
+| Borradores y listas de correos que descartaste | 90 días |
+| Seguimientos terminados | 90 días |
+| Eventos anotados | 180 días |
+| Informes | 1 año |
+| Métricas | las últimas 26 semanas |
+| `postulaciones.md` y `historial-propuestas.md` | se recortan a la mitad al pasar de 3 MB |
+
+Los guiones, tu perfil, tus hojas de vida y los borradores vigentes no se borran. Los plazos están en
+`Resources/retencion.json` dentro de la app.
+
 ## Comandos de Telegram
 
 | Para | Escribe |

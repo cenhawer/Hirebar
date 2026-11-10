@@ -6,7 +6,7 @@ import HirebarStorage
 import HirebarTelegram
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class AutoSendTests: XCTestCase {
     var controller: Controller!

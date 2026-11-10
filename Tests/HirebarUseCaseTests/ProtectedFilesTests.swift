@@ -7,7 +7,7 @@ import HirebarTelegram
 import XCTest
 
 @testable import HirebarAI
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class ProtectedFilesTests: XCTestCase {
     var folder: URL!

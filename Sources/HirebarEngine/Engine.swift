@@ -19,9 +19,10 @@ public final class Engine {
         let stores = Repositories.files
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore())
-        controller = Controller(
-            telegram: telegram, stores: stores, clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer(),
+        let adapters = EngineAdapters(
+            chat: telegram, desktop: MacDesktopNotifications(), clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer(),
             resources: .bundled())
+        controller = Controller(stores: stores, adapters: adapters)
         let portals = PortalAccess.bundled
         jobRadar = JobRadar(stores: stores, clock: clock, portals: portals)
         freelanceRadar = FreelanceRadar(stores: stores, clock: clock, portals: portals)

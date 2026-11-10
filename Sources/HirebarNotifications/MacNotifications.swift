@@ -52,3 +52,11 @@ public enum MacNotifications {
         return settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
     }
 }
+
+public struct MacDesktopNotifications: DesktopNotifications {
+    public init() {}
+
+    public func show(title: String, body: String) {
+        MacNotifications.show(title: title, body: body)
+    }
+}

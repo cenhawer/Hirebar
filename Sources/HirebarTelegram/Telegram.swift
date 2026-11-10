@@ -4,27 +4,6 @@ import HirebarDomain
 
 private let log = Log(.telegram)
 
-public struct TelegramMessage: Sendable {
-    public let chatId: Int64
-    public let text: String
-    public let replyTo: Int?
-    public let callbackId: String?
-    public var sender: ChannelSender?
-    /// Nota de voz o archivo de audio que mandó la persona (identificador de Telegram para descargarlo).
-    public var audioFileId: String? = nil
-    /// Extensión del audio recibido (oga para notas de voz).
-    public var audioExtension: String = "oga"
-    public var audioBytes: Int?
-    public var audioSeconds: Int?
-}
-
-public enum BotCheck: Equatable, Sendable {
-    case valid(username: String)
-    case rejected
-    case unreachable
-    case notSaved
-}
-
 public final class Telegram: @unchecked Sendable {
     let secrets: SecretStore
 
@@ -38,7 +17,7 @@ public final class Telegram: @unchecked Sendable {
     static let unauthorizedCode = 401
     static let notFoundCode = 404
 
-    public var onMessage: ((TelegramMessage) -> Void)?
+    public var onMessage: ((ChatMessage) -> Void)?
     private var polling = false
     private let lock = NSLock()
     private var cachedToken: String?
@@ -170,11 +149,11 @@ public final class Telegram: @unchecked Sendable {
         }
     }
 
-    public static func parse(_ update: [String: Any]) -> TelegramMessage? {
+    public static func parse(_ update: [String: Any]) -> ChatMessage? {
         if let callback = update["callback_query"] as? [String: Any] {
             let message = callback["message"] as? [String: Any]
             let chat = message?["chat"] as? [String: Any]
-            var result = TelegramMessage(
+            var result = ChatMessage(
                 chatId: (chat?["id"] as? NSNumber)?.int64Value ?? 0,
                 text: callback["data"] as? String ?? "",
                 replyTo: (message?["message_id"] as? NSNumber)?.intValue,
@@ -192,7 +171,7 @@ public final class Telegram: @unchecked Sendable {
             let name = (audio["file_name"] as? String) ?? ""
             let ext = message["voice"] != nil ? "oga" : (message["video_note"] != nil ? "mp4"
                 : (name.contains(".") ? String(name.split(separator: ".").last ?? "m4a") : "m4a"))
-            var result = TelegramMessage(
+            var result = ChatMessage(
                 chatId: chatId, text: message["caption"] as? String ?? "", replyTo: reply?.intValue, callbackId: nil)
             result.audioFileId = fileId
             result.audioExtension = ext
@@ -202,7 +181,7 @@ public final class Telegram: @unchecked Sendable {
             return result
         }
         guard let text = message["text"] as? String else { return nil }
-        var result = TelegramMessage(chatId: chatId, text: text, replyTo: reply?.intValue, callbackId: nil)
+        var result = ChatMessage(chatId: chatId, text: text, replyTo: reply?.intValue, callbackId: nil)
         result.sender = from
         return result
     }
@@ -219,7 +198,7 @@ public final class Telegram: @unchecked Sendable {
             isPrivateChat: (chat?["type"] as? String) == privateChatType, sentAt: sentAt, viaButton: viaButton)
     }
 
-    public func send(_ text: String, chatId: Int64, buttons: [[(String, String)]] = [], completion: ((Int?) -> Void)? = nil) {
+    public func send(_ text: String, chatId: Int64, buttons: ChatButtons = [], completion: ((Int?) -> Void)? = nil) {
         var params: [String: Any] = ["chat_id": chatId, "text": String(text.prefix(4000)),
                                      "disable_web_page_preview": true]
         if !buttons.isEmpty {
@@ -322,5 +301,11 @@ public final class Telegram: @unchecked Sendable {
         let params: [String: Any] = ["chat_id": chatId, "message_id": messageId,
                                      "reply_markup": ["inline_keyboard": [[String: String]]()]]
         DispatchQueue.global(qos: .utility).async { [weak self] in _ = self?.call("editMessageReplyMarkup", params) }
+    }
+}
+
+extension Telegram: ChatChannel {
+    public func checkToken(_ token: String) async -> BotCheck {
+        await Self.check(token: token)
     }
 }

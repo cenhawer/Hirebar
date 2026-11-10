@@ -45,9 +45,9 @@ extension Controller {
     static let missingVocabulary =
         "Faltan los comandos dentro de la app (comandos.json). Vuelve a instalarla con scripts/bundle.sh --install."
 
-    func handle(_ message: TelegramMessage) {
+    func handle(_ message: ChatMessage) {
         guard admits(message) else { return }
-        if let callback = message.callbackId { telegram.answerCallback(callback, text: Self.callbackAnswer) }
+        if let callback = message.callbackId { chat.answerCallback(callback, text: Self.callbackAnswer) }
         guard let parser = commandParser else {
             reply(Self.missingVocabulary)
             return
@@ -175,14 +175,14 @@ extension Controller {
 
     static let pairingReply = "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos."
 
-    func admits(_ message: TelegramMessage) -> Bool {
+    func admits(_ message: ChatMessage) -> Bool {
         guard let sender = message.sender else {
             log.write("Telegram: ignorado un mensaje sin remitente")
             return false
         }
         guard stores.config.load().channelOwner != nil else {
             if channel.offer(sender, text: message.text) {
-                telegram.send(Self.pairingReply, chatId: sender.chatId)
+                chat.send(Self.pairingReply, chatId: sender.chatId)
             } else {
                 log.write("Telegram: ignorado un mensaje fuera de la vinculación")
             }
@@ -320,7 +320,7 @@ extension Controller {
         target.status = .discarded
         stores.batches.upsert(target)
         stores.metrics.bump(target.mode, "listas_descartadas")
-        if let id = target.messageId { telegram.removeButtons(chatId: chatId, messageId: id) }
+        if let id = target.messageId { chat.removeButtons(chatId: chatId, messageId: id) }
         reply("Descartada. Sigo buscando.")
     }
 
@@ -527,7 +527,7 @@ extension Controller {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
             let limit = self?.media.maxAudioBytes()
-            guard self?.telegram.download(fileId: fileId, to: file, maxBytes: limit) == true else {
+            guard self?.chat.download(fileId: fileId, to: file, maxBytes: limit) == true else {
                 DispatchQueue.main.async { self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.") }
                 return
             }

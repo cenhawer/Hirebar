@@ -15,7 +15,7 @@ public final class Controller {
     lazy var executionGuard = ExecutionGuard(
         store: stores.executionState, alerts: TelegramExecutionAlerts(notifier: notifier, agents: stores.agents), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
-    public let telegram: Telegram
+    public let chat: ChatChannel
     public let notifier: Notifier
     public internal(set) var channel: ChannelSetup
     weak var scheduler: Scheduler?
@@ -27,18 +27,17 @@ public final class Controller {
     let media: MediaRenderer
     public let stores: Repositories
 
-    public init(
-        telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner, media: MediaRenderer, resources: EngineResources
-    ) {
+    public init(stores: Repositories, adapters: EngineAdapters) {
+        let resources = adapters.resources
+        clock = adapters.clock
+        aiRunner = adapters.aiRunner
+        media = adapters.media
         targetRules = resources.targetRules
         commandParser = resources.commands.map(CommandParser.init)
-        self.clock = clock
-        self.media = media
-        self.aiRunner = aiRunner
-        self.telegram = telegram
+        chat = adapters.chat
         self.stores = stores
-        notifier = Notifier(telegram: telegram, config: stores.config, batches: stores.batches)
-        channel = ChannelSetup(settings: resources.channel, telegram: .live(telegram), configs: stores.config, clock: clock)
+        notifier = Notifier(chat: adapters.chat, desktop: adapters.desktop, config: stores.config, batches: stores.batches)
+        channel = ChannelSetup(settings: resources.channel, chat: adapters.chat, configs: stores.config, clock: clock)
     }
 
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }
@@ -70,9 +69,9 @@ public final class Controller {
             watchdog = clock.every(Self.watchdogInterval, tolerance: 0) { [weak self] in self?.stopIfStuck() }
         }
         stores.workspace.prepare()
-        telegram.onMessage = { [weak self] message in self?.handle(message) }
-        telegram.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
-        telegram.start()
+        chat.onMessage = { [weak self] message in self?.handle(message) }
+        chat.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
+        chat.start()
         Task { @MainActor [weak self] in await self?.channel.completeMissingDetails() }
         clock.after(Self.recoveryDelay) { [weak self] in self?.recoverInterrupted() }
     }
@@ -98,7 +97,7 @@ public final class Controller {
             notifier.tell(text)
             return
         }
-        telegram.send(text, chatId: stores.config.load().chatId, buttons: buttons)
+        chat.send(text, chatId: stores.config.load().chatId, buttons: buttons)
     }
 
     public func autoApprove(_ batch: Batch) {
@@ -125,7 +124,7 @@ public final class Controller {
         batch.items = ready
         stores.batches.upsert(batch)
         stores.metrics.bump(batch.mode, "aprobados", ready.count)
-        if let id = batch.messageId { telegram.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
+        if let id = batch.messageId { chat.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
         queue.append((batch, ready))
         if running == nil {
             runNext()
@@ -659,7 +658,7 @@ public final class Controller {
         batch.items.removeAll { removed.contains($0.id) }
         if batch.items.isEmpty {
             batch.status = .done
-            if let id = batch.messageId { telegram.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
+            if let id = batch.messageId { chat.removeButtons(chatId: stores.config.load().chatId, messageId: id) }
         }
         stores.batches.upsert(batch)
     }

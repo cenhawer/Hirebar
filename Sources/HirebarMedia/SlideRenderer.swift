@@ -32,18 +32,20 @@ public enum SlideRenderer {
             .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
     }
 
-    public static func renderAll(_ account: ContentAccount, completion: @escaping (_ made: [URL], _ failed: Int) -> Void) {
+    public static func renderAll(
+        _ account: ContentAccount, completion: @escaping SlidesCompletion
+    ) {
         let folder = account.slides
         let sources = pages(in: folder)
         DispatchQueue.global(qos: .utility).async {
             guard !sources.isEmpty else {
                 log.write("Contenido: no hay láminas en \(folder.path)")
-                DispatchQueue.main.async { completion([], 0) }
+                Task { @MainActor in completion([], 0) }
                 return
             }
             guard let chrome = CVRenderer.chromePath() else {
                 log.write("Contenido: no encontré Google Chrome para crear las imágenes")
-                DispatchQueue.main.async { completion([], sources.count) }
+                Task { @MainActor in completion([], sources.count) }
                 return
             }
             let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-chrome", isDirectory: true)
@@ -53,19 +55,23 @@ public enum SlideRenderer {
                 if shoot(source, to: target, chrome: chrome, scratch: scratch) { made.append(target) }
             }
             log.write("Contenido (\(account.id)): \(made.count) de \(sources.count) láminas convertidas en PNG")
-            DispatchQueue.main.async { completion(made, sources.count - made.count) }
+            Task { @MainActor in completion(made, sources.count - made.count) }
         }
     }
 
-    static func shoot(_ source: URL, to target: URL, chrome: String, scratch: URL,
-                      width: Int = SlideRenderer.width, height: Int = SlideRenderer.height) -> Bool {
+    static func shoot(
+        _ source: URL, to target: URL, chrome: String, scratch: URL,
+        width: Int = SlideRenderer.width, height: Int = SlideRenderer.height
+    ) -> Bool {
         try? FileManager.default.removeItem(at: target)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: chrome)
-        process.arguments = ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
-                             "--user-data-dir=\(scratch.path)", "--hide-scrollbars", "--force-device-scale-factor=1",
-                             "--window-size=\(width),\(height)", "--virtual-time-budget=4000",
-                             "--screenshot=\(target.path)", source.absoluteString]
+        process.arguments = [
+            "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+            "--user-data-dir=\(scratch.path)", "--hide-scrollbars", "--force-device-scale-factor=1",
+            "--window-size=\(width),\(height)", "--virtual-time-budget=4000",
+            "--screenshot=\(target.path)", source.absoluteString,
+        ]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         guard (try? process.run()) != nil else { return false }

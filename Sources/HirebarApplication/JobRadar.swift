@@ -106,7 +106,7 @@ public final class JobRadar: Radar {
             + "\"si 1 3\" para elegir, \"no\" para descartar."
         controller?.notifier.announce(batch, title: auto ? title + " (postulación automática)" : title, footer: auto ? automatic : manual)
         if auto {
-            DispatchQueue.main.async { self.controller?.autoApprove(self.stores.batches.find(id: batch.id) ?? batch) }
+            Task { [weak self] in self?.controller?.autoApprove(self?.stores.batches.find(id: batch.id) ?? batch) }
         }
     }
 }

@@ -5,6 +5,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ## [Sin publicar]
 
 ### Agregado
+- Bandeja "Pendientes de aprobar" en la Mac: cada lista con sus envíos para aprobar todos, elegir o descartar, y las publicaciones listas con su texto, láminas y video para publicar o descartar.
 - Los textos de Hirebar están en un String Catalog (`Resources/Localizable.xcstrings`), listo para traducirse.
 - Cada tarea de la IA corre con el perfil que necesita: lectura (sin escribir ni actuar), redacción (escribe solo en su carpeta) o ejecución (actúa solo sobre lo aprobado).
 - Registro y verificación de cada envío contra lo aprobado; una acción que no coincide pone al agente en pausa, con aviso y botones para reanudar (`reanudar <agente>`).

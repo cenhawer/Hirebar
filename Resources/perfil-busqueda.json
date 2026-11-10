@@ -1,11 +1,11 @@
 {
-  "freelance" : {
-    "frontendOnly" : [
+  "freelance": {
+    "frontendOnly": [
       "react",
       "next.js",
       "nextjs"
     ],
-    "hardBlocked" : [
+    "hardBlocked": [
       "wordpress",
       "woocommerce",
       "shopify",
@@ -31,9 +31,9 @@
       "seo",
       "edicion de video"
     ],
-    "minFixedUSD" : 50,
-    "minHourlyUSD" : 12,
-    "offProfile" : [
+    "minFixedUSD": 50,
+    "minHourlyUSD": 12,
+    "offProfile": [
       "data entry",
       "entrada de datos",
       "research",
@@ -67,11 +67,31 @@
       "embudo",
       "funnel"
     ],
-    "stackBlocked" : [
+    "portals": {
+      "freelancerBids": {
+        "backup": 80,
+        "stretch": 60,
+        "strong": 80
+      },
+      "freelancerMaxAgeMinutes": 1440,
+      "workanaBids": {
+        "backup": 40,
+        "stretch": 20,
+        "strong": 35
+      },
+      "workanaLowBudgets": [
+        "menos de usd 15",
+        "menos de usd 50"
+      ],
+      "workanaMaxAgeMinutes": 720,
+      "workanaOldAfterMinutes": 180,
+      "workanaOldMaxBids": 12
+    },
+    "stackBlocked": [
       "php",
       "laravel"
     ],
-    "stretch" : [
+    "stretch": [
       "python",
       "fastapi",
       "django",
@@ -119,7 +139,7 @@
       "sap",
       "odoo"
     ],
-    "strong" : [
+    "strong": [
       "api",
       "apis",
       "rest",
@@ -184,7 +204,7 @@
       "servidor",
       "escalabilidad"
     ],
-    "titleBlocked" : [
+    "titleBlocked": [
       "android",
       "ios",
       "swift",
@@ -202,7 +222,7 @@
       "certification",
       "celular colombiano"
     ],
-    "titleNever" : [
+    "titleNever": [
       "bot",
       "bots",
       "chatbot",
@@ -232,7 +252,7 @@
       "tableau",
       "psicotecnicos"
     ],
-    "whatsappBotWords" : [
+    "whatsappBotWords": [
       "respuestas",
       "automatiz",
       "asistente",
@@ -240,7 +260,7 @@
       "inteligente",
       "mensajes"
     ],
-    "workanaQueries" : [
+    "workanaQueries": [
       "category=it-programming",
       "category=it-programming&page=2",
       "query=api",
@@ -261,8 +281,8 @@
       "query=migracion"
     ]
   },
-  "jobs" : {
-    "blocked" : [
+  "jobs": {
+    "blocked": [
       "php",
       "laravel",
       "wordpress",
@@ -310,19 +330,19 @@
       "desenvolvedor",
       "pleno"
     ],
-    "blockedCompanies" : [
+    "blockedCompanies": [
       "canonical",
       "mercado libre",
       "mercadolibre"
     ],
-    "blockedTitleWords" : [
+    "blockedTitleWords": [
       "arquitecto",
       "arquitecta",
       "architect",
       "staff",
       "principal"
     ],
-    "computrabajoSlugs" : [
+    "computrabajoSlugs": [
       "backend",
       "desarrollador-backend",
       "desarrollador-node",
@@ -338,8 +358,8 @@
       "desarrollador-angular",
       "desarrollador-typescript"
     ],
-    "country" : "colombia",
-    "elempleoQueries" : [
+    "country": "colombia",
+    "elempleoQueries": [
       "backend",
       "nodejs",
       ".net",
@@ -351,7 +371,7 @@
       "microservicios",
       "desarrollador senior"
     ],
-    "frontendOnly" : [
+    "frontendOnly": [
       "react",
       "react.js",
       "reactjs",
@@ -362,7 +382,7 @@
       "front-end",
       "vue"
     ],
-    "generic" : [
+    "generic": [
       "backend",
       "back end",
       "back-end",
@@ -387,7 +407,7 @@
       "fastapi",
       "flask"
     ],
-    "getOnBoardQueries" : [
+    "getOnBoardQueries": [
       "backend",
       "node",
       "nestjs",
@@ -400,9 +420,9 @@
       "microservicios",
       "typescript"
     ],
-    "hasProfessionalCard" : false,
-    "homeCity" : "cali",
-    "linkedInContractQueries" : [
+    "hasProfessionalCard": false,
+    "homeCity": "cali",
+    "linkedInContractQueries": [
       "backend",
       "node.js",
       "nestjs",
@@ -413,7 +433,7 @@
       "freelance desarrollador",
       "desarrollador por proyecto"
     ],
-    "linkedInQueries" : [
+    "linkedInQueries": [
       "nestjs",
       "desarrollador node.js",
       "desarrollador .net",
@@ -434,7 +454,7 @@
       "desarrollador full stack react node",
       "desarrollador backend python"
     ],
-    "linkedInRegionalQueries" : [
+    "linkedInRegionalQueries": [
       "desarrollador backend",
       "desarrollador node.js",
       "nestjs",
@@ -443,17 +463,17 @@
       "lider tecnico",
       "desarrollador full stack"
     ],
-    "magnetoRoles" : [
+    "magnetoRoles": [
       "desarrollador-software",
       "ingeniero-software",
       "desarrollador-full-stack",
       "ingeniero-desarrollo-software",
       "desarrollador-web"
     ],
-    "maxYearsRequired" : 5,
-    "minSalaryCOP" : 5000000,
-    "minSalaryUSD" : 1200,
-    "otherStack" : [
+    "maxYearsRequired": 5,
+    "minSalaryCOP": 5000000,
+    "minSalaryUSD": 1200,
+    "otherStack": [
       "webflux",
       "go",
       "golang",
@@ -462,7 +482,7 @@
       "scala",
       "kotlin"
     ],
-    "ownStack" : [
+    "ownStack": [
       "node",
       "nodejs",
       "node.js",
@@ -482,8 +502,13 @@
       "maven",
       "gradle"
     ],
-    "screening" : {
-      "backendRoles" : [
+    "portals": {
+      "elempleoMaxAgeMinutes": 4320,
+      "getOnBoardMaxAgeMinutes": 4320,
+      "magnetoMaxAgeDays": 7
+    },
+    "screening": {
+      "backendRoles": [
         "backend",
         "back end",
         "back-end",
@@ -491,7 +516,7 @@
         "fullstack",
         "full-stack"
       ],
-      "englishRequired" : [
+      "englishRequired": [
         "ingles avanzado",
         "ingles fluido",
         "ingles conversacional",
@@ -520,7 +545,7 @@
         "good english",
         "ingles requerido"
       ],
-      "englishWords" : [
+      "englishWords": [
         "the",
         "and",
         "with",
@@ -532,7 +557,7 @@
         "for",
         "to"
       ],
-      "fullyRemote" : [
+      "fullyRemote": [
         " 100 remoto ",
         " 100 remota ",
         " totalmente remoto ",
@@ -554,7 +579,7 @@
         " remoto colombia ",
         " 100 remota colombia "
       ],
-      "hybrid" : [
+      "hybrid": [
         " hibrido ",
         " hibrida ",
         " hybrid ",
@@ -567,7 +592,7 @@
         " dias en la oficina ",
         " asistir a la oficina "
       ],
-      "otherPlaces" : [
+      "otherPlaces": [
         "argentina",
         "mexico",
         "chile",
@@ -586,7 +611,7 @@
         "estados unidos",
         "usa"
       ],
-      "portuguese" : [
+      "portuguese": [
         "voce",
         "nao",
         "vaga",
@@ -597,7 +622,7 @@
         "sera",
         "experiencia em"
       ],
-      "regionWide" : [
+      "regionWide": [
         " latam ",
         " latinoamerica ",
         " america latina ",
@@ -607,7 +632,7 @@
         " latin america ",
         " hispanoamerica "
       ],
-      "remoteHints" : [
+      "remoteHints": [
         " remoto ",
         " remota ",
         " remote ",
@@ -616,7 +641,7 @@
         " trabajo en casa ",
         " desde casa "
       ],
-      "residencyPatterns" : [
+      "residencyPatterns": [
         "residentes en",
         "residir en",
         "remoto desde",
@@ -628,7 +653,7 @@
         "solo",
         "unicamente en"
       ],
-      "spanishWords" : [
+      "spanishWords": [
         "el",
         "la",
         "los",
@@ -641,7 +666,7 @@
         "que"
       ]
     },
-    "strong" : [
+    "strong": [
       "node",
       "nodejs",
       "node.js",
@@ -664,7 +689,7 @@
       "maven",
       "gradle"
     ],
-    "weak" : [
+    "weak": [
       "webflux",
       "go",
       "golang",
@@ -679,5 +704,5 @@
       "scala"
     ]
   },
-  "schemaVersion" : 1
+  "schemaVersion": 1
 }

@@ -1,5 +1,4 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals
@@ -7,7 +6,7 @@ import HirebarStorage
 import HirebarTelegram
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class PracticeTests: XCTestCase {
     var controller: Controller!

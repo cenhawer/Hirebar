@@ -1,11 +1,10 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 import HirebarStorage
 import HirebarTelegram
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class AIRunnerFlowTests: XCTestCase {
     static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-runner-\(UUID().uuidString)")

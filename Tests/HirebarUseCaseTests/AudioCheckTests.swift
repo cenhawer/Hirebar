@@ -1,10 +1,9 @@
 import Foundation
-import HirebarApplication
 import HirebarStorage
 import HirebarTelegram
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class AudioCheckTests: XCTestCase {
     var media: TestMediaRenderer!

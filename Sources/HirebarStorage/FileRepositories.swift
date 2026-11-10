@@ -104,7 +104,7 @@ extension Repositories {
             config: FileConfigRepository(), batches: FileBatchRepository(), agents: FileAgentRepository(),
             contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(), profile: FileProfileRepository(),
             quotas: FileQuotaRepository(), portals: FilePortalRepository(), prospecting: FileProspectingRepository(),
-            runState: DefaultsRunStateRepository(), workspace: FileWorkspaceRepository(), practice: FilePracticeLogRepository(),
+            runState: FileRunStateRepository(), workspace: FileWorkspaceRepository(), practice: FilePracticeLogRepository(),
             executionState: FileExecutionStateStore.standard)
     }
 }

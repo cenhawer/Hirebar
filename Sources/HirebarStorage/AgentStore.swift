@@ -61,9 +61,7 @@ public enum AgentStore {
 
     public static func save(_ settings: AgentSettings) {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        if let data = try? encoder.encode(settings) { try? data.write(to: url(for: settings.id), options: .atomic) }
+        try? VersionedJSON.write(settings, to: url(for: settings.id))
     }
 
     public static func update(_ kind: AgentKind, _ change: (inout AgentSettings) -> Void) {

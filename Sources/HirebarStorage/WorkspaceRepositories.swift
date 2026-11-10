@@ -21,37 +21,6 @@ public struct FileProspectingRepository: ProspectingRepository {
     }
 }
 
-public struct DefaultsRunStateRepository: RunStateRepository, @unchecked Sendable {
-    static let waitingVoiceKey = "video.esperandoVoz"
-    let defaults: UserDefaults
-
-    public init(defaults: UserDefaults = .standard) {
-        self.defaults = defaults
-    }
-
-    public func seen(_ key: String) -> [String: Date] {
-        defaults.dictionary(forKey: key) as? [String: Date] ?? [:]
-    }
-
-    public func saveSeen(_ seen: [String: Date], key: String) {
-        defaults.set(seen, forKey: key)
-    }
-
-    public func claim(_ key: String) -> Bool {
-        guard !defaults.bool(forKey: key) else { return false }
-        defaults.set(true, forKey: key)
-        return true
-    }
-
-    public func waitingVoiceAccount() -> String? {
-        defaults.string(forKey: Self.waitingVoiceKey)
-    }
-
-    public func setWaitingVoiceAccount(_ id: String) {
-        defaults.set(id, forKey: Self.waitingVoiceKey)
-    }
-}
-
 enum ContentAccountFiles {
     static let minimumCopyableLength = 10
     static let maximumCopyableLength = 3800

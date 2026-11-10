@@ -95,7 +95,7 @@ extension Controller {
         }
         let phase = request.profile.phase
         Log(agent: AgentKind.owner(of: mode)).write("IA: inicia lote \(batchId) con \(items.count) elemento(s), perfil \(phase)")
-        clock.after(Self.maxRunSeconds) { [weak self] in
+        clock.after(policy.corridas.maximum) { [weak self] in
             guard let self, self.runningBatch == batchId, let run = self.running, run.isRunning else { return }
             log.write("IA: lote \(batchId) superó 1 hora, se detiene")
             run.stop()

@@ -14,13 +14,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let loginItem = NSMenuItem(
         title: String(localized: "Abrir al iniciar sesión"), action: #selector(toggleLogin), keyEquivalent: "")
     private let popover = NSPopover()
-    private let engine = Engine()
+    private let engine: Engine
     private lazy var statusMenu = StatusMenu(engine: engine)
     private lazy var panel = PanelModel(engine: engine)
     private var activity: NSObjectProtocol?
     private var panelTimer: Timer?
     private lazy var settings = SettingsWindowController(engine: engine)
     private let notificationRouter = NotificationRouter()
+
+    init(engine: Engine) {
+        self.engine = engine
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         activity = ProcessInfo.processInfo.beginActivity(

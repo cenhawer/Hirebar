@@ -36,10 +36,17 @@ extension TargetRulesFile {
     }
 }
 
+extension EnginePolicy {
+    public static func load(from url: URL) throws -> EnginePolicy { try decode(Data(contentsOf: url)) }
+    public static func bundled(in bundle: Bundle = .main) throws -> EnginePolicy {
+        try decode(BundledResource.data(fileName, in: bundle))
+    }
+}
+
 extension EngineResources {
-    public static func bundled(in bundle: Bundle = .main) -> EngineResources {
+    public static func bundled(in bundle: Bundle = .main) throws -> EngineResources {
         EngineResources(
             targetRules: TargetRulesFile.bundled(in: bundle), commands: try? CommandVocabularyFile.bundled(in: bundle),
-            channel: try? ChannelSettings.bundled(in: bundle))
+            channel: try? ChannelSettings.bundled(in: bundle), policy: try EnginePolicy.bundled(in: bundle))
     }
 }

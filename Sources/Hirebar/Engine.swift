@@ -15,18 +15,18 @@ public final class Engine {
     public let freelanceRadar: FreelanceRadar
     public let scheduler: Scheduler
 
-    public init() {
+    public init(resources: EngineResources) {
         let stores = Repositories.files
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore(), offsets: FileRunStateRepository())
         let adapters = EngineAdapters(
             chat: telegram, desktop: MacDesktopNotifications(), clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer(),
-            resources: .bundled())
+            resources: resources)
         controller = Controller(stores: stores, adapters: adapters)
         let portals = PortalAccess.bundled
-        jobRadar = JobRadar(stores: stores, clock: clock, portals: portals)
-        freelanceRadar = FreelanceRadar(stores: stores, clock: clock, portals: portals)
-        scheduler = Scheduler(stores: stores, clock: clock)
+        jobRadar = JobRadar(stores: stores, clock: clock, portals: portals, policy: resources.policy)
+        freelanceRadar = FreelanceRadar(stores: stores, clock: clock, portals: portals, policy: resources.policy)
+        scheduler = Scheduler(stores: stores, clock: clock, policy: resources.policy)
         jobRadar.controller = controller
         freelanceRadar.controller = controller
         scheduler.controller = controller

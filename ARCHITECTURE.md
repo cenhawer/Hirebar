@@ -228,6 +228,7 @@ y la app está aislada al actor principal por defecto. El paso 3 de la spec
 | `HirebarApplication/PortalSources.swift` · `HirebarPortals/PortalCatalog.swift` | Application · Portals | `ListingSource`, `JobSource` y `WebPageFetcher` en la aplicación; `PortalAccess.bundled`, `NetPageFetcher` y `PageSlice` en el adaptador |
 | `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarApplication/Controller.swift`, `ControllerRuns.swift`, `ControllerApprovals.swift`, `ControllerResults.swift`, `ControllerQuota.swift` | Application | Casos de uso de lotes: cola, corridas de la IA, práctica y pausas, resultados y cupos |
+| `HirebarApplication/Activity.swift` · `HirebarStorage/ExecutionActivity.swift` · `Hirebar/ActivityWindow.swift` | Application · Storage · Hirebar | `ActivityRepository`: actividad armada con verificaciones y práctica, filtrada por agente y período |
 | `HirebarApplication/CommandParser.swift` · `Commands.swift`, `StatusCommands.swift`, `AgentCommands.swift`, `ContentCommands.swift` | Application | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones son casos de uso del `Controller` |
 | `HirebarApplication/Scheduler.swift` | Application | Programar tareas, con `Clock` |
 | `HirebarApplication/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |

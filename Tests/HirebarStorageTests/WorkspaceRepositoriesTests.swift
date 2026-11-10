@@ -27,14 +27,17 @@ final class WorkspaceRepositoriesTests: XCTestCase {
     func testAScheduledSlotRunsOnlyOnceAndRunStateSurvivesARestart() throws {
         let file = folder.appendingPathComponent("corrida.json")
         let moment = Date(timeIntervalSince1970: 1_800_000_000)
-        let state = FileRunStateRepository(file: file, now: { moment })
+        let state = FileRunStateRepository(file: file, now: { moment }, claimRetention: RepositoryDefaults.retention.claims)
         XCTAssertTrue(state.claim("sched.jobs.2026-11-09"))
-        XCTAssertFalse(FileRunStateRepository(file: file, now: { moment }).claim("sched.jobs.2026-11-09"))
-        let later = FileRunStateRepository(file: file, now: { moment.addingTimeInterval(15 * 86400) })
+        XCTAssertFalse(
+            FileRunStateRepository(file: file, now: { moment }, claimRetention: RepositoryDefaults.retention.claims).claim(
+                "sched.jobs.2026-11-09"))
+        let later = FileRunStateRepository(
+            file: file, now: { moment.addingTimeInterval(15 * 86400) }, claimRetention: RepositoryDefaults.retention.claims)
         XCTAssertTrue(later.claim("sched.otro"))
         XCTAssertTrue(later.claim("sched.jobs.2026-11-09"))
         state.saveChatOffset(7)
-        XCTAssertEqual(FileRunStateRepository(file: file).chatOffset(), 7)
+        XCTAssertEqual(FileRunStateRepository(file: file, claimRetention: RepositoryDefaults.retention.claims).chatOffset(), 7)
         state.saveSeen(["hit": moment], key: "radar.seen")
         XCTAssertEqual(state.seen("radar.seen"), ["hit": moment])
         state.setWaitingVoiceAccount("empresa")

@@ -7,7 +7,7 @@ import HirebarTelegram
 import SwiftUI
 
 struct PanelView: View {
-    @ObservedObject var model: PanelModel
+    @Bindable var model: PanelModel
 
     private struct AgentSection: Identifiable {
         let id: String
@@ -131,7 +131,7 @@ struct FooterButton: View {
 
 struct AgentRow: View {
     let agent: AgentCardData
-    @ObservedObject var model: PanelModel
+    @Bindable var model: PanelModel
     @State private var expanded = false
     @State private var hovering = false
 

@@ -7,13 +7,11 @@ import HirebarStorage
 import HirebarTelegram
 
 enum ExecutionApprovals {
-    static let store = FileExecutionStateStore.standard
-
     static func agent(of mode: Mode) -> AgentID {
         AgentID(rawValue: AgentKind.owner(of: mode).rawValue)
     }
 
-    static func proposals(for batch: Batch, items: [BatchItem]) -> [Proposal] {
+    static func proposals(for batch: Batch, items: [BatchItem], store: ExecutionStateStore) -> [Proposal] {
         let stored = Dictionary(store.proposals(batch: batch.id).map { ($0.id, $0) }) { first, _ in first }
         return items.compactMap { stored[$0.id] ?? proposal(from: $0, mode: batch.mode) }
     }

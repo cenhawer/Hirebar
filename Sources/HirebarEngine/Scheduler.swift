@@ -80,7 +80,7 @@ public final class Scheduler {
         let due = (weekday == 1 && hour >= Self.cleanupHour) || weekday == 2
         guard due, controller?.isIdle ?? false else { return }
         let sunday = weekday == 2 ? now.addingTimeInterval(-86400) : now
-        once("sched.limpieza.\(WeekKey.of(sunday))") { Housekeeping.run() }
+        once("sched.limpieza.\(WeekKey.of(sunday))") { stores.workspace.cleanUp() }
     }
 
     public func nextRun(of kind: AgentKind) -> Date? {

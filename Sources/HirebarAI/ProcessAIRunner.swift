@@ -38,6 +38,10 @@ public struct ProcessAIRunner: AIRunner {
         return .success(ProcessRun(process: process))
     }
 
+    public func loginHint(_ kind: AIEngineKind) -> String {
+        ClaudeCLI.loginHint(kind)
+    }
+
     static func protectedFiles() -> ProtectedFiles? {
         (try? EngineProfiles.bundled()).map { ProtectedFiles(folder: Paths.workspace, patterns: $0.restoredFiles) }
     }

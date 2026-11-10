@@ -45,4 +45,5 @@ public protocol AIRun: AnyObject {
 
 public protocol AIRunner {
     func start(_ request: AIRunRequest, completion: @escaping (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure>
+    func loginHint(_ kind: AIEngineKind) -> String
 }

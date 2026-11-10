@@ -63,6 +63,15 @@ public protocol ProspectingRepository: Sendable {
     func discardPendingEmails(at date: Date)
 }
 
+public protocol WorkspaceRepository: Sendable {
+    func prepare()
+    func cleanUp()
+}
+
+public protocol PracticeLogRepository: Sendable {
+    func record(batch: String, agent: String, at date: Date, wouldSend: [Proposal]) throws
+}
+
 public protocol RunStateRepository: Sendable {
     func seen(_ key: String) -> [String: Date]
     func saveSeen(_ seen: [String: Date], key: String)
@@ -101,6 +110,9 @@ public struct Repositories: Sendable {
     public let portals: PortalRepository
     public let prospecting: ProspectingRepository
     public let runState: RunStateRepository
+    public let workspace: WorkspaceRepository
+    public let practice: PracticeLogRepository
+    public let executionState: ExecutionStateStore
 
     public init(
         config: ConfigRepository,
@@ -112,7 +124,10 @@ public struct Repositories: Sendable {
         quotas: QuotaRepository,
         portals: PortalRepository,
         prospecting: ProspectingRepository,
-        runState: RunStateRepository
+        runState: RunStateRepository,
+        workspace: WorkspaceRepository,
+        practice: PracticeLogRepository,
+        executionState: ExecutionStateStore
     ) {
         self.config = config
         self.batches = batches
@@ -124,5 +139,8 @@ public struct Repositories: Sendable {
         self.portals = portals
         self.prospecting = prospecting
         self.runState = runState
+        self.workspace = workspace
+        self.practice = practice
+        self.executionState = executionState
     }
 }

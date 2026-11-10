@@ -17,10 +17,10 @@ struct AgentPrompts {
     }
 
     func actionLogSection(for batch: Batch) -> String {
-        let approved = ExecutionApprovals.store.approvedItems(batch: batch.id).map { item in
+        let approved = stores.executionState.approvedItems(batch: batch.id).map { item in
             "- itemId: \(item.proposal.id) · action: \(item.proposal.action.rawValue) · target: \(ExecutionApprovals.targetJSON(item.proposal.target))"
         }.joined(separator: "\n")
-        let file = FileExecutionStateStore.actionLogFile(batch: batch.id).lastPathComponent
+        let file = ActionLogFile.name(batch: batch.id)
         return """
             Registro obligatorio de acciones. Solo puedes actuar sobre esta lista aprobada; cualquier otra acción es una \
             violación y pone en pausa al agente:
@@ -38,7 +38,7 @@ struct AgentPrompts {
     }
 
     func approvedEmails(for batch: Batch) -> String {
-        ExecutionApprovals.store.approvedItems(batch: batch.id).map { item in
+        stores.executionState.approvedItems(batch: batch.id).map { item in
             """
             itemId \(item.proposal.id) · para: \(item.proposal.target.displayText)
             asunto: \(item.proposal.title)

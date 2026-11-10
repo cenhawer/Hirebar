@@ -543,7 +543,7 @@ extension Controller {
             parts.removeFirst()
         }
         let sub = parts.first?.lowercased() ?? ""
-        Paths.ensure()
+        stores.workspace.prepare()
         guard sub == "salta" || sub == "no" || sub == "cambia" else {
             runScheduled(.linkedInDraft, manual: true, account: named?.id)
             return

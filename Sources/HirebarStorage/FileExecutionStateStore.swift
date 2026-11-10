@@ -40,7 +40,7 @@ public struct FileExecutionStateStore: ExecutionStateStore {
     var seenFile: URL { stateFolder.appendingPathComponent("vistos.json") }
 
     public static func actionLogFile(batch: String, in runsFolder: URL = Paths.runs) -> URL {
-        runsFolder.appendingPathComponent("\(batch).acciones.json")
+        runsFolder.appendingPathComponent(ActionLogFile.name(batch: batch))
     }
 
     public func proposals(batch: String) -> [Proposal] {

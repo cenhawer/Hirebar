@@ -46,6 +46,15 @@ public enum MacNotifications {
         _ = await requestPermission()
     }
 
+    public static func permissionState() async -> PermissionState {
+        guard isAvailable else { return .denied }
+        switch await UNUserNotificationCenter.current().notificationSettings().authorizationStatus {
+        case .authorized, .provisional, .ephemeral: return .allowed
+        case .denied: return .denied
+        default: return .undecided
+        }
+    }
+
     public static func isAllowed() async -> Bool {
         guard isAvailable else { return false }
         let settings = await UNUserNotificationCenter.current().notificationSettings()

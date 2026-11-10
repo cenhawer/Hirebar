@@ -70,7 +70,7 @@ extension Controller {
         }
         log.write("IA: la sesión venció; lote \(batchId) queda para reintentar")
         let now = Date()
-        if lastAuthAlert.map({ now.timeIntervalSince($0) > Self.authAlertEvery }) ?? true {
+        if lastAuthAlert.map({ now.timeIntervalSince($0) > policy.corridas.expiredSessionAlert }) ?? true {
             lastAuthAlert = now
             let expired = String(
                 localized: "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(aiRunner.loginHint(ai.settings.kind))")

@@ -5,17 +5,19 @@ private let log = Log(.portals)
 
 public final class JobRadar: Radar {
     public weak var controller: Controller?
-    nonisolated static let maxReviewed = 15
-    nonisolated static let maxStrong = 6
-    nonisolated static let maxStretchOnly = 2
 
     let stores: Repositories
     let portals: PortalAccess
 
-    public init(stores: Repositories, clock: Clock, portals: PortalAccess) {
+    let limits: EnginePolicy.JobRadar
+
+    public init(stores: Repositories, clock: Clock, portals: PortalAccess, policy: EnginePolicy) {
         self.stores = stores
         self.portals = portals
-        super.init(firstDelay: 300, seenKey: "jobradar.seen", seenDays: 21, runState: stores.runState, clock: clock)
+        self.limits = policy.radares.empleo
+        super.init(
+            firstDelay: limits.firstDelay, seenKey: "jobradar.seen", seenWindow: limits.seenWindow, radars: policy.radares,
+            runState: stores.runState, clock: clock)
     }
 
     override var intervalMinutes: Int { stores.agents.load(.jobs).searchEveryMinutes ?? stores.config.load().jobMinutes }
@@ -35,15 +37,15 @@ public final class JobRadar: Radar {
             for source in active {
                 found += await source.search(skip: skip, profile: profile).hits
             }
-            let refined = await Self.refine(found, profile: profile.jobs, portals: self.portals)
+            let refined = await Self.refine(found, profile: profile.jobs, portals: self.portals, reviewed: self.limits.revisadasPorBusqueda)
             await MainActor.run { self.finish(refined.kept, examined: refined.examined) }
         }
     }
 
-    static func refine(_ hits: [Hit], profile: JobProfile, portals: PortalAccess) async -> (kept: [Hit], examined: [Hit]) {
+    static func refine(_ hits: [Hit], profile: JobProfile, portals: PortalAccess, reviewed: Int) async -> (kept: [Hit], examined: [Hit]) {
         var unique: [String: Hit] = [:]
         for hit in hits where unique[hit.id] == nil { unique[hit.id] = hit }
-        let examined = Array(unique.values.sorted(by: Hit.ranked).prefix(maxReviewed))
+        let examined = Array(unique.values.sorted(by: Hit.ranked).prefix(reviewed))
         var kept: [Hit] = []
         for hit in examined {
             guard let source = portals.jobs.first(where: { $0.owns(hit) }) else { continue }
@@ -81,7 +83,7 @@ public final class JobRadar: Radar {
         for hit in found where unique[hit.id] == nil { unique[hit.id] = hit }
         let sorted = unique.values.sorted(by: Hit.ranked)
         let fits = sorted.filter { $0.fit == .strong }
-        let hits = fits.isEmpty ? Array(sorted.prefix(Self.maxStretchOnly)) : Array(fits.prefix(Self.maxStrong))
+        let hits = fits.isEmpty ? Array(sorted.prefix(limits.retoPorLista)) : Array(fits.prefix(limits.fuertesPorLista))
         remember(examined)
 
         let hour = TextTools.shortTime()

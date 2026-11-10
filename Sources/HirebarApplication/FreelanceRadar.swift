@@ -5,15 +5,19 @@ private let log = Log(.portals)
 
 public final class FreelanceRadar: Radar {
     public weak var controller: Controller?
-    nonisolated static let maxPerBatch = 5
 
     let stores: Repositories
     let portals: PortalAccess
 
-    public init(stores: Repositories, clock: Clock, portals: PortalAccess) {
+    let limits: EnginePolicy.FreelanceRadar
+
+    public init(stores: Repositories, clock: Clock, portals: PortalAccess, policy: EnginePolicy) {
         self.stores = stores
         self.portals = portals
-        super.init(firstDelay: 60, seenKey: "radar.seen", seenDays: 14, runState: stores.runState, clock: clock)
+        self.limits = policy.radares.freelance
+        super.init(
+            firstDelay: limits.firstDelay, seenKey: "radar.seen", seenWindow: limits.seenWindow, radars: policy.radares,
+            runState: stores.runState, clock: clock)
     }
 
     override var intervalMinutes: Int { stores.agents.load(.freelance).searchEveryMinutes ?? stores.config.load().freelanceMinutes }
@@ -54,7 +58,7 @@ public final class FreelanceRadar: Radar {
             if let left = stores.quotas.remaining(source.id) { room[source.name] = left }
         }
         var hits: [Hit] = []
-        for hit in pool where hits.count < Self.maxPerBatch {
+        for hit in pool where hits.count < limits.proyectosPorLista {
             if let left = room[hit.platform] {
                 if left <= 0 { continue }
                 room[hit.platform] = left - 1

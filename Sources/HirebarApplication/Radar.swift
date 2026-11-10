@@ -11,20 +11,24 @@ public class Radar {
     private var lastStart: Date?
     private let firstDelay: TimeInterval
     private let seenKey: String
-    private let seenDays: Double
+    private let seenWindow: TimeInterval
+    private let tickInterval: TimeInterval
+    private let tickTolerance: TimeInterval
     private let runState: RunStateRepository
     let clock: Clock
 
-    init(firstDelay: TimeInterval, seenKey: String, seenDays: Double, runState: RunStateRepository, clock: Clock) {
+    init(
+        firstDelay: TimeInterval, seenKey: String, seenWindow: TimeInterval, radars: EnginePolicy.Radars, runState: RunStateRepository,
+        clock: Clock
+    ) {
+        self.tickInterval = radars.tick
+        self.tickTolerance = radars.tolerance
         self.runState = runState
         self.clock = clock
         self.firstDelay = firstDelay
         self.seenKey = seenKey
-        self.seenDays = seenDays
+        self.seenWindow = seenWindow
     }
-
-    nonisolated static let tickInterval: TimeInterval = 30
-    nonisolated static let tickTolerance: TimeInterval = 5
 
     var intervalMinutes: Int { 60 }
 
@@ -36,7 +40,7 @@ public class Radar {
     public func start() {
         ticker?.cancel()
         firstRun = clock.now().addingTimeInterval(firstDelay)
-        ticker = clock.every(Self.tickInterval, tolerance: Self.tickTolerance) { [weak self] in self?.tick() }
+        ticker = clock.every(tickInterval, tolerance: tickTolerance) { [weak self] in self?.tick() }
         setStatus(status)
     }
 
@@ -68,7 +72,7 @@ public class Radar {
         let now = clock.now()
         var map = seen()
         for hit in hits { map[hit.id] = now }
-        map = map.filter { now.timeIntervalSince($0.value) < seenDays * 86400 }
+        map = map.filter { now.timeIntervalSince($0.value) < seenWindow }
         runState.saveSeen(map, key: seenKey)
     }
 }

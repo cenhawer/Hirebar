@@ -9,23 +9,21 @@ public final class Scheduler {
 
     let stores: Repositories
     let clock: Clock
+    let policy: EnginePolicy.Scheduler
 
-    public init(stores: Repositories, clock: Clock) {
+    public init(stores: Repositories, clock: Clock, policy: EnginePolicy) {
         self.stores = stores
         self.clock = clock
+        self.policy = policy.programador
     }
-    nonisolated static let cleanupHour = 19
-    nonisolated static let tickInterval: TimeInterval = 60
-    nonisolated static let tickTolerance: TimeInterval = 10
-    nonisolated static let firstTickDelay: TimeInterval = 120
 
     public var onChange: (() -> Void)?
     private var timer: ScheduledWork?
 
     public func start() {
         timer?.cancel()
-        timer = clock.every(Self.tickInterval, tolerance: Self.tickTolerance) { [weak self] in self?.tick() }
-        clock.after(Self.firstTickDelay) { [weak self] in self?.tick() }
+        timer = clock.every(policy.tick, tolerance: policy.tolerance) { [weak self] in self?.tick() }
+        clock.after(policy.firstTick) { [weak self] in self?.tick() }
     }
 
     static func dayKey(_ date: Date) -> String {
@@ -73,7 +71,7 @@ public final class Scheduler {
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: now)
         let hour = calendar.component(.hour, from: now)
-        let due = (weekday == 1 && hour >= Self.cleanupHour) || weekday == 2
+        let due = (weekday == 1 && hour >= policy.horaLimpiezaDomingo) || weekday == 2
         guard due, controller?.isIdle ?? false else { return }
         let sunday = weekday == 2 ? now.addingTimeInterval(-86400) : now
         once("sched.limpieza.\(WeekKey.of(sunday))") { stores.workspace.cleanUp() }

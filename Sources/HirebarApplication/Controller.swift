@@ -6,6 +6,7 @@ private let log = Log(.ai)
 @MainActor
 public final class Controller {
     let targetRules: TargetRules
+    public let policy: EnginePolicy
     lazy var executionGuard = ExecutionGuard(
         store: stores.executionState, alerts: TelegramExecutionAlerts(notifier: notifier, agents: stores.agents), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
@@ -27,6 +28,7 @@ public final class Controller {
         aiRunner = adapters.aiRunner
         media = adapters.media
         targetRules = resources.targetRules
+        policy = resources.policy
         commandParser = resources.commands.map(CommandParser.init)
         chat = adapters.chat
         self.stores = stores
@@ -38,8 +40,6 @@ public final class Controller {
     var prompts: AgentPrompts { AgentPrompts(stores: stores, ai: ai) }
     var commandParser: CommandParser?
     nonisolated static let noNewsMarker = "SIN_NOVEDADES"
-    nonisolated static let maxRunSeconds: TimeInterval = 3600
-    nonisolated static let authAlertEvery: TimeInterval = 3600
 
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = String(localized: "en espera")
@@ -52,22 +52,19 @@ public final class Controller {
     var watchdog: ScheduledWork?
     var lastAuthAlert: Date?
 
-    nonisolated static let watchdogInterval: TimeInterval = 60
-    nonisolated static let recoveryDelay: TimeInterval = 5
-
     public var isIdle: Bool { running == nil && queue.isEmpty }
     public var runningAgent: AgentKind? { runningMode.map(AgentKind.owner) }
 
     public func start() {
         if watchdog == nil {
-            watchdog = clock.every(Self.watchdogInterval, tolerance: 0) { [weak self] in self?.stopIfStuck() }
+            watchdog = clock.every(policy.corridas.watchdog, tolerance: 0) { [weak self] in self?.stopIfStuck() }
         }
         stores.workspace.prepare()
         chat.onMessage = { [weak self] message in self?.handle(message) }
         chat.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
         chat.start()
         Task { @MainActor [weak self] in await self?.channel.completeMissingDetails() }
-        clock.after(Self.recoveryDelay) { [weak self] in self?.recoverInterrupted() }
+        clock.after(policy.corridas.recoveryDelay) { [weak self] in self?.recoverInterrupted() }
     }
 
     func setStatus(_ text: String) {
@@ -187,7 +184,7 @@ public final class Controller {
 
     func stopIfStuck() {
         guard let run = running, run.isRunning, let started = runStarted,
-            Date().timeIntervalSince(started) > Self.maxRunSeconds
+            Date().timeIntervalSince(started) > policy.corridas.maximum
         else { return }
         log.write("IA: lote \(runningBatch ?? "?") lleva más de 1 hora, se detiene")
         run.stop()

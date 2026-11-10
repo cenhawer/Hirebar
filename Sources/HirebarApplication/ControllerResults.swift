@@ -101,8 +101,6 @@ extension Controller {
         }
     }
 
-    nonisolated static let proposalSeenWindow: TimeInterval = 30 * 86400
-
     func offerProposals(from output: String, mode: Mode) {
         guard let execution = TaskProfiles.executionMode(for: mode) else { return }
         let proposals: [Proposal]
@@ -122,7 +120,7 @@ extension Controller {
                         """))
             return
         }
-        let intake = ProposalIntake(window: Self.proposalSeenWindow, rules: targetRules).accept(
+        let intake = ProposalIntake(window: policy.corridas.proposalSeenWindow, rules: targetRules).accept(
             proposals,
             allowed: TaskProfiles.allowedProposals(for: mode),
             seen: stores.executionState.seenProposals(),

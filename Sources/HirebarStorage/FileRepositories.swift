@@ -49,6 +49,8 @@ public struct FileContentAccountRepository: ContentAccountRepository {
     public func videoDescription(_ account: ContentAccount) -> String? { ContentAccountFiles.copyableText(account.videoDescription) }
     public func hasVideoScript(_ account: ContentAccount) -> Bool { ContentAccountFiles.hasVideoScript(account) }
     public func latestRecording(_ account: ContentAccount) -> URL? { ContentAccountFiles.latestRecording(account) }
+    public func slideImages(_ account: ContentAccount) -> [URL] { ContentAccountFiles.slideImages(account) }
+    public func videoPreview(_ account: ContentAccount) -> URL? { ContentAccountFiles.videoPreview(account) }
 }
 
 public struct FileMetricsRepository: MetricsRepository {

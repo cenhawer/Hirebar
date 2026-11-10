@@ -51,6 +51,16 @@ enum ContentAccountFiles {
         FileManager.default.fileExists(atPath: account.videoScript.path)
     }
 
+    static func slideImages(_ account: ContentAccount) -> [URL] {
+        let files = (try? FileManager.default.contentsOfDirectory(at: account.slides, includingPropertiesForKeys: nil)) ?? []
+        return files.filter { $0.pathExtension.lowercased() == "png" }
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+    }
+
+    static func videoPreview(_ account: ContentAccount) -> URL? {
+        [account.finalVideo, account.previewVideo].first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
     static func latestRecording(_ account: ContentAccount) -> URL? {
         let keys: [URLResourceKey] = [.contentModificationDateKey]
         let files = (try? FileManager.default.contentsOfDirectory(at: account.videoFolder, includingPropertiesForKeys: keys)) ?? []

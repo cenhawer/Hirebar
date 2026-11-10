@@ -75,8 +75,11 @@ final class PanelModel {
     var onQuit: (() -> Void)?
     var onOpenSettings: ((SettingsPage?) -> Void)?
     var onOpenActivity: (() -> Void)?
+    var onOpenInbox: (() -> Void)?
+    var pendingCount = 0
 
     func refresh() {
+        pendingCount = engine.controller.pendingLists().count + engine.controller.pendingDrafts().count
         let running = engine.controller.runningAgent
         let pauses = engine.controller.pauseReasons()
         agents = AgentKind.allCases.map { card($0, running: running, pauseReason: pauses[$0]) }
@@ -174,6 +177,10 @@ final class PanelModel {
 
     func editSettings(_ kind: AgentKind?) {
         onOpenSettings?(kind.map { .agent($0) })
+    }
+
+    func openInbox() {
+        onOpenInbox?()
     }
 
     func editContentAccounts() {

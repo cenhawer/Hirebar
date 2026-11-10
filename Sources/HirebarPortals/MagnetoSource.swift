@@ -10,7 +10,6 @@ public struct MagnetoSource: JobSource {
     public let hitPrefix = "mg"
     public let requiresRemoteInDescription = true
     static let base = "https://www.magneto365.com"
-    static let maxAgeDays = 7.0
 
     let fetcher: WebPageFetcher
     let now: PortalClock
@@ -59,11 +58,13 @@ public struct MagnetoSource: JobSource {
         PageSlice.between(page, from: "\"@type\":\"JobPosting\"", to: "\"hiringOrganization\"", max: 20000)
     }
 
-    public func staleReason(page: String) -> String? {
+    public func staleReason(page: String, profile: JobProfile) -> String? {
         guard let posted = TextTools.first(page, "\"datePosted\":\"(\\d{4}-\\d{2}-\\d{2})") else { return nil }
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
-        guard let date = formatter.date(from: posted), now().timeIntervalSince(date) > Self.maxAgeDays * 86400 else { return nil }
+        guard let date = formatter.date(from: posted),
+            now().timeIntervalSince(date) > TimeInterval(profile.portals.magnetoMaxAgeDays) * 86400
+        else { return nil }
         return String(localized: "publicada el \(posted)")
     }
 }

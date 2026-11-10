@@ -28,17 +28,17 @@ public protocol JobSource: ListingSource {
     func descriptionCheck(for hit: Hit) -> DescriptionCheck
     func descriptionText(from page: String) -> String?
     func location(from page: String) -> String
-    func staleReason(page: String) -> String?
+    func staleReason(page: String, profile: JobProfile) -> String?
 }
 
-public extension JobSource {
-    var requiresRemoteInDescription: Bool { false }
-    func descriptionCheck(for hit: Hit) -> DescriptionCheck { .read(address: hit.url) }
-    func descriptionText(from page: String) -> String? { TextTools.clean(page) }
-    func location(from page: String) -> String { "" }
-    func staleReason(page: String) -> String? { nil }
+extension JobSource {
+    public var requiresRemoteInDescription: Bool { false }
+    public func descriptionCheck(for hit: Hit) -> DescriptionCheck { .read(address: hit.url) }
+    public func descriptionText(from page: String) -> String? { TextTools.clean(page) }
+    public func location(from page: String) -> String { "" }
+    public func staleReason(page: String, profile: JobProfile) -> String? { nil }
 
-    func owns(_ hit: Hit) -> Bool { hit.id.hasPrefix(hitPrefix + ":") }
+    public func owns(_ hit: Hit) -> Bool { hit.id.hasPrefix(hitPrefix + ":") }
 }
 
 public protocol WebPageFetcher: Sendable {

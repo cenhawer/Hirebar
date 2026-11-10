@@ -9,7 +9,6 @@ public struct GetOnBoardSource: JobSource {
     public let name = "Get on Board"
     public let hitPrefix = "gob"
     static let api = "https://www.getonbrd.com/api/v0/search/jobs"
-    static let maxAgeMinutes = 72 * 60
 
     let fetcher: WebPageFetcher
     let now: PortalClock
@@ -47,7 +46,7 @@ public struct GetOnBoardSource: JobSource {
                 else { continue }
                 let published = (attributes["published_at"] as? NSNumber)?.doubleValue ?? 0
                 let age = Int((now - published) / 60)
-                guard age >= 0, age <= Self.maxAgeMinutes else { continue }
+                guard age >= 0, age <= jobs.portals.getOnBoardMaxAgeMinutes else { continue }
                 let modality = attributes["remote_modality"] as? String ?? ""
                 let countries = (attributes["countries"] as? [String]) ?? []
                 guard modality == "fully_remote" || (modality == "remote_local" && countries.contains(country)) else { continue }

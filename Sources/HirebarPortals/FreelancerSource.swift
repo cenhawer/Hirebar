@@ -8,7 +8,6 @@ public struct FreelancerSource: ListingSource {
     public let id = "freelancer"
     public let name = "Freelancer"
     static let api = "https://www.freelancer.com/api/projects/0.1/projects/active/"
-    static let maxAgeMinutes = 1440
 
     let fetcher: WebPageFetcher
     let now: PortalClock
@@ -19,6 +18,7 @@ public struct FreelancerSource: ListingSource {
     }
 
     public func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
+        let rules = profile.freelance.portals
         var projects: [Int: [String: Any]] = [:]
         var users: [String: Any] = [:]
         for offset in [0, 100, 200] {
@@ -49,7 +49,7 @@ public struct FreelancerSource: ListingSource {
             guard !skip.contains("f:\(projectId)") else { continue }
             let submitted = (project["time_submitted"] as? NSNumber)?.doubleValue ?? 0
             let age = Int((now - submitted) / 60)
-            guard age >= 0, age <= Self.maxAgeMinutes else { continue }
+            guard age >= 0, age <= rules.freelancerMaxAgeMinutes else { continue }
             recent += 1
             let upgrades = project["upgrades"] as? [String: Any] ?? [:]
             if (upgrades["pf_only"] as? Bool) == true || (project["nonpublic"] as? Bool) == true { continue }
@@ -89,11 +89,11 @@ public struct FreelancerSource: ListingSource {
             let hit = Hit(
                 id: "f:\(projectId)", platform: name, fit: fit, title: title,
                 url: "https://www.freelancer.com/projects/" + seo, detail: detail, score: bids)
-            if fit == .strong && bids <= 80 {
+            if fit == .strong && bids <= rules.freelancerBids.strong {
                 outcome.hits.append(hit)
-            } else if fit == .stretch && bids <= 60 {
+            } else if fit == .stretch && bids <= rules.freelancerBids.stretch {
                 outcome.hits.append(hit)
-            } else if bids <= 80 {
+            } else if bids <= rules.freelancerBids.backup {
                 outcome.backup.append(hit.with(fit: .stretch, score: bids + (verified ? 0 : 10)))
             }
         }

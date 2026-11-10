@@ -57,7 +57,7 @@ public final class JobRadar: Radar {
                 await portals.fetcher.pause(1)
                 continue
             }
-            if let reason = source.staleReason(page: page) {
+            if let reason = source.staleReason(page: page, profile: profile) {
                 log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
                 await portals.fetcher.pause(1)
                 continue

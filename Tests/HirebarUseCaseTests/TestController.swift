@@ -5,12 +5,18 @@ import HirebarStorage
 
 @MainActor
 extension Controller {
+    nonisolated static var repositoryPolicy: EnginePolicy {
+        let file = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/motor.json")
+        guard let policy = try? EnginePolicy.load(from: file) else { fatalError("Resources/motor.json no se pudo leer") }
+        return policy
+    }
+
     nonisolated static var repositoryResources: EngineResources {
         let folder = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources")
         return EngineResources(
             targetRules: (try? TargetRulesFile.load(from: folder.appendingPathComponent("destinos.json"))) ?? TargetRulesFile.fallback,
             commands: try? CommandVocabularyFile.load(from: folder.appendingPathComponent("comandos.json")),
-            channel: try? ChannelSettings.load(from: folder.appendingPathComponent("canal.json")))
+            channel: try? ChannelSettings.load(from: folder.appendingPathComponent("canal.json")), policy: repositoryPolicy)
     }
 
     static func forTests(

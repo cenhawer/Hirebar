@@ -21,7 +21,7 @@ final class SchedulerTests: XCTestCase {
 
     func start(at moment: Date) {
         harness = EngineHarness(at: moment)
-        scheduler = Scheduler(stores: harness.stores, clock: harness.clock)
+        scheduler = Scheduler(stores: harness.stores, clock: harness.clock, policy: Controller.repositoryPolicy)
         scheduler.controller = harness.controller
         scheduler.start()
     }

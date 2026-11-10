@@ -29,4 +29,31 @@ final class EngineResourcesTests: XCTestCase {
         XCTAssertEqual(rules.ignoredQueryParameterPrefixes, ["utm_"])
         XCTAssertEqual(rules.webSchemes, ["https"])
     }
+
+    static let repositoryPolicy = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().appendingPathComponent("Resources/motor.json")
+
+    func policyData(_ change: (inout [String: Any]) -> Void) throws -> Data {
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: Self.repositoryPolicy)) as? [String: Any])
+        change(&object)
+        return try JSONSerialization.data(withJSONObject: object)
+    }
+
+    func testTheBundledEnginePolicyIsReadable() throws {
+        let policy = try EnginePolicy.decode(Data(contentsOf: Self.repositoryPolicy))
+        XCTAssertEqual(policy.corridas.maximum, 3600)
+        XCTAssertEqual(policy.radares.freelance.seenWindow, 14 * 86400)
+        XCTAssertEqual(policy.programador.horaLimpiezaDomingo, 19)
+    }
+
+    func testAnEnginePolicyWithAnUnknownVersionOrEmptyLimitsIsRejected() throws {
+        let newer = try policyData { $0["schemaVersion"] = 2 }
+        XCTAssertThrowsError(try EnginePolicy.decode(newer)) { XCTAssertEqual($0 as? ResourceFailure, .unsupportedVersion(2)) }
+        let empty = try policyData { object in
+            var runs = object["corridas"] as? [String: Any] ?? [:]
+            runs["maximoMinutos"] = 0
+            object["corridas"] = runs
+        }
+        XCTAssertThrowsError(try EnginePolicy.decode(empty)) { XCTAssertEqual($0 as? ResourceFailure, .invalidValues) }
+    }
 }

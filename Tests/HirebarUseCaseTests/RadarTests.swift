@@ -80,7 +80,8 @@ final class RadarTests: XCTestCase {
 
     func testFreelanceFindingsBecomeAPendingListAndAreRemembered() async throws {
         let source = FakeListingSource(id: "fake-freelance", name: "Portal", hits: [hit("p1", platform: "Portal")])
-        let radar = FreelanceRadar(stores: harness.stores, clock: harness.clock, portals: portals(freelance: [source]))
+        let radar = FreelanceRadar(
+            stores: harness.stores, clock: harness.clock, portals: portals(freelance: [source]), policy: Controller.repositoryPolicy)
         radar.controller = harness.controller
         await waitForResult(of: radar)
         let batch = try XCTUnwrap(pendingList(.freelance))
@@ -92,7 +93,8 @@ final class RadarTests: XCTestCase {
         harness.runState.saveSeen(["p1": harness.clock.now()], key: "radar.seen")
         let before = harness.stores.batches.load().count
         let source = FakeListingSource(id: "fake-freelance", name: "Portal", hits: [hit("p1", platform: "Portal")])
-        let radar = FreelanceRadar(stores: harness.stores, clock: harness.clock, portals: portals(freelance: [source]))
+        let radar = FreelanceRadar(
+            stores: harness.stores, clock: harness.clock, portals: portals(freelance: [source]), policy: Controller.repositoryPolicy)
         await waitForResult(of: radar)
         XCTAssertTrue(radar.status.hasSuffix("nada nuevo"))
         XCTAssertEqual(harness.stores.batches.load().count, before)
@@ -102,7 +104,8 @@ final class RadarTests: XCTestCase {
         let source = FakeJobSource(hits: [
             hit("fake:1", platform: "Portal de prueba"), hit("fake:2", platform: "Portal de prueba", fit: .stretch),
         ])
-        let radar = JobRadar(stores: harness.stores, clock: harness.clock, portals: portals(jobs: [source]))
+        let radar = JobRadar(
+            stores: harness.stores, clock: harness.clock, portals: portals(jobs: [source]), policy: Controller.repositoryPolicy)
         radar.controller = harness.controller
         await waitForResult(of: radar)
         let batch = try XCTUnwrap(pendingList(.jobs))
@@ -111,7 +114,9 @@ final class RadarTests: XCTestCase {
 
     func testATurnedOffRadarDoesNotSearch() {
         harness.stores.agents.update(.jobs) { $0.enabled = false }
-        let radar = JobRadar(stores: harness.stores, clock: harness.clock, portals: portals(jobs: [FakeJobSource(hits: [])]))
+        let radar = JobRadar(
+            stores: harness.stores, clock: harness.clock, portals: portals(jobs: [FakeJobSource(hits: [])]),
+            policy: Controller.repositoryPolicy)
         radar.checkNow()
         XCTAssertEqual(radar.status, "apagado")
     }

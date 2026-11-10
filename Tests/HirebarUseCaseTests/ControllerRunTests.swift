@@ -59,7 +59,7 @@ final class ControllerRunTests: XCTestCase {
     func testARunLongerThanTheLimitIsStopped() throws {
         harness.controller.runScheduled(.weeklyReport, manual: true)
         let run = try XCTUnwrap(harness.runner.runs.first)
-        harness.clock.advance(by: Controller.maxRunSeconds + 1)
+        harness.clock.advance(by: harness.controller.policy.corridas.maximum + 1)
         XCTAssertFalse(run.isRunning)
     }
 }

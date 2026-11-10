@@ -1,7 +1,7 @@
 import Foundation
 import HirebarDomain
 
-public struct ProtectedFiles {
+public struct ProtectedFiles: Sendable {
     public typealias Snapshot = [String: Data]
 
     public let folder: URL

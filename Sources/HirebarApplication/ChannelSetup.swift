@@ -19,6 +19,7 @@ public enum ChannelChange: Equatable, Sendable {
     case keychainFailed
 }
 
+@MainActor
 public final class ChannelSetup {
     let settings: ChannelSettings?
     let clock: Clock

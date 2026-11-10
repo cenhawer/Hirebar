@@ -20,14 +20,20 @@ public enum AudioCheck: Equatable, Sendable {
     case tooLong(minutes: Int, megabytes: Int)
 }
 
+public typealias SlidesCompletion = @MainActor @Sendable (_ made: [URL], _ failed: Int) -> Void
+public typealias VideoCompletion = @MainActor @Sendable (_ video: URL?, _ problem: String?) -> Void
+public typealias CVCompletion = @MainActor @Sendable (CVRenderResult) -> Void
+
+@MainActor
 public protocol MediaRenderer {
     func prepareSlides(for account: ContentAccount)
-    func renderSlides(for account: ContentAccount, completion: @escaping (_ made: [URL], _ failed: Int) -> Void)
-    func renderVideoPreview(for account: ContentAccount, completion: @escaping (_ video: URL?, _ problem: String?) -> Void)
+    func renderSlides(for account: ContentAccount, completion: @escaping SlidesCompletion)
+    func renderVideoPreview(
+        for account: ContentAccount, completion: @escaping VideoCompletion)
     func renderVideoWithVoice(
-        for account: ContentAccount, recording: URL, completion: @escaping (_ video: URL?, _ problem: String?) -> Void)
+        for account: ContentAccount, recording: URL, completion: @escaping VideoCompletion)
     func readingScript(for account: ContentAccount) -> String?
-    func renderCVs(for profile: Profile, completion: @escaping (CVRenderResult) -> Void)
+    func renderCVs(for profile: Profile, completion: @escaping CVCompletion)
     func audioCheck(bytes: Int?, seconds: Int?) -> AudioCheck
     func maxAudioBytes() -> Int?
 }

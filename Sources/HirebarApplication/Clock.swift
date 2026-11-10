@@ -1,11 +1,13 @@
 import Foundation
 
+@MainActor
 public protocol ScheduledWork: AnyObject {
     func cancel()
 }
 
-public protocol Clock: Sendable {
+@MainActor
+public protocol Clock {
     func now() -> Date
-    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping () -> Void) -> ScheduledWork
-    func after(_ delay: TimeInterval, _ action: @escaping () -> Void)
+    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) -> ScheduledWork
+    func after(_ delay: TimeInterval, _ action: @escaping @MainActor () -> Void)
 }

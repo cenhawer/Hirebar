@@ -38,12 +38,14 @@ public enum AIRunFailure: Error, Equatable {
     case couldNotOpen(String)
 }
 
+@MainActor
 public protocol AIRun: AnyObject {
     var isRunning: Bool { get }
     func stop()
 }
 
+@MainActor
 public protocol AIRunner {
-    func start(_ request: AIRunRequest, completion: @escaping (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure>
+    func start(_ request: AIRunRequest, completion: @escaping @MainActor @Sendable (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure>
     func loginHint(_ kind: AIEngineKind) -> String
 }

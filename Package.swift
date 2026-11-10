@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.2
 import PackageDescription
 
 let adapters: [Target.Dependency] = [
@@ -8,7 +8,7 @@ let adapters: [Target.Dependency] = [
 
 let package = Package(
     name: "Hirebar",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v26)],
     products: [
         .executable(name: "Hirebar", targets: ["Hirebar"]),
     ],
@@ -21,7 +21,7 @@ let package = Package(
         .target(name: "HirebarPortals", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarMedia", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarAI", dependencies: ["HirebarDomain", "HirebarApplication"]),
-        .executableTarget(name: "Hirebar", dependencies: adapters),
+        .executableTarget(name: "Hirebar", dependencies: adapters, swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(name: "HirebarDomainTests", dependencies: ["HirebarDomain"]),
         .testTarget(name: "HirebarApplicationTests", dependencies: ["HirebarApplication", "HirebarDomain"]),
         .testTarget(name: "HirebarStorageTests", dependencies: ["HirebarApplication", "HirebarDomain", "HirebarStorage"]),

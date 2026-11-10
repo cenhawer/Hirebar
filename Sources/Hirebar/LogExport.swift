@@ -6,8 +6,8 @@ import HirebarStorage
 import HirebarTelegram
 
 enum LogExport {
-    static let tool = "/usr/bin/log"
-    static let window = "3d"
+    nonisolated static let tool = "/usr/bin/log"
+    nonisolated static let window = "3d"
 
     static func openRecent() {
         let file = Paths.log

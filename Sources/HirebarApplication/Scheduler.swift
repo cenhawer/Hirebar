@@ -1,6 +1,7 @@
 import Foundation
 import HirebarDomain
 
+@MainActor
 public final class Scheduler {
     public weak var controller: Controller?
     public weak var jobRadar: JobRadar?
@@ -13,10 +14,10 @@ public final class Scheduler {
         self.stores = stores
         self.clock = clock
     }
-    static let cleanupHour = 19
-    static let tickInterval: TimeInterval = 60
-    static let tickTolerance: TimeInterval = 10
-    static let firstTickDelay: TimeInterval = 120
+    nonisolated static let cleanupHour = 19
+    nonisolated static let tickInterval: TimeInterval = 60
+    nonisolated static let tickTolerance: TimeInterval = 10
+    nonisolated static let firstTickDelay: TimeInterval = 120
 
     public var onChange: (() -> Void)?
     private var timer: ScheduledWork?

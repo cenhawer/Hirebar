@@ -20,6 +20,7 @@ public protocol ExecutionStateStore: Sendable {
     func removeRecords(before date: Date) throws
 }
 
+@MainActor
 public protocol ExecutionAlerts: Sendable {
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool)
 }

@@ -98,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         NSApp.activate(ignoringOtherApps: true)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
-        let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in self?.panel.refresh() }
+        let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.panel.refresh() } }
         RunLoop.main.add(timer, forMode: .common)
         panelTimer = timer
     }
@@ -107,7 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         panelTimer?.invalidate()
         panelTimer = nil
         if popover.isShown { popover.performClose(nil) }
-        if let action { DispatchQueue.main.async(execute: action) }
+        if let action { Task { @MainActor in action() } }
     }
 
     func popoverDidClose(_ notification: Notification) {

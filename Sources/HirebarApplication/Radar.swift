@@ -1,6 +1,7 @@
 import Foundation
 import HirebarDomain
 
+@MainActor
 public class Radar {
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = "sin buscar todavía"
@@ -22,8 +23,8 @@ public class Radar {
         self.seenDays = seenDays
     }
 
-    static let tickInterval: TimeInterval = 30
-    static let tickTolerance: TimeInterval = 5
+    nonisolated static let tickInterval: TimeInterval = 30
+    nonisolated static let tickTolerance: TimeInterval = 5
 
     var intervalMinutes: Int { 60 }
 

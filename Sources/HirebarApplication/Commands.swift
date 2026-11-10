@@ -4,7 +4,7 @@ import HirebarDomain
 private let log = Log(.telegram)
 
 extension Controller {
-    static let help = """
+    nonisolated static let help = """
         Comandos:
         si: la IA envía/postula a toda la última lista
         si 1 3: solo esos números
@@ -35,8 +35,8 @@ extension Controller {
         (Puedes responder citando un aviso para elegir cuál lista.)
         """
 
-    static let callbackAnswer = "Recibido"
-    static let missingVocabulary =
+    nonisolated static let callbackAnswer = "Recibido"
+    nonisolated static let missingVocabulary =
         "Faltan los comandos dentro de la app (comandos.json). Vuelve a instalarla con scripts/bundle.sh --install."
 
     func handle(_ message: ChatMessage) {
@@ -132,7 +132,7 @@ extension Controller {
         }
     }
 
-    static let practiceOrigin = "Telegram"
+    nonisolated static let practiceOrigin = "Telegram"
 
     func handlePractice(_ words: [String]) {
         let named = words.count > 1 ? stores.agents.parse(words.dropLast().joined(separator: " ")) : nil
@@ -167,7 +167,7 @@ extension Controller {
             + "proyectos o vacantes para ti.\n\n" + help
     }
 
-    static let pairingReply = "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos."
+    nonisolated static let pairingReply = "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos."
 
     func admits(_ message: ChatMessage) -> Bool {
         guard let sender = message.sender else {
@@ -318,7 +318,7 @@ extension Controller {
         reply("Descartada. Sigo buscando.")
     }
 
-    static let autoSendOrigin = "Telegram"
+    nonisolated static let autoSendOrigin = "Telegram"
 
     private func handleAuto(_ rest: [String]) {
         let named = rest.count > 1 ? stores.agents.parse(rest.dropLast().joined(separator: " ")) : nil
@@ -518,14 +518,18 @@ extension Controller {
             return
         }
         reply("Recibí tu audio. Armo el video de \(account.title) con tu voz; tarda unos minutos.")
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
-            let limit = self?.media.maxAudioBytes()
-            guard self?.chat.download(fileId: fileId, to: file, maxBytes: limit) == true else {
-                DispatchQueue.main.async { self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.") }
+        let file = account.videoFolder.appendingPathComponent("grabacion.\(ext)")
+        let limit = media.maxAudioBytes()
+        let chat = chat
+        Task { [weak self] in
+            let downloaded = await Task.detached(priority: .userInitiated) {
+                chat.download(fileId: fileId, to: file, maxBytes: limit)
+            }.value
+            guard downloaded else {
+                self?.reply("No pude descargar tu audio de Telegram. Mándalo otra vez.")
                 return
             }
-            DispatchQueue.main.async { self?.deliverVoiced(account, recording: file) }
+            self?.deliverVoiced(account, recording: file)
         }
     }
 

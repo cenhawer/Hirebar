@@ -3,6 +3,7 @@ import HirebarDomain
 
 private let log = Log(.notifications)
 
+@MainActor
 public struct Notifier: Sendable {
     public let chat: ChatChannel
     let desktop: DesktopNotifications
@@ -22,7 +23,7 @@ public struct Notifier: Sendable {
         chat.isConfigured && !chat.tokenRejected && chatId != 0
     }
 
-    static let messageLimit = 3800
+    nonisolated static let messageLimit = 3800
 
     public func announce(_ batch: Batch, title: String, footer: String) {
         var blocks = [title]
@@ -54,7 +55,7 @@ public struct Notifier: Sendable {
         }
     }
 
-    static func chunks(_ blocks: [String], limit: Int) -> [String] {
+    nonisolated static func chunks(_ blocks: [String], limit: Int) -> [String] {
         var messages: [String] = []
         var current = ""
         for block in blocks.flatMap({ pieces(of: $0, limit: limit) }) {
@@ -68,7 +69,7 @@ public struct Notifier: Sendable {
         return messages
     }
 
-    static func pieces(of block: String, limit: Int) -> [String] {
+    nonisolated static func pieces(of block: String, limit: Int) -> [String] {
         guard block.count > limit else { return [block] }
         var pieces: [String] = []
         var rest = Substring(block)
@@ -83,7 +84,7 @@ public struct Notifier: Sendable {
         _ messages: [String],
         chatId: Int64,
         buttons: [[(String, String)]],
-        completion: @escaping (Int?) -> Void
+        completion: @escaping @MainActor @Sendable (Int?) -> Void
     ) {
         guard let first = messages.first else {
             completion(nil)
@@ -99,7 +100,7 @@ public struct Notifier: Sendable {
         }
     }
 
-    static let notificationTitle = "Hirebar"
+    nonisolated static let notificationTitle = "Hirebar"
 
     public func tell(_ text: String) {
         guard canUseTelegram else {
@@ -119,7 +120,7 @@ public struct Notifier: Sendable {
         chat.sendDocument(file, caption: caption, chatId: chatId)
     }
 
-    public func sendPhotos(_ files: [URL], caption: String, completion: @escaping () -> Void) {
+    public func sendPhotos(_ files: [URL], caption: String, completion: @escaping @MainActor @Sendable () -> Void) {
         guard canUseTelegram, !files.isEmpty else {
             if let folder = files.first?.deletingLastPathComponent().path {
                 log.write("Imágenes listas sin canal para enviarlas: \(folder)")
@@ -130,7 +131,7 @@ public struct Notifier: Sendable {
         chat.sendPhotos(files, caption: caption, chatId: chatId, completion: completion)
     }
 
-    public func sendVideo(_ file: URL, caption: String, completion: @escaping () -> Void) {
+    public func sendVideo(_ file: URL, caption: String, completion: @escaping @MainActor @Sendable () -> Void) {
         guard canUseTelegram else {
             log.write("Video listo sin canal para enviarlo: \(file.path)")
             completion()

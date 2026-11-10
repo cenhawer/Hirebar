@@ -16,7 +16,7 @@ final class MemoryRunState: RunStateRepository, @unchecked Sendable {
 
 final class RecordingWorkspace: WorkspaceRepository, @unchecked Sendable {
     private(set) var cleanUps = 0
-    func prepare() { FileWorkspaceRepository().prepare() }
+    func prepare() { Paths.ensure() }
     func cleanUp() { cleanUps += 1 }
 }
 
@@ -24,7 +24,8 @@ extension Repositories {
     static func forTests(
         runState: RunStateRepository = MemoryRunState(), workspace: WorkspaceRepository = RecordingWorkspace()
     ) -> Repositories {
-        let files = Repositories.files(searchDefaults: Controller.repositorySearchDefaults)
+        let files = Repositories.files(
+            searchDefaults: Controller.repositorySearchDefaults, retention: Controller.repositoryRetention)
         return Repositories(
             config: files.config, batches: files.batches, agents: files.agents, contentAccounts: files.contentAccounts,
             metrics: files.metrics, profile: files.profile, quotas: files.quotas, portals: files.portals,

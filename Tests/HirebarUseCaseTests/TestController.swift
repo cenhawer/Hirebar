@@ -20,13 +20,19 @@ extension Controller {
         return defaults
     }
 
+    nonisolated static var repositoryRetention: RetentionPolicy {
+        let file = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/retencion.json")
+        guard let policy = try? RetentionPolicy.load(from: file) else { fatalError("Resources/retencion.json no se pudo leer") }
+        return policy
+    }
+
     nonisolated static var repositoryResources: EngineResources {
         let folder = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources")
         return EngineResources(
             targetRules: (try? TargetRulesFile.load(from: folder.appendingPathComponent("destinos.json"))) ?? TargetRulesFile.fallback,
             commands: try? CommandVocabularyFile.load(from: folder.appendingPathComponent("comandos.json")),
             channel: try? ChannelSettings.load(from: folder.appendingPathComponent("canal.json")), policy: repositoryPolicy,
-            searchDefaults: repositorySearchDefaults)
+            searchDefaults: repositorySearchDefaults, retention: repositoryRetention)
     }
 
     static func forTests(

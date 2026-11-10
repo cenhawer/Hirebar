@@ -82,7 +82,7 @@ public final class Telegram: @unchecked Sendable {
 
     public var isConfigured: Bool { currentToken() != nil }
 
-    private func currentToken() -> String? {
+    func currentToken() -> String? {
         lock.lock()
         defer { lock.unlock() }
         return cachedToken
@@ -111,14 +111,14 @@ public final class Telegram: @unchecked Sendable {
         Thread.detachNewThread { [weak self] in self?.pollLoop() }
     }
 
-    private func call(_ method: String, _ params: [String: Any], timeout: TimeInterval = 30) -> [String: Any]? {
+    func call(_ method: String, _ params: [String: Any], timeout: TimeInterval = 30) -> [String: Any]? {
         guard let token = currentToken(),
             let url = URL(string: "https://api.telegram.org/bot\(token)/\(method)")
         else { return nil }
         return TelegramHTTP.postJSON(url, params, timeout: timeout)
     }
 
-    private func call(_ method: String, body: Data?, timeout: TimeInterval = 30) -> [String: Any]? {
+    func call(_ method: String, body: Data?, timeout: TimeInterval = 30) -> [String: Any]? {
         guard let token = currentToken(),
             let url = URL(string: "https://api.telegram.org/bot\(token)/\(method)")
         else { return nil }
@@ -155,172 +155,6 @@ public final class Telegram: @unchecked Sendable {
                 }
             }
         }
-    }
-
-    public static func parse(_ update: [String: Any]) -> ChatMessage? {
-        if let callback = update["callback_query"] as? [String: Any] {
-            let message = callback["message"] as? [String: Any]
-            let chat = message?["chat"] as? [String: Any]
-            var result = ChatMessage(
-                chatId: (chat?["id"] as? NSNumber)?.int64Value ?? 0,
-                text: callback["data"] as? String ?? "",
-                replyTo: (message?["message_id"] as? NSNumber)?.intValue,
-                callbackId: callback["id"] as? String)
-            result.sender = sender(from: callback["from"] as? [String: Any], chat: chat, sentAt: Date(), viaButton: true)
-            return result
-        }
-        guard let message = update["message"] as? [String: Any], let chat = message["chat"] as? [String: Any] else { return nil }
-        guard let chatId = (chat["id"] as? NSNumber)?.int64Value else { return nil }
-        let reply = (message["reply_to_message"] as? [String: Any])?["message_id"] as? NSNumber
-        let sentAt = (message["date"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) } ?? Date()
-        let from = sender(from: message["from"] as? [String: Any], chat: chat, sentAt: sentAt)
-        let attachment = (message["voice"] ?? message["audio"] ?? message["video_note"]) as? [String: Any]
-        if let audio = attachment, let fileId = audio["file_id"] as? String {
-            let name = (audio["file_name"] as? String) ?? ""
-            let ext =
-                message["voice"] != nil
-                ? "oga"
-                : (message["video_note"] != nil
-                    ? "mp4"
-                    : (name.contains(".") ? String(name.split(separator: ".").last ?? "m4a") : "m4a"))
-            var result = ChatMessage(
-                chatId: chatId, text: message["caption"] as? String ?? "", replyTo: reply?.intValue, callbackId: nil)
-            result.audioFileId = fileId
-            result.audioExtension = ext
-            result.audioBytes = (audio["file_size"] as? NSNumber)?.intValue
-            result.audioSeconds = (audio["duration"] as? NSNumber)?.intValue
-            result.sender = from
-            return result
-        }
-        guard let text = message["text"] as? String else { return nil }
-        var result = ChatMessage(chatId: chatId, text: text, replyTo: reply?.intValue, callbackId: nil)
-        result.sender = from
-        return result
-    }
-
-    static let privateChatType = "private"
-
-    static func sender(from user: [String: Any]?, chat: [String: Any]?, sentAt: Date, viaButton: Bool = false) -> ChannelSender? {
-        guard let user, let userId = (user["id"] as? NSNumber)?.int64Value,
-            let chatId = (chat?["id"] as? NSNumber)?.int64Value
-        else { return nil }
-        let name = [user["first_name"] as? String, user["last_name"] as? String].compactMap { $0 }.joined(separator: " ")
-        return ChannelSender(
-            userId: userId, chatId: chatId, name: name, username: user["username"] as? String,
-            isPrivateChat: (chat?["type"] as? String) == privateChatType, sentAt: sentAt, viaButton: viaButton)
-    }
-
-    public func send(_ text: String, chatId: Int64, buttons: ChatButtons = [], completion: (@MainActor @Sendable (Int?) -> Void)? = nil) {
-        var params: [String: Any] = [
-            "chat_id": chatId, "text": String(text.prefix(4000)),
-            "disable_web_page_preview": true,
-        ]
-        if !buttons.isEmpty {
-            let keyboard = buttons.map { row in row.map { ["text": $0.0, "callback_data": $0.1] } }
-            params["reply_markup"] = ["inline_keyboard": keyboard]
-        }
-        let payload = TelegramHTTP.encode(params)
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            let result = self?.call("sendMessage", body: payload)
-            let id = ((result?["result"] as? [String: Any])?["message_id"] as? NSNumber)?.intValue
-            if id == nil { log.write("Telegram: no se pudo enviar (\(result?["description"] ?? "sin respuesta"))") }
-            Task { @MainActor in completion?(id) }
-        }
-    }
-
-    public func sendDocument(_ file: URL, caption: String, chatId: Int64) {
-        guard let token = currentToken(),
-            let url = URL(string: "https://api.telegram.org/bot\(token)/sendDocument")
-        else { return }
-        let fields = ["chat_id": String(chatId), "caption": String(caption.prefix(1000))]
-        DispatchQueue.global(qos: .utility).async {
-            let result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "document", file: file)
-            if (result?["ok"] as? Bool) != true {
-                log.write("Telegram: no se pudo enviar \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
-            }
-        }
-    }
-
-    /// Manda las imágenes una por una, en orden, y avisa al terminar.
-    public func sendPhotos(_ files: [URL], caption: String, chatId: Int64, completion: (@MainActor @Sendable () -> Void)? = nil) {
-        guard let token = currentToken(),
-            let url = URL(string: "https://api.telegram.org/bot\(token)/sendPhoto")
-        else {
-            Task { @MainActor in completion?() }
-            return
-        }
-        DispatchQueue.global(qos: .utility).async {
-            for (index, file) in files.enumerated() {
-                var fields = ["chat_id": String(chatId)]
-                if index == 0 && !caption.isEmpty { fields["caption"] = String(caption.prefix(1000)) }
-                var result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "photo", file: file)
-                for _ in 0..<2 where (result?["ok"] as? Bool) != true {
-                    Thread.sleep(forTimeInterval: 3)
-                    result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "photo", file: file)
-                }
-                if (result?["ok"] as? Bool) != true {
-                    let reason = result?["description"] ?? "sin respuesta"
-                    log.write("Telegram: no se pudo enviar la imagen \(file.lastPathComponent) (\(reason))")
-                }
-            }
-            Task { @MainActor in completion?() }
-        }
-    }
-
-    public func sendVideo(_ file: URL, caption: String, chatId: Int64, completion: (@MainActor @Sendable () -> Void)? = nil) {
-        guard let token = currentToken(),
-            let url = URL(string: "https://api.telegram.org/bot\(token)/sendVideo")
-        else {
-            Task { @MainActor in completion?() }
-            return
-        }
-        let fields = ["chat_id": String(chatId), "caption": String(caption.prefix(1000)), "supports_streaming": "true"]
-        DispatchQueue.global(qos: .utility).async {
-            var result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
-            if (result?["ok"] as? Bool) != true {
-                Thread.sleep(forTimeInterval: 5)
-                result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "video", file: file, timeout: 300)
-            }
-            if (result?["ok"] as? Bool) != true {
-                log.write("Telegram: no se pudo enviar el video \(file.lastPathComponent) (\(result?["description"] ?? "sin respuesta"))")
-            }
-            Task { @MainActor in completion?() }
-        }
-    }
-
-    /// Descarga un archivo que mandó la persona (por ejemplo, una nota de voz). Llamar desde un hilo de fondo.
-    public func download(fileId: String, to target: URL, maxBytes: Int? = nil) -> Bool {
-        guard let token = currentToken(),
-            let info = call("getFile", ["file_id": fileId]),
-            let path = (info["result"] as? [String: Any])?["file_path"] as? String,
-            let url = URL(string: "https://api.telegram.org/file/bot\(token)/\(path)")
-        else { return false }
-        final class Box: @unchecked Sendable { var data: Data? }
-        let box = Box()
-        let done = DispatchSemaphore(value: 0)
-        URLSession.shared.dataTask(with: URLRequest(url: url, timeoutInterval: 120)) { data, response, _ in
-            if (response as? HTTPURLResponse)?.statusCode == 200 { box.data = data }
-            done.signal()
-        }.resume()
-        done.wait()
-        guard let data = box.data, data.count > 500, data.count <= (maxBytes ?? Int.max) else { return false }
-        return (try? data.write(to: target, options: .atomic)) != nil
-    }
-
-    public func answerCallback(_ id: String, text: String? = nil) {
-        var params: [String: Any] = ["callback_query_id": id]
-        if let text { params["text"] = text }
-        let payload = TelegramHTTP.encode(params)
-        DispatchQueue.global(qos: .utility).async { [weak self] in _ = self?.call("answerCallbackQuery", body: payload) }
-    }
-
-    public func removeButtons(chatId: Int64, messageId: Int) {
-        let params: [String: Any] = [
-            "chat_id": chatId, "message_id": messageId,
-            "reply_markup": ["inline_keyboard": [[String: String]]()],
-        ]
-        let payload = TelegramHTTP.encode(params)
-        DispatchQueue.global(qos: .utility).async { [weak self] in _ = self?.call("editMessageReplyMarkup", body: payload) }
     }
 }
 

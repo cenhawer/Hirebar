@@ -131,6 +131,7 @@ flowchart TB
 |---|---|---|---|
 | `ChatChannel` | Entrada y salida | Órdenes, aprobaciones y notas de voz de la persona; avisos, listas con botones, fotos, video y documentos | `HirebarTelegram` |
 | `DesktopNotifications` | Salida | Respaldo cuando el canal no está configurado o falla | `HirebarNotifications` |
+| `SystemPermissions` | Entrada y salida | Estado y pedido de los permisos de macOS (reconocimiento de voz, notificaciones) | `Hirebar` sobre `HirebarMedia` y `HirebarNotifications` |
 | `AIRunner` | Salida | Ejecutar una tarea con instrucciones, pedido y perfil (`read`, `draft` o `act`); devolver respuesta o fallo tipado | `HirebarAI` |
 | `ListingSource`/`JobSource` | Salida | Buscar avisos en un portal incluido | `HirebarPortals` |
 | `WebPageFetcher` | Salida | Leer la página de un aviso | `HirebarPortals` |

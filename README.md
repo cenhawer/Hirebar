@@ -31,12 +31,11 @@ Compila, copia la app a `~/Applications/Hirebar.app` y la abre. Aparece un malet
 
 ## Primera configuración
 
-1. **Telegram:** clic en el maletín → engranaje → **Telegram y avisos…**. Pega el token de @BotFather y pulsa **Comprobar**; después escríbele "hola" a tu bot desde tu Telegram y confirma tu nombre en la Mac. Desde ahí el bot solo atiende tu cuenta. En la misma sección permite las notificaciones de macOS: son el respaldo cuando Telegram no está disponible.
+1. **Asistente:** la primera vez se abre solo. Te pide tu nombre, la IA que hace el trabajo (con **Probar**), Telegram (pegas el token de @BotFather, le escribes "hola" a tu bot y confirmas tu nombre; desde ahí el bot solo atiende tu cuenta), los agentes que quieres prendidos y los permisos de macOS (reconocimiento de voz para el video narrado y notificaciones de respaldo). Lo que falte queda en el panel bajo **Falta configurar**; lo vuelves a abrir con engranaje → **Asistente de configuración…**.
 2. **Tu perfil:** pie del panel → **Datos** → abre `workspace/perfil.json` y llénalo con tu información real: datos, experiencia con logros, habilidades con nivel y las versiones de hoja de vida que quieres (`cvVariants`). Viene con un ejemplo para guiarte.
 3. **Hojas de vida:** escribe `hv` a tu bot. Claude genera `perfil.md` y una hoja de vida en PDF por cada versión.
-4. **IA:** pie del panel → **Ajustes → Motor de IA**. Elige cuál usar y pulsa **Probar**.
-5. **Agentes:** en la misma ventana de **Ajustes**. Prende los que quieras, ajusta horarios y portales, y decide cuáles envían solos.
-6. **Inicio automático:** engranaje → **Abrir al iniciar sesión**.
+4. **Ajustes finos:** pie del panel → **Ajustes**: horarios y portales de cada agente, cuáles envían solos y otra IA si la cambias.
+5. **Inicio automático:** engranaje → **Abrir al iniciar sesión**.
 
 ## Dónde quedan tus datos
 

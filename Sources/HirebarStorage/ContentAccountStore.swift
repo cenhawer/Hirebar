@@ -42,7 +42,7 @@ public enum ContentAccountStore {
 
     public static func defaultAccount() -> ContentAccount {
         let owner = Config.load().ownerName
-        return ContentAccount(id: ContentAccount.defaultIdentifier, name: owner == String(localized: "el usuario") ? "" : owner)
+        return ContentAccount(id: ContentAccount.defaultIdentifier, name: owner == Config.placeholderOwnerName ? "" : owner)
     }
 
     public static func enabled() -> [ContentAccount] { load().filter(\.enabled) }

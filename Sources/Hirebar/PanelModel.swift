@@ -59,9 +59,11 @@ enum AgentStyle {
 @Observable
 final class PanelModel {
     let engine: Engine
+    let permissions: SystemPermissions
 
-    init(engine: Engine) {
+    init(engine: Engine, permissions: SystemPermissions) {
         self.engine = engine
+        self.permissions = permissions
     }
 
     var agents: [AgentCardData] = []
@@ -71,6 +73,8 @@ final class PanelModel {
     var telegram = ""
     var telegramReady = false
     var opensAtLogin = false
+    var pendingSetup: [SetupStep] = []
+    var onOpenSetup: (() -> Void)?
 
     var onQuit: (() -> Void)?
     var onOpenSettings: ((SettingsPage?) -> Void)?
@@ -87,6 +91,10 @@ final class PanelModel {
         telegram = ChannelStatusText.describe(channel)
         telegramReady = ChannelStatusText.isReady(channel)
         opensAtLogin = SMAppService.mainApp.status == .enabled
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            pendingSetup = SetupChecklist.pending(await SetupFacts.current(engine: engine, permissions: permissions))
+        }
     }
 
     private func card(_ kind: AgentKind, running: AgentKind?, pauseReason: String?) -> AgentCardData {

@@ -42,9 +42,18 @@ public extension JobSource {
 }
 
 public protocol WebPageFetcher: Sendable {
-    func text(_ address: String) async -> String?
+    func data(_ url: URL) async -> Data?
     func pause(_ seconds: Double) async
 }
+
+extension WebPageFetcher {
+    public func text(_ address: String) async -> String? {
+        guard let url = URL(string: address), let data = await data(url) else { return nil }
+        return String(bytes: data, encoding: .utf8)
+    }
+}
+
+public typealias PortalClock = @Sendable () -> Date
 
 public struct PortalAccess: Sendable {
     public let jobs: [JobSource]

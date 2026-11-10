@@ -5,7 +5,9 @@ public struct Config: Codable, Sendable {
     public static let freelanceSources = ["workana", "freelancer"]
     public static let jobSources = ["linkedin", "getonboard", "computrabajo", "elempleo", "magneto"]
 
-    public var ownerName = String(localized: "el usuario")
+    public static var placeholderOwnerName: String { String(localized: "el usuario") }
+
+    public var ownerName = Config.placeholderOwnerName
     public var sources: [String: Bool] = [:]
     public var channelOwner: ChannelOwner?
     public var botUsername = ""
@@ -16,12 +18,14 @@ public struct Config: Codable, Sendable {
     public var jobMinutes = 30
     public var aiEngine = AIEngineSettings()
     public var updated = ""
+    public var verifiedEngine: AIEngineKind?
+    public var setupDismissed = false
 
     public init() {}
 
     enum CodingKeys: String, CodingKey {
         case ownerName, sources, channelOwner, botUsername, autoFreelance, autoJobs, autoEmails
-        case freelanceMinutes, jobMinutes, aiEngine, updated
+        case freelanceMinutes, jobMinutes, aiEngine, updated, verifiedEngine, setupDismissed
     }
 
     struct LegacyKey: CodingKey {
@@ -33,7 +37,7 @@ public struct Config: Codable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        ownerName = try container.decodeIfPresent(String.self, forKey: .ownerName) ?? "el usuario"
+        ownerName = try container.decodeIfPresent(String.self, forKey: .ownerName) ?? Config.placeholderOwnerName
         sources = try container.decodeIfPresent([String: Bool].self, forKey: .sources) ?? [:]
         channelOwner = (try? container.decodeIfPresent(ChannelOwner.self, forKey: .channelOwner)) ?? nil
         botUsername = try container.decodeIfPresent(String.self, forKey: .botUsername) ?? ""
@@ -44,6 +48,8 @@ public struct Config: Codable, Sendable {
         jobMinutes = max(20, try container.decodeIfPresent(Int.self, forKey: .jobMinutes) ?? 30)
         aiEngine = try container.decodeIfPresent(AIEngineSettings.self, forKey: .aiEngine) ?? AIEngineSettings()
         updated = try container.decodeIfPresent(String.self, forKey: .updated) ?? ""
+        verifiedEngine = try container.decodeIfPresent(AIEngineKind.self, forKey: .verifiedEngine)
+        setupDismissed = try container.decodeIfPresent(Bool.self, forKey: .setupDismissed) ?? false
 
         let legacy = try decoder.container(keyedBy: LegacyKey.self)
         for id in Self.freelanceSources + Self.jobSources where sources[id] == nil {

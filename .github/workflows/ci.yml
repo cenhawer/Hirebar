@@ -48,6 +48,7 @@ jobs:
           python3 -m json.tool Resources/canal.json > /dev/null
           python3 -m json.tool Resources/herramientas.json > /dev/null
           python3 -m json.tool Resources/comandos.json > /dev/null
+          python3 -m json.tool Resources/Localizable.xcstrings > /dev/null
 
   build:
     runs-on: macos-26
@@ -59,6 +60,9 @@ jobs:
 
       - name: Build
         run: swift build
+
+      - name: String Catalog up to date
+        run: scripts/strings.sh --check
 
       - name: Test with coverage
         run: scripts/coverage.sh

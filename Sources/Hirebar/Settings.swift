@@ -63,24 +63,25 @@ struct DayOption: Identifiable {
     let title: String
 }
 
-final class SettingsModel: ObservableObject {
+@Observable
+final class SettingsModel {
     let agentRepository: AgentRepository
 
     init(agentRepository: AgentRepository) {
         self.agentRepository = agentRepository
     }
 
-    @Published var agents: [AgentSettings] = []
-    @Published var sources: [String: Bool] = [:]
-    @Published var skills: [EditableSkill] = []
-    @Published var portals: [CustomPortal] = []
-    @Published var contentAccounts: [EditableAccount] = []
-    @Published var engine = AIEngineSettings()
-    @Published var engineCheck: String?
-    @Published var engineCheckOK = false
-    @Published var checkingEngine = false
-    @Published var selection: SettingsPage? = .agent(.jobs)
-    @Published var message: String?
+    var agents: [AgentSettings] = []
+    var sources: [String: Bool] = [:]
+    var skills: [EditableSkill] = []
+    var portals: [CustomPortal] = []
+    var contentAccounts: [EditableAccount] = []
+    var engine = AIEngineSettings()
+    var engineCheck: String?
+    var engineCheckOK = false
+    var checkingEngine = false
+    var selection: SettingsPage? = .agent(.jobs)
+    var message: String?
 
     var onSaved: (() -> Void)?
 
@@ -217,8 +218,8 @@ final class SettingsModel: ObservableObject {
 }
 
 struct SettingsView: View {
-    @ObservedObject var model: SettingsModel
-    @ObservedObject var channel: ChannelSettingsModel
+    @Bindable var model: SettingsModel
+    @Bindable var channel: ChannelSettingsModel
 
     var body: some View {
         HStack(spacing: 0) {
@@ -298,7 +299,7 @@ struct SettingsView: View {
 
 struct AgentEditor: View {
     @Binding var agent: AgentSettings
-    @ObservedObject var model: SettingsModel
+    @Bindable var model: SettingsModel
 
     private var sourceIDs: [String] {
         switch agent.id {
@@ -419,7 +420,7 @@ struct TaskEditor: View {
             }
             TextField("Horas (0 a 23, separadas por coma)", text: $hoursText, prompt: Text("8, 14"))
                 .onAppear { hoursText = task.hours.sorted().map(String.init).joined(separator: ", ") }
-                .onChange(of: hoursText) { text in
+                .onChange(of: hoursText) { _, text in
                     task.hours = text.split(whereSeparator: { $0 == "," || $0 == " " })
                         .compactMap { Int($0) }
                         .filter { (0...23).contains($0) }
@@ -503,7 +504,7 @@ struct SkillRow: View {
             .frame(width: 210)
             TextField("Otros nombres", text: $aliasesText, prompt: Text("node, nodejs"))
                 .onAppear { aliasesText = skill.aliases.joined(separator: ", ") }
-                .onChange(of: aliasesText) { text in
+                .onChange(of: aliasesText) { _, text in
                     skill.aliases = text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
                 }
             Button(action: onDelete) {
@@ -564,7 +565,7 @@ struct CustomPortalsSection: View {
 }
 
 struct EngineEditor: View {
-    @ObservedObject var model: SettingsModel
+    @Bindable var model: SettingsModel
 
     static let customWarning =
         "Hirebar no puede verificar qué permisos tienen estos comandos. El de lectura no debería poder enviar, "

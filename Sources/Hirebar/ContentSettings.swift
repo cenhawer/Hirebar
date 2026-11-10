@@ -158,8 +158,9 @@ struct PalettePreview: View {
                 .padding(.vertical, 2)
                 .background(Color(hex: p.accent))
                 .foregroundColor(Color(hex: p.background))
-            (Text("Tus imágenes, ").foregroundColor(Color(hex: p.text))
-             + Text("con tus colores").foregroundColor(Color(hex: p.accent)).italic())
+            let lead = Text("Tus imágenes, ").foregroundColor(Color(hex: p.text))
+            let accent = Text("con tus colores").foregroundColor(Color(hex: p.accent)).italic()
+            Text("\(lead)\(accent)")
                 .font(.system(size: 22, weight: .bold))
             HStack {
                 Text(account.name.isEmpty ? "Tu nombre" : account.name)

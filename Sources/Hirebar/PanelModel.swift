@@ -56,20 +56,21 @@ enum AgentStyle {
     }
 }
 
-final class PanelModel: ObservableObject {
+@Observable
+final class PanelModel {
     let engine: Engine
 
     init(engine: Engine) {
         self.engine = engine
     }
 
-    @Published var agents: [AgentCardData] = []
-    @Published var claude = "en espera"
-    @Published var aiName = "Claude"
-    @Published var claudeBusy = false
-    @Published var telegram = ""
-    @Published var telegramReady = false
-    @Published var opensAtLogin = false
+    var agents: [AgentCardData] = []
+    var claude = "en espera"
+    var aiName = "Claude"
+    var claudeBusy = false
+    var telegram = ""
+    var telegramReady = false
+    var opensAtLogin = false
 
     var onQuit: (() -> Void)?
     var onOpenSettings: ((SettingsPage?) -> Void)?

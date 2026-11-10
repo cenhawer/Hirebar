@@ -9,6 +9,8 @@ extension ContentAccount {
     public var changes: URL { folder.appendingPathComponent("cambios.txt") }
     public var videoScript: URL { videoFolder.appendingPathComponent("guion.json") }
     public var videoDescription: URL { videoFolder.appendingPathComponent("texto.md") }
+    public var finalVideo: URL { videoFolder.appendingPathComponent("reel.mp4") }
+    public var previewVideo: URL { videoFolder.appendingPathComponent("vista-previa.mp4") }
     public var performance: URL { folder.appendingPathComponent("rendimiento.md") }
     public var relativeFolder: String { "contenido/\(id)" }
 }

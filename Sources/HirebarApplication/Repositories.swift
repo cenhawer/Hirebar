@@ -39,6 +39,8 @@ public protocol ContentAccountRepository: Sendable {
     func videoDescription(_ account: ContentAccount) -> String?
     func hasVideoScript(_ account: ContentAccount) -> Bool
     func latestRecording(_ account: ContentAccount) -> URL?
+    func slideImages(_ account: ContentAccount) -> [URL]
+    func videoPreview(_ account: ContentAccount) -> URL?
 }
 
 public protocol MetricsRepository: Sendable {

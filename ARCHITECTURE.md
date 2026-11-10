@@ -199,7 +199,8 @@ perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos an
 resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
 radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. Los recursos del
 bundle (`destinos.json`, `comandos.json`, `canal.json`) se validan en la aplicación y llegan al
-motor en `EngineResources`. El paso 3 de la spec
+motor en `EngineResources`. Los mensajes con la persona pasan por `ChatChannel` (Telegram) y el respaldo por
+`DesktopNotifications` (macOS); el `Controller` recibe todos sus adaptadores en `EngineAdapters`. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

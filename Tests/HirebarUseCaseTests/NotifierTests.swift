@@ -26,7 +26,8 @@ final class NotifierTests: XCTestCase {
     var notifier: Notifier {
         let chat = TestChatChannel(
             isConfigured: { [unowned self] in self.configured }, send: { [unowned self] in self.sent.append(($0, $1)) })
-        return Notifier(chat: chat, desktop: desktop, config: config, batches: FileBatchRepository())
+        return Notifier(
+            chat: chat, desktop: desktop, config: config, batches: FileBatchRepository(retention: Controller.repositoryRetention.batches))
     }
 
     func testWithoutAChannelTheNoticeGoesToTheMacNotifications() {

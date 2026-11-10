@@ -10,7 +10,13 @@ public struct FreelancerSource: ListingSource {
     static let api = "https://www.freelancer.com/api/projects/0.1/projects/active/"
     static let maxAgeMinutes = 1440
 
-    public init() {}
+    let fetcher: WebPageFetcher
+    let now: PortalClock
+
+    public init(fetcher: WebPageFetcher, now: @escaping PortalClock) {
+        self.fetcher = fetcher
+        self.now = now
+    }
 
     public func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
         var projects: [Int: [String: Any]] = [:]
@@ -24,7 +30,7 @@ public struct FreelancerSource: ListingSource {
                 URLQueryItem(name: "upgrade_details", value: "true"),
                 URLQueryItem(name: "languages[]", value: "es"),
             ]
-            if let url = components.url, let data = await Net.fetch(url),
+            if let url = components.url, let data = await fetcher.data(url),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let result = json["result"] as? [String: Any] {
                 for project in (result["projects"] as? [[String: Any]]) ?? [] {
@@ -32,9 +38,9 @@ public struct FreelancerSource: ListingSource {
                 }
                 if let found = result["users"] as? [String: Any] { users.merge(found) { old, _ in old } }
             }
-            await Net.pause(0.6)
+            await fetcher.pause(0.6)
         }
-        let now = Date().timeIntervalSince1970
+        let now = now().timeIntervalSince1970
         var outcome = SourceResult()
         var recent = 0, matching = 0
         for (projectId, project) in projects {

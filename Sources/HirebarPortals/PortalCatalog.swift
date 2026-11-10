@@ -15,15 +15,20 @@ public enum PageSlice {
 
 public struct NetPageFetcher: WebPageFetcher {
     public init() {}
-    public func text(_ address: String) async -> String? { await Net.fetchText(address) }
+    public func data(_ url: URL) async -> Data? { await Net.fetch(url) }
     public func pause(_ seconds: Double) async { await Net.pause(seconds) }
 }
 
 extension PortalAccess {
     public static var bundled: PortalAccess {
-        PortalAccess(
-            jobs: [LinkedInSource(), GetOnBoardSource(), ComputrabajoSource(), ElempleoSource(), MagnetoSource()],
-            freelance: [WorkanaSource(), FreelancerSource()],
-            fetcher: NetPageFetcher())
+        let fetcher = NetPageFetcher()
+        let now: PortalClock = { Date() }
+        return PortalAccess(
+            jobs: [
+                LinkedInSource(fetcher: fetcher), GetOnBoardSource(fetcher: fetcher, now: now), ComputrabajoSource(fetcher: fetcher),
+                ElempleoSource(fetcher: fetcher), MagnetoSource(fetcher: fetcher, now: now),
+            ],
+            freelance: [WorkanaSource(fetcher: fetcher), FreelancerSource(fetcher: fetcher, now: now)],
+            fetcher: fetcher)
     }
 }

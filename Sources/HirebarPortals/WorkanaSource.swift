@@ -10,21 +10,25 @@ public struct WorkanaSource: ListingSource {
     static let base = "https://www.workana.com"
     static let maxAgeMinutes = 720
 
-    public init() {}
+    let fetcher: WebPageFetcher
+
+    public init(fetcher: WebPageFetcher) {
+        self.fetcher = fetcher
+    }
 
     public func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
         let queries = profile.freelance.workanaQueries
         var candidates: [String: [String: Any]] = [:]
         var pages = 0, recent = 0, matching = 0
         for query in queries {
-            if let html = await Net.fetchText("\(Self.base)/jobs?\(query)&language=es") {
+            if let html = await fetcher.text("\(Self.base)/jobs?\(query)&language=es") {
                 pages += 1
                 for result in Self.results(html) {
                     guard let slug = result["slug"] as? String, !skip.contains("w:" + slug), candidates[slug] == nil else { continue }
                     candidates[slug] = result
                 }
             }
-            await Net.pause(0.8)
+            await fetcher.pause(0.8)
         }
         var outcome = SourceResult()
         for (slug, result) in candidates {
@@ -38,7 +42,7 @@ public struct WorkanaSource: ListingSource {
             matching += 1
             let budgetText = TextTools.normalize(result["budget"] as? String ?? "")
             if budgetText.contains(" menos de usd 15 ") || budgetText.contains(" menos de usd 50 ") { continue }
-            guard let page = await Net.fetchText("\(Self.base)/job/" + slug) else { continue }
+            guard let page = await fetcher.text("\(Self.base)/job/" + slug) else { continue }
             if page.contains(">Esperando depósito") { continue }
             let pageText = TextTools.clean(page)
             let bids = TextTools.firstInt(pageText, #"(\d+) Propuestas"#) ?? 0
@@ -55,7 +59,7 @@ public struct WorkanaSource: ListingSource {
             } else if bids <= 40 {
                 outcome.backup.append(hit.with(fit: .stretch, score: bids + (verified ? 0 : 10)))
             }
-            await Net.pause(0.5)
+            await fetcher.pause(0.5)
         }
         let found = "\(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h"
         let notified = "\(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo"

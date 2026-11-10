@@ -14,27 +14,35 @@ public struct LinkedInSource: JobSource {
     static let recentWindow = "r10800"
     static let contractWindow = "r86400"
 
-    public init() {}
+    let fetcher: WebPageFetcher
+
+    public init(fetcher: WebPageFetcher) {
+        self.fetcher = fetcher
+    }
 
     public func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
         let jobs = profile.jobs
         let home = jobs.country.capitalized
-        let searches = jobs.linkedInQueries.map { ($0, home, "") }
+        let searches =
+            jobs.linkedInQueries.map { ($0, home, "") }
             + jobs.linkedInRegionalQueries.map { ($0, Self.regionName, "") }
             + jobs.linkedInContractQueries.map { ($0, home, "C,T") }
             + jobs.linkedInContractQueries.map { ($0, Self.regionName, "C,T") }
         var hits: [Hit] = []
-        var pages = 0, cards = 0
+        var pages = 0
+        var cards = 0
         for (query, place, jobType) in searches {
             guard var components = URLComponents(string: Self.searchURL) else { continue }
-            components.queryItems = [URLQueryItem(name: "keywords", value: query),
-                                     URLQueryItem(name: "location", value: place),
-                                     URLQueryItem(name: "f_WT", value: "2"),
-                                     URLQueryItem(name: "f_TPR", value: jobType.isEmpty ? Self.recentWindow : Self.contractWindow),
-                                     URLQueryItem(name: "start", value: "0")]
+            components.queryItems = [
+                URLQueryItem(name: "keywords", value: query),
+                URLQueryItem(name: "location", value: place),
+                URLQueryItem(name: "f_WT", value: "2"),
+                URLQueryItem(name: "f_TPR", value: jobType.isEmpty ? Self.recentWindow : Self.contractWindow),
+                URLQueryItem(name: "start", value: "0"),
+            ]
             if !jobType.isEmpty { components.queryItems?.append(URLQueryItem(name: "f_JT", value: jobType)) }
-            guard let url = components.url, let data = await Net.fetch(url) else {
-                await Net.pause(2)
+            guard let url = components.url, let data = await fetcher.data(url) else {
+                await fetcher.pause(2)
                 continue
             }
             let html = String(decoding: data, as: UTF8.self)
@@ -42,7 +50,8 @@ public struct LinkedInSource: JobSource {
             for card in html.components(separatedBy: "<li>").dropFirst() {
                 cards += 1
                 guard let jobId = TextTools.first(card, "urn:li:jobPosting:(\\d+)"), !skip.contains("li:" + jobId),
-                      let rawTitle = TextTools.first(card, "base-search-card__title\">([^<]+)<") else { continue }
+                    let rawTitle = TextTools.first(card, "base-search-card__title\">([^<]+)<")
+                else { continue }
                 let title = TextTools.clean(rawTitle)
                 let company = TextTools.clean(TextTools.first(card, "base-search-card__subtitle\">\\s*(?:<a[^>]*>)?([^<]+)<") ?? "")
                 guard let fit = JobScreener.classify(title, company: company, profile: jobs) else { continue }
@@ -56,10 +65,12 @@ public struct LinkedInSource: JobSource {
                 if !cardPlace.isEmpty && !cardPlace.contains(home) { detail += " · \(cardPlace)" }
                 if !salary.isEmpty { detail += " · \(salary)" }
                 if hits.contains(where: { $0.id == "li:" + jobId }) { continue }
-                hits.append(Hit(id: "li:" + jobId, platform: name, fit: fit, title: title,
-                                url: "https://www.linkedin.com/jobs/view/\(jobId)/", detail: detail, score: age))
+                hits.append(
+                    Hit(
+                        id: "li:" + jobId, platform: name, fit: fit, title: title,
+                        url: "https://www.linkedin.com/jobs/view/\(jobId)/", detail: detail, score: age))
             }
-            await Net.pause(1.5)
+            await fetcher.pause(1.5)
         }
         log.write("Empleo · LinkedIn: \(pages) páginas leídas, \(cards) ofertas vistas, \(hits.count) pasan el filtro de título")
         return SourceResult(hits: hits)

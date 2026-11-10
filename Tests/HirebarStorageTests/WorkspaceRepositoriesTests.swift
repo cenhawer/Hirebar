@@ -24,14 +24,17 @@ final class WorkspaceRepositoriesTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appendingPathComponent("descartados-1800000000.json").path))
     }
 
-    func testAScheduledSlotRunsOnlyOnceAndSeenHitsAreKept() throws {
-        let suite = "hirebar.tests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let state = DefaultsRunStateRepository(defaults: defaults)
-        XCTAssertTrue(state.claim("sched.jobs.2026-11-09"))
-        XCTAssertFalse(state.claim("sched.jobs.2026-11-09"))
+    func testAScheduledSlotRunsOnlyOnceAndRunStateSurvivesARestart() throws {
+        let file = folder.appendingPathComponent("corrida.json")
         let moment = Date(timeIntervalSince1970: 1_800_000_000)
+        let state = FileRunStateRepository(file: file, now: { moment })
+        XCTAssertTrue(state.claim("sched.jobs.2026-11-09"))
+        XCTAssertFalse(FileRunStateRepository(file: file, now: { moment }).claim("sched.jobs.2026-11-09"))
+        let later = FileRunStateRepository(file: file, now: { moment.addingTimeInterval(15 * 86400) })
+        XCTAssertTrue(later.claim("sched.otro"))
+        XCTAssertTrue(later.claim("sched.jobs.2026-11-09"))
+        state.saveChatOffset(7)
+        XCTAssertEqual(FileRunStateRepository(file: file).chatOffset(), 7)
         state.saveSeen(["hit": moment], key: "radar.seen")
         XCTAssertEqual(state.seen("radar.seen"), ["hit": moment])
         state.setWaitingVoiceAccount("empresa")

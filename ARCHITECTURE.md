@@ -221,20 +221,20 @@ y la app está aislada al actor principal por defecto. El paso 3 de la spec
 | `HirebarApplication/Paths.swift` · `HirebarStorage/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Application · Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarStorage/Keychain.swift` | Storage | `KeychainSecretStore` con `Security.framework`, puerto `SecretStore` |
 | `HirebarApplication/Log.swift` · `Hirebar/LogExport.swift` | Application · Hirebar | `os.Logger` por área y por agente; el botón "Registro" exporta los últimos días |
-| `HirebarTelegram/Telegram.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarApplication/Notifier.swift` | Telegram · Notifications · Application | `ChatChannel` y `DesktopNotifications`; `Notifier` elige el canal |
+| `HirebarTelegram/Telegram.swift`, `TelegramUpdates.swift`, `TelegramSending.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarApplication/Notifier.swift` | Telegram · Notifications · Application | `ChatChannel` y `DesktopNotifications`; `Notifier` elige el canal |
 | `HirebarPortals/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarAI/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
 | `HirebarApplication/PortalSources.swift` · `HirebarPortals/PortalCatalog.swift` | Application · Portals | `ListingSource`, `JobSource` y `WebPageFetcher` en la aplicación; `PortalAccess.bundled`, `NetPageFetcher` y `PageSlice` en el adaptador |
 | `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
-| `HirebarApplication/Controller.swift` | Application | Casos de uso de lotes; se parte en archivos menores en la spec `020` |
-| `HirebarApplication/CommandParser.swift` · `HirebarApplication/Commands.swift` | Application | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones son casos de uso del `Controller` |
+| `HirebarApplication/Controller.swift`, `ControllerRuns.swift`, `ControllerApprovals.swift`, `ControllerResults.swift`, `ControllerQuota.swift` | Application | Casos de uso de lotes: cola, corridas de la IA, práctica y pausas, resultados y cupos |
+| `HirebarApplication/CommandParser.swift` · `Commands.swift`, `StatusCommands.swift`, `AgentCommands.swift`, `ContentCommands.swift` | Application | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones son casos de uso del `Controller` |
 | `HirebarApplication/Scheduler.swift` | Application | Programar tareas, con `Clock` |
 | `HirebarApplication/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
 | `HirebarApplication/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |
 | `HirebarAI/EngineCheck.swift` | AI | Probar el motor elegido |
 | `HirebarApplication/AI.swift` · `HirebarAI/ClaudeCLI.swift`, `EngineProfiles.swift`, `ProtectedFiles.swift` | Application · AI | `AIRunner`: argumentos por perfil, comandos de Codex y Gemini, archivos protegidos |
-| `HirebarMedia/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
+| `HirebarMedia/ReelRenderer.swift`, `ReelVideoWriter.swift`, `ReelFrames.swift`, `ReelSoundMixer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
 | `HirebarMedia/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
 | `HirebarMedia/VoiceListener.swift` · `HirebarDomain/ScriptAligner.swift` | Media · Domain | `VoiceListener` a `SpeechRecognizer`; alineación de la voz en el dominio |
 | `Hirebar/Engine.swift`, `SystemClock.swift` | Hirebar | Raíz de composición y reloj del sistema |

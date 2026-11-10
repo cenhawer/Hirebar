@@ -42,19 +42,19 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .freelance: return "Enviar propuestas"
-        case .jobs: return "Postular a vacantes"
-        case .followUp: return "Seguimientos de propuestas"
-        case .weeklyReport: return "Análisis semanal"
-        case .prospecting: return "Buscar empresas y negocios"
-        case .prospectingSend: return "Enviar correos aprobados"
-        case .social: return "Buscar vacantes en redes"
-        case .linkedInDraft: return "Preparar publicaciones"
-        case .linkedInPublish: return "Publicar en redes"
-        case .profileUpdate: return "Actualizar perfil y hojas de vida"
-        case .portalScanJobs: return "Revisar tus portales de empleo"
-        case .portalScanFreelance: return "Revisar tus portales freelance"
-        case .followUpSend: return "Enviar seguimientos aprobados"
+        case .freelance: return String(localized: "Enviar propuestas")
+        case .jobs: return String(localized: "Postular a vacantes")
+        case .followUp: return String(localized: "Seguimientos de propuestas")
+        case .weeklyReport: return String(localized: "Análisis semanal")
+        case .prospecting: return String(localized: "Buscar empresas y negocios")
+        case .prospectingSend: return String(localized: "Enviar correos aprobados")
+        case .social: return String(localized: "Buscar vacantes en redes")
+        case .linkedInDraft: return String(localized: "Preparar publicaciones")
+        case .linkedInPublish: return String(localized: "Publicar en redes")
+        case .profileUpdate: return String(localized: "Actualizar perfil y hojas de vida")
+        case .portalScanJobs: return String(localized: "Revisar tus portales de empleo")
+        case .portalScanFreelance: return String(localized: "Revisar tus portales freelance")
+        case .followUpSend: return String(localized: "Enviar seguimientos aprobados")
         }
     }
 }
@@ -88,7 +88,8 @@ public struct Hit: Sendable {
     }
 
     public func with(fit: Fit? = nil, detail: String? = nil, score: Int? = nil) -> Hit {
-        Hit(id: id, platform: platform, fit: fit ?? self.fit, title: title, url: url,
+        Hit(
+            id: id, platform: platform, fit: fit ?? self.fit, title: title, url: url,
             detail: detail ?? self.detail, score: score ?? self.score)
     }
 

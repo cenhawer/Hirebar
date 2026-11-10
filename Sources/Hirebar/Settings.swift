@@ -120,7 +120,7 @@ struct AgentEditor: View {
             if agent.hasSearch {
                 Section {
                     Stepper(value: minutes, in: 15...240, step: 5) {
-                        LabeledContent("Buscar cada", value: "\(minutes.wrappedValue) min")
+                        LabeledContent("Buscar cada", value: String(localized: "\(minutes.wrappedValue) min"))
                     }
                     ForEach(sourceIDs, id: \.self) { source in
                         Toggle(StatusMenu.sourceTitles[source] ?? source, isOn: model.sourceBinding(source))
@@ -141,7 +141,8 @@ struct AgentEditor: View {
             if [.jobs, .freelance, .clients].contains(agent.id) {
                 Section {
                     Stepper(value: limit, in: 0...100) {
-                        LabeledContent("Cupo diario", value: limit.wrappedValue == 0 ? "sin límite" : "\(limit.wrappedValue)")
+                        LabeledContent(
+                            "Cupo diario", value: limit.wrappedValue == 0 ? String(localized: "sin límite") : "\(limit.wrappedValue)")
                     }
                 } footer: {
                     Text("Se le indica a la IA como máximo de envíos por día para este agente.")
@@ -168,8 +169,13 @@ struct AgentEditor: View {
                 Section {
                     Text(
                         agent.id == .profile
-                            ? "Corre cuando se lo pides: \"logro\", \"trabajo\" o \"hv\" en Telegram, o Regenerar HV en el panel."
-                            : "Este agente no tiene tareas programadas."
+                            ? String(
+                                localized:
+                                    """
+                                    Corre cuando se lo pides: \"logro\", \"trabajo\" o \"hv\" en Telegram, o Regenerar HV en el \
+                                    panel.
+                                    """)
+                            : String(localized: "Este agente no tiene tareas programadas.")
                     )
                     .foregroundStyle(.secondary)
                 }

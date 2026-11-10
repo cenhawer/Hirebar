@@ -5,15 +5,19 @@ private let log = Log(.telegram)
 
 extension Controller {
     public func sendTestMessage() {
-        notifier.tell("Aviso de prueba: tu celular ya recibe Hirebar.\n\n" + statusReport())
+        notifier.tell(String(localized: "Aviso de prueba: tu celular ya recibe Hirebar.\n\n") + statusReport())
     }
 
     public static var welcome: String {
-        "Listo, este chat quedó vinculado a Hirebar y solo atiende tu cuenta. Te avisaré aquí cada vez que aparezcan "
-            + "proyectos o vacantes para ti.\n\n" + help
+        String(
+            localized: """
+                Listo, este chat quedó vinculado a Hirebar y solo atiende tu cuenta. Te avisaré aquí cada vez \
+                que aparezcan\u{20}
+                """)
+            + String(localized: "proyectos o vacantes para ti.\n\n") + help
     }
 
-    nonisolated static let pairingReply = "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos."
+    nonisolated static let pairingReply = String(localized: "Recibido. Confirma tu nombre en la Mac, en Ajustes → Telegram y avisos.")
 
     func admits(_ message: ChatMessage) -> Bool {
         guard let sender = message.sender else {
@@ -41,14 +45,15 @@ extension Controller {
     }
 
     public func statusReport() -> String {
-        """
-        \(ai.capitalizedName): \(status)
-        Cupos: \(stores.quotas.summary())
-        Búsqueda freelance: \(freelanceRadar?.status ?? "")
-        Búsqueda de empleo: \(jobRadar?.status ?? "")
+        String(
+            localized: """
+                \(ai.capitalizedName): \(status)
+                Cupos: \(stores.quotas.summary())
+                Búsqueda freelance: \(freelanceRadar?.status ?? "")
+                Búsqueda de empleo: \(jobRadar?.status ?? "")
 
-        \(agentsReport())
-        """
+                \(agentsReport())
+                """)
     }
 
     public func pauseReason(of kind: AgentKind) -> String? {
@@ -63,7 +68,7 @@ extension Controller {
 
     func pauseReason(of kind: AgentKind, among pauses: [AgentPause]) -> String? {
         let agent = AgentID(rawValue: kind.rawValue)
-        return (pauses.first { $0.agent == agent } ?? unsavedPauses[agent]).map { "lista \($0.batch) (\($0.reason))" }
+        return (pauses.first { $0.agent == agent } ?? unsavedPauses[agent]).map { String(localized: "lista \($0.batch) (\($0.reason))") }
     }
 
     @discardableResult
@@ -83,7 +88,7 @@ extension Controller {
 
     func resumeAgent(named name: String) {
         guard let kind = stores.agents.parse(name) else {
-            reply("Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>")
+            reply(String(localized: "Escribe: reanudar <empleo | freelance | clientes | contenido | perfil | analista>"))
             return
         }
         let agentName = stores.agents.load(kind).name
@@ -93,18 +98,24 @@ extension Controller {
                 $0.status == .pending && $0.created > since && AgentKind.owner(of: $0.mode) == kind && $0.mode.hasItems
             }
             let lists = waiting.map(\.id).joined(separator: ", ")
-            let pending = "Estas listas siguen pendientes y no se ejecutan solas: \(lists). Responde \"si\" a cada una para ejecutarla."
-            reply(waiting.isEmpty ? "\(agentName) reanudado." : "\(agentName) reanudado. \(pending)")
+            let pending = String(
+                localized: "Estas listas siguen pendientes y no se ejecutan solas: \(lists). Responde \"si\" a cada una para ejecutarla.")
+            reply(waiting.isEmpty ? String(localized: "\(agentName) reanudado.") : String(localized: "\(agentName) reanudado. \(pending)"))
         } else {
-            reply("\(agentName) no estaba en pausa.")
+            reply(String(localized: "\(agentName) no estaba en pausa."))
         }
     }
 
     func keepPaused(named name: String) {
         guard let kind = stores.agents.parse(name) else {
-            reply("El agente sigue en pausa.")
+            reply(String(localized: "El agente sigue en pausa."))
             return
         }
-        reply("\(stores.agents.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando quieras.")
+        reply(
+            String(
+                localized: """
+                    \(stores.agents.load(kind).name) sigue en pausa. Escribe \"reanudar \(kind.rawValue)\" cuando \
+                    quieras.
+                    """))
     }
 }

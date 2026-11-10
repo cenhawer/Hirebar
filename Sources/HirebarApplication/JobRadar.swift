@@ -23,7 +23,7 @@ public final class JobRadar: Radar {
     public override func checkNow() {
         let config = stores.config.load()
         guard config.jobsOn, stores.agents.load(.jobs).enabled else {
-            setStatus("apagado")
+            setStatus(String(localized: "apagado"))
             return
         }
         guard beginCheck() else { return }
@@ -60,14 +60,15 @@ public final class JobRadar: Radar {
                 await portals.fetcher.pause(1)
                 continue
             }
-            let verdict = JobScreener.screen(text, location: source.location(from: page),
-                                             requireRemote: source.requiresRemoteInDescription, profile: profile)
+            let verdict = JobScreener.screen(
+                text, location: source.location(from: page),
+                requireRemote: source.requiresRemoteInDescription, profile: profile)
             switch verdict {
             case .reject(let reason):
                 log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
             case .keep(let fit):
                 let final: Fit = (hit.fit == .stretch || fit == .stretch) ? .stretch : .strong
-                kept.append(hit.with(fit: final, detail: hit.detail + " · descripción revisada"))
+                kept.append(hit.with(fit: final, detail: hit.detail + String(localized: " · descripción revisada")))
             }
             await portals.fetcher.pause(1.2)
         }
@@ -85,26 +86,28 @@ public final class JobRadar: Radar {
 
         let hour = TextTools.shortTime()
         guard !hits.isEmpty else {
-            setStatus("\(hour), nada nuevo")
+            setStatus(String(localized: "\(hour), nada nuevo"))
             log.write("Empleo: nada nuevo")
             return
         }
-        setStatus("\(hour), \(hits.count) avisada(s)")
+        setStatus(String(localized: "\(hour), \(hits.count) avisada(s)"))
         stores.metrics.bump(.jobs, "avisados", hits.count)
         stores.metrics.bump(.jobs, "avisados_reto", hits.filter { $0.fit == .stretch }.count)
         log.write("Empleo: \(hits.count) vacante(s) avisada(s)")
         let batch = Batch(mode: .jobs, items: hits.map(BatchItem.init), status: .pending)
         stores.batches.upsert(batch)
-        let title = fits.isEmpty
-            ? "Radar empleo: nada de tu fuerte esta hora, pero hay \(hits.count) vacante(s) RETO"
-            : "Radar empleo: \(hits.count) vacante(s) para ti"
+        let title =
+            fits.isEmpty
+            ? String(localized: "Radar empleo: nada de tu fuerte esta hora, pero hay \(hits.count) vacante(s) RETO")
+            : String(localized: "Radar empleo: \(hits.count) vacante(s) para ti")
         let auto = stores.agents.load(.jobs).autoApprove
         let ai = controller?.ai ?? AI(settings: stores.config.load().aiEngine)
-        let automatic = "\(ai.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar."
+        let automatic = String(localized: "\(ai.capitalizedName) ya está revisando cada vacante y postulándote; te aviso al terminar.")
         let manual =
-            "Responde \"si\" y \(ai.name) revisa cada vacante, llena el formulario y te postula. "
-            + "\"si 1 3\" para elegir, \"no\" para descartar."
-        controller?.notifier.announce(batch, title: auto ? title + " (postulación automática)" : title, footer: auto ? automatic : manual)
+            String(localized: "Responde \"si\" y \(ai.name) revisa cada vacante, llena el formulario y te postula. ")
+            + String(localized: "\"si 1 3\" para elegir, \"no\" para descartar.")
+        controller?.notifier.announce(
+            batch, title: auto ? title + String(localized: " (postulación automática)") : title, footer: auto ? automatic : manual)
         if auto {
             Task { [weak self] in self?.controller?.autoApprove(self?.stores.batches.find(id: batch.id) ?? batch) }
         }

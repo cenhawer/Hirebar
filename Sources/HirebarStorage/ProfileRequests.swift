@@ -8,7 +8,7 @@ enum ProfileRequests {
     static func append(_ kind: String, _ text: String, at date: Date) {
         Paths.ensure()
         let stamp = ISO8601DateFormatter().string(from: date)
-        let line = "- \(stamp) · \(kind): \(text)\n"
+        let line = String(localized: "- \(stamp) · \(kind): \(text)\n")
         try? (read(raw: true) + line).write(to: url, atomically: true, encoding: .utf8)
     }
 

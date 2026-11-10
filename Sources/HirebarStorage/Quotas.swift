@@ -39,9 +39,9 @@ public enum Quotas {
     public static func exhausted(_ platform: String) -> Bool { remaining(platform) == 0 }
 
     public static func describe(_ platform: String) -> String {
-        guard let quota = load()[platform], let left = quota.restantes else { return "sin dato" }
+        guard let quota = load()[platform], let left = quota.restantes else { return String(localized: "sin dato") }
         let date = renewal(platform, quota)
-        if Date() >= date { return "renovado (sin contar)" }
+        if Date() >= date { return String(localized: "renovado (sin contar)") }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "es_CO")
         formatter.dateFormat = "d MMM"
@@ -50,6 +50,6 @@ public enum Quotas {
     }
 
     public static func summary() -> String {
-        "Workana \(describe("workana")) · Freelancer \(describe("freelancer"))"
+        String(localized: "Workana \(describe("workana")) · Freelancer \(describe("freelancer"))")
     }
 }

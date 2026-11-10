@@ -48,7 +48,7 @@ public enum ProfileEditor {
         var root: [String: Any] = [:]
         if let data = try? Data(contentsOf: url) {
             guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return .failed("perfil.json no es JSON válido")
+                return .failed(String(localized: "perfil.json no es JSON válido"))
             }
             root = object
         }
@@ -68,7 +68,7 @@ public enum ProfileEditor {
         root[WorkspaceSchema.versionKey] = WorkspaceSchema.current
         guard let data = try? JSONSerialization.data(withJSONObject: root, options: VersionedJSON.formatting)
         else {
-            return .failed("no pude guardar perfil.json")
+            return .failed(String(localized: "no pude guardar perfil.json"))
         }
         do {
             try data.write(to: url, options: .atomic)

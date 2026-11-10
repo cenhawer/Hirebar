@@ -34,10 +34,15 @@ public struct Notifier: Sendable {
         blocks.append(footer)
         let messages = Self.chunks(blocks, limit: Self.messageLimit)
         guard canUseTelegram else {
-            desktop.show(title: title, body: "Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.")
+            desktop.show(
+                title: title,
+                body: String(
+                    localized: """
+                        Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.
+                        """))
             return
         }
-        let label = batch.mode == .jobs ? "Sí, postular a todas" : "Sí, enviar todas"
+        let label = batch.mode == .jobs ? String(localized: "Sí, postular a todas") : String(localized: "Sí, enviar todas")
         let chatId = chatId
         sendInOrder(messages, chatId: chatId, buttons: [[(label, "si:\(batch.id)"), ("No", "no:\(batch.id)")]]) { id in
             guard var stored = batches.find(id: batch.id) else { return }
@@ -46,7 +51,8 @@ public struct Notifier: Sendable {
                 stored.status = .discarded
                 batches.upsert(stored)
                 log.write("Telegram: la lista \(batch.id) no llegó completa y se descartó")
-                let notice = "No pude mostrarte completa la lista \(batch.id), así que la descarté para que no se apruebe a ciegas."
+                let notice = String(
+                    localized: "No pude mostrarte completa la lista \(batch.id), así que la descarté para que no se apruebe a ciegas.")
                 tell(notice)
                 return
             }

@@ -19,7 +19,9 @@ public struct WorkanaSource: ListingSource {
     public func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
         let queries = profile.freelance.workanaQueries
         var candidates: [String: [String: Any]] = [:]
-        var pages = 0, recent = 0, matching = 0
+        var pages = 0
+        var recent = 0
+        var matching = 0
         for query in queries {
             if let html = await fetcher.text("\(Self.base)/jobs?\(query)&language=es") {
                 pages += 1
@@ -37,8 +39,11 @@ public struct WorkanaSource: ListingSource {
             let title = TextTools.clean(result["title"] as? String ?? slug)
             let description = TextTools.clean(result["description"] as? String ?? "")
             let skills = ((result["skills"] as? [[String: Any]]) ?? []).compactMap { $0["anchorText"] as? String }
-            guard let fit = FreelanceClassifier.classify(head: "\(title) \(skills.joined(separator: " "))", body: description,
-                                                         title: title, profile: profile.freelance) else { continue }
+            guard
+                let fit = FreelanceClassifier.classify(
+                    head: "\(title) \(skills.joined(separator: " "))", body: description,
+                    title: title, profile: profile.freelance)
+            else { continue }
             matching += 1
             let budgetText = TextTools.normalize(result["budget"] as? String ?? "")
             if budgetText.contains(" menos de usd 15 ") || budgetText.contains(" menos de usd 50 ") { continue }
@@ -48,9 +53,12 @@ public struct WorkanaSource: ListingSource {
             let bids = TextTools.firstInt(pageText, #"(\d+) Propuestas"#) ?? 0
             let verified = (result["hasVerifiedPaymentMethod"] as? Bool) ?? pageText.contains("Pago verificado")
             let budget = TextTools.clean(result["budget"] as? String ?? "")
-            let detail = "Workana · \(TextTools.ageText(age)) · \(bids) propuestas · \(budget)" + (verified ? " · pago verificado" : "")
-            let hit = Hit(id: "w:" + slug, platform: name, fit: fit, title: title,
-                          url: "\(Self.base)/job/" + slug, detail: detail, score: bids)
+            let detail =
+                String(localized: "Workana · \(TextTools.ageText(age)) · \(bids) propuestas · \(budget)")
+                + (verified ? String(localized: " · pago verificado") : "")
+            let hit = Hit(
+                id: "w:" + slug, platform: name, fit: fit, title: title,
+                url: "\(Self.base)/job/" + slug, detail: detail, score: bids)
             if age > 180 && bids > 12 { continue }
             if fit == .strong && bids <= 35 {
                 outcome.hits.append(hit)
@@ -61,8 +69,12 @@ public struct WorkanaSource: ListingSource {
             }
             await fetcher.pause(0.5)
         }
-        let found = "\(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h"
-        let notified = "\(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo"
+        let found = String(
+            localized: "\(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h")
+        let notified = String(
+            localized: """
+                \(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo
+                """)
         log.write("Freelance · Workana: \(found), \(notified)")
         return outcome
     }
@@ -73,7 +85,8 @@ public struct WorkanaSource: ListingSource {
         guard let end = rest.firstIndex(of: "'") else { return [] }
         let json = TextTools.decodeEntities(String(rest[..<end]), numeric: false)
         guard let data = json.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return [] }
         return object["results"] as? [[String: Any]] ?? []
     }
 }

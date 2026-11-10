@@ -7,16 +7,16 @@ import HirebarStorage
 import HirebarTelegram
 
 enum AutoSendConfirmation {
-    static let origin = "la Mac"
+    static let origin = String(localized: "la Mac")
     static let settingsOrigin = "Ajustes"
 
     static func ask(_ kinds: [AgentKind], agents: AgentRepository) -> Bool {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "¿Prender el envío automático?"
+        alert.messageText = String(localized: "¿Prender el envío automático?")
         alert.informativeText = AutoSend.explanation(for: kinds, agents: agents)
-        alert.addButton(withTitle: "Prender")
-        alert.addButton(withTitle: "Cancelar")
+        alert.addButton(withTitle: String(localized: "Prender"))
+        alert.addButton(withTitle: String(localized: "Cancelar"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 

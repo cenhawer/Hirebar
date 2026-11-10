@@ -11,7 +11,7 @@ extension ReelRenderer {
         guard let source = try await videoAsset.loadTracks(withMediaType: .video).first,
             let videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
         else {
-            throw Problem(message: "no se pudo leer el video para ponerle el sonido")
+            throw Problem(message: String(localized: "no se pudo leer el video para ponerle el sonido"))
         }
         let total = try await videoAsset.load(.duration)
         try videoTrack.insertTimeRange(CMTimeRange(start: .zero, duration: total), of: source, at: .zero)
@@ -23,7 +23,7 @@ extension ReelRenderer {
             parameters.append(volume)
         }
         guard let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
-            throw Problem(message: "no se pudo preparar la exportación del video")
+            throw Problem(message: String(localized: "no se pudo preparar la exportación del video"))
         }
         if !parameters.isEmpty {
             let audioMix = AVMutableAudioMix()

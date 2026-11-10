@@ -7,9 +7,9 @@ public enum SkillLevel: String, Codable, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .expert: return "Domino"
-        case .familiar: return "Conozco"
-        case .avoid: return "Evito"
+        case .expert: return String(localized: "Domino")
+        case .familiar: return String(localized: "Conozco")
+        case .avoid: return String(localized: "Evito")
         }
     }
 
@@ -81,14 +81,15 @@ public struct Profile: Codable, Sendable {
 
     public func skill(named name: String) -> Skill? {
         let wanted = TextTools.normalize(name)
-        return skills.first { TextTools.normalize($0.name) == wanted || $0.searchTerms.contains(wanted.trimmingCharacters(in: .whitespaces)) }
+        return skills.first {
+            TextTools.normalize($0.name) == wanted || $0.searchTerms.contains(wanted.trimmingCharacters(in: .whitespaces))
+        }
     }
 
     public var summary: String {
-        let groups: [(SkillLevel, String)] = [(.expert, "Domino"), (.familiar, "Conozco"), (.avoid, "Evito")]
-        return groups.map { level, title in
+        return [SkillLevel.expert, .familiar, .avoid].map { level in
             let names = skills.filter { $0.level == level }.map(\.name)
-            return "\(title): " + (names.isEmpty ? "—" : names.joined(separator: ", "))
+            return "\(level.title): " + (names.isEmpty ? "—" : names.joined(separator: ", "))
         }.joined(separator: "\n")
     }
 }

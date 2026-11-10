@@ -15,15 +15,15 @@ extension Controller {
             if batchId.hasPrefix("gm-") {
                 let summary = output.replacingOccurrences(of: Self.noNewsMarker, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
                 reply(
-                    "Seguimientos: hoy no tocaba escribirle a nadie.\n\n"
-                        + (summary.isEmpty ? "Sin más detalle." : String(summary.suffix(3500))))
+                    String(localized: "Seguimientos: hoy no tocaba escribirle a nadie.\n\n")
+                        + (summary.isEmpty ? String(localized: "Sin más detalle.") : String(summary.suffix(3500))))
             }
             return
         }
         guard code == 0 && !output.isEmpty else {
-            let detail = output.isEmpty ? "sin salida" : String(output.suffix(1500))
-            let failure = "\(ai.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)"
-            reply(failure + "\nRegistro: workspace/ejecuciones/\(batchId).log")
+            let detail = output.isEmpty ? String(localized: "sin salida") : String(output.suffix(1500))
+            let failure = String(localized: "\(ai.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)")
+            reply(failure + String(localized: "\nRegistro: workspace/ejecuciones/\(batchId).log"))
             return
         }
         reply(String(ProposalParser.removingBlock(from: output).suffix(3800)))
@@ -38,27 +38,38 @@ extension Controller {
 
     func sendSlides(_ accountId: String?) {
         guard let account = stores.contentAccounts.find(accountId) else {
-            reply("No encontré la cuenta de esta publicación en Ajustes → Cuentas de contenido.")
+            reply(String(localized: "No encontré la cuenta de esta publicación en Ajustes → Cuentas de contenido."))
             return
         }
         let several = stores.contentAccounts.load().count > 1
         let publish = several ? "publica \(account.id)" : "publica"
-        let change = several ? "post \(account.id) cambia <qué>" : "post cambia <qué>"
+        let change = several ? String(localized: "post \(account.id) cambia <qué>") : String(localized: "post cambia <qué>")
         let skip = several ? "post \(account.id) salta" : "post salta"
         let ask =
-            "¿Lo subo a \(account.title)? Responde \"\(publish)\" para subirlo tal cual, \"\(change)\" para ajustarlo "
-            + "o \"\(skip)\" para no publicarlo."
+            String(
+                localized: """
+                    ¿Lo subo a \(account.title)? Responde \"\(publish)\" para subirlo tal cual, \"\(change)\" para \
+                    ajustarlo\u{20}
+                    """)
+            + String(localized: "o \"\(skip)\" para no publicarlo.")
         media.renderSlides(for: account) { [weak self] made, failed in
             var notes: [String] = []
             if made.isEmpty {
-                let aiName = self?.ai.name ?? "la IA"
-                notes.append("Esta vez no salieron imágenes (\(aiName) no dejó las láminas o Chrome no pudo convertirlas).")
+                let aiName = self?.ai.name ?? String(localized: "la IA")
+                notes.append(
+                    String(localized: "Esta vez no salieron imágenes (\(aiName) no dejó las láminas o Chrome no pudo convertirlas)."))
             } else if failed > 0 {
-                notes.append("\(failed) lámina(s) no se pudieron convertir.")
+                notes.append(String(localized: "\(failed) lámina(s) no se pudieron convertir."))
             }
-            self?.notifier.sendPhotos(made, caption: "\(account.title): imágenes de la publicación (\(made.count))") {
+            self?.notifier.sendPhotos(
+                made,
+                caption: String(
+                    localized: """
+                        \(account.title): imágenes de la publicación (\(made.count))
+                        """)
+            ) {
                 if let text = self?.stores.contentAccounts.draftText(account) {
-                    self?.reply("Texto de la publicación de \(account.title), listo para copiar:\n\n\(text)")
+                    self?.reply(String(localized: "Texto de la publicación de \(account.title), listo para copiar:\n\n\(text)"))
                 }
                 guard account.video else {
                     self?.reply((notes + [ask]).joined(separator: " "))
@@ -71,16 +82,20 @@ extension Controller {
                             self?.reply(script)
                         }
                         if let text = self?.stores.contentAccounts.videoDescription(account) {
-                            self?.reply("Descripción del video de \(account.title), lista para copiar:\n\n\(text)")
+                            self?.reply(String(localized: "Descripción del video de \(account.title), lista para copiar:\n\n\(text)"))
                         }
-                        self?.reply((notes + [ask + " El video se sube cuando me mandes tu voz."]).joined(separator: " "))
+                        self?.reply(
+                            (notes + [ask + String(localized: " El video se sube cuando me mandes tu voz.")]).joined(separator: " "))
                     }
                     guard let video else {
-                        notes.append("No salió la vista previa del video: \(problem ?? "sin detalle").")
+                        notes.append(
+                            String(localized: "No salió la vista previa del video: \(problem ?? String(localized: "sin detalle"))."))
                         rest()
                         return
                     }
-                    self?.notifier.sendVideo(video, caption: "\(account.title): vista previa del video, sin voz") { rest() }
+                    self?.notifier.sendVideo(video, caption: String(localized: "\(account.title): vista previa del video, sin voz")) {
+                        rest()
+                    }
                 }
             }
         }
@@ -98,7 +113,13 @@ extension Controller {
             return
         case .failure(let failure):
             Log(agent: AgentKind.owner(of: mode)).write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
-            reply("\(ai.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó en el registro.")
+            reply(
+                String(
+                    localized:
+                        """
+                        \(ai.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó \
+                        en el registro.
+                        """))
             return
         }
         let intake = ProposalIntake(window: Self.proposalSeenWindow, rules: targetRules).accept(
@@ -127,7 +148,7 @@ extension Controller {
             try stores.executionState.saveProposals(proposals, batch: batch.id)
         } catch {
             log.write("\(batch.mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
-            reply("No pude guardar la lista para aprobar, así que no te la muestro: \(error.localizedDescription)")
+            reply(String(localized: "No pude guardar la lista para aprobar, así que no te la muestro: \(error.localizedDescription)"))
             return false
         }
         stores.batches.upsert(batch)
@@ -135,9 +156,9 @@ extension Controller {
         let auto = stores.agents.load(AgentKind.owner(of: batch.mode)).autoApprove
         let footer =
             auto
-            ? "\(ai.capitalizedName) ya los está procesando; te aviso al terminar."
-            : "Responde \"si\" para que \(ai.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar."
-        notifier.announce(batch, title: title + (auto ? " (envío automático)" : ""), footer: footer)
+            ? String(localized: "\(ai.capitalizedName) ya los está procesando; te aviso al terminar.")
+            : String(localized: "Responde \"si\" para que \(ai.name) los procese, \"si 1 3\" para elegir o \"no\" para descartar.")
+        notifier.announce(batch, title: title + (auto ? String(localized: " (envío automático)") : ""), footer: footer)
         if auto { autoApprove(batch) }
         return true
     }
@@ -146,18 +167,26 @@ extension Controller {
         stores.profile.clearChangeRequests()
         let profile = stores.profile.load()
         guard !profile.cvVariants.isEmpty else {
-            reply("perfil.json no tiene hojas de vida definidas (cvVariants), así que no generé PDF.")
+            reply(String(localized: "perfil.json no tiene hojas de vida definidas (cvVariants), así que no generé PDF."))
             return
         }
         media.renderCVs(for: profile) { [weak self] result in
             for file in result.made {
-                self?.notifier.sendFile(file, caption: "Hoja de vida actualizada: \(file.lastPathComponent)")
+                self?.notifier.sendFile(file, caption: String(localized: "Hoja de vida actualizada: \(file.lastPathComponent)"))
             }
-            var lines = ["Hojas de vida: \(result.made.count) de \(profile.cvVariants.count) listas."]
-            let aiName = self?.ai.capitalizedName ?? "La IA"
-            if !result.missing.isEmpty { lines.append("\(aiName) no dejó el HTML de: \(result.missing.joined(separator: ", ")).") }
+            var lines = [String(localized: "Hojas de vida: \(result.made.count) de \(profile.cvVariants.count) listas.")]
+            let aiName = self?.ai.capitalizedName ?? String(localized: "La IA")
+            if !result.missing.isEmpty {
+                lines.append(String(localized: "\(aiName) no dejó el HTML de: \(result.missing.joined(separator: ", "))."))
+            }
             if !result.failed.isEmpty {
-                lines.append("No pude crear el PDF de: \(result.failed.joined(separator: ", ")) (revisa que Google Chrome esté instalado).")
+                lines.append(
+                    String(
+                        localized:
+                            """
+                            No pude crear el PDF de: \(result.failed.joined(separator: ", ")) (revisa que Google Chrome \
+                            esté instalado).
+                            """))
             }
             self?.reply(lines.joined(separator: "\n"))
         }
@@ -170,19 +199,26 @@ extension Controller {
         case .invalid(let ids):
             let numbers = ids.joined(separator: ", ")
             Log(agent: .clients).write("Prospección: correos incompletos o repetidos en pendientes.json (\(numbers))")
-            reply("\(ai.capitalizedName) dejó correos sin destinatario, asunto o texto válidos (\(numbers)); no te muestro la lista.")
+            reply(
+                String(
+                    localized:
+                        """
+                        \(ai.capitalizedName) dejó correos sin destinatario, asunto o texto válidos (\(numbers)); no te \
+                        muestro la lista.
+                        """)
+            )
         case .found(let drafts):
             let batch = Batch(mode: .prospectingSend, items: drafts.map { BatchItem($0.proposal, kind: $0.kind) }, status: .pending)
-            offer(batch, proposals: drafts.map(\.proposal), title: "Correos de hoy: \(drafts.count) para aprobar")
+            offer(batch, proposals: drafts.map(\.proposal), title: String(localized: "Correos de hoy: \(drafts.count) para aprobar"))
         }
     }
 
     static func proposalsTitle(for mode: Mode, count: Int) -> String {
         switch mode {
-        case .social: return "Redes: \(count) publicación(es) con vacantes para ti"
-        case .followUp: return "Seguimientos: \(count) para aprobar"
-        case .portalScanFreelance: return "Tus portales: \(count) proyecto(s) para ti"
-        default: return "Tus portales: \(count) vacante(s) para ti"
+        case .social: return String(localized: "Redes: \(count) publicación(es) con vacantes para ti")
+        case .followUp: return String(localized: "Seguimientos: \(count) para aprobar")
+        case .portalScanFreelance: return String(localized: "Tus portales: \(count) proyecto(s) para ti")
+        default: return String(localized: "Tus portales: \(count) vacante(s) para ti")
         }
     }
 }

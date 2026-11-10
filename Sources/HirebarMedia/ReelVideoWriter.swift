@@ -29,9 +29,9 @@ extension ReelRenderer {
             kCVPixelBufferHeightKey as String: height,
         ]
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: attributes)
-        guard writer.canAdd(input) else { throw Problem(message: "no se pudo preparar el video") }
+        guard writer.canAdd(input) else { throw Problem(message: String(localized: "no se pudo preparar el video")) }
         writer.add(input)
-        guard writer.startWriting() else { throw writer.error ?? Problem(message: "no se pudo empezar el video") }
+        guard writer.startWriting() else { throw writer.error ?? Problem(message: String(localized: "no se pudo empezar el video")) }
         writer.startSession(atSourceTime: .zero)
         let capture = await WebFrameCapture(width: width, height: height)
         let animated: Int
@@ -44,7 +44,7 @@ extension ReelRenderer {
         }
         input.markAsFinished()
         await writer.finishWriting()
-        guard writer.status == .completed else { throw writer.error ?? Problem(message: "no se pudo terminar el video") }
+        guard writer.status == .completed else { throw writer.error ?? Problem(message: String(localized: "no se pudo terminar el video")) }
         return animated
     }
 
@@ -106,7 +106,7 @@ struct SceneRecorder {
                 zoom = 1.0 + ReelRenderer.stillZoom * (elapsed / clip.seconds)
             }
             guard let image else {
-                throw ReelRenderer.Problem(message: "no se pudo dibujar la escena \(clip.page.lastPathComponent)")
+                throw ReelRenderer.Problem(message: String(localized: "no se pudo dibujar la escena \(clip.page.lastPathComponent)"))
             }
             try await append(image, zoom: zoom, caption: ReelRenderer.captionWords(clip.words, at: elapsed))
         }
@@ -123,7 +123,7 @@ struct SceneRecorder {
             let buffer = ReelRenderer.pixelBuffer(
                 pool: adaptor.pixelBufferPool, image: image, zoom: zoom, caption: caption, accent: accent)
         else {
-            throw ReelRenderer.Problem(message: "no se pudo dibujar un cuadro del video")
+            throw ReelRenderer.Problem(message: String(localized: "no se pudo dibujar un cuadro del video"))
         }
         adaptor.append(buffer, withPresentationTime: CMTime(value: frameIndex, timescale: ReelRenderer.fps))
         frameIndex += 1

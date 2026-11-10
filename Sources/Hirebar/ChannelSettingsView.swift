@@ -39,7 +39,7 @@ final class ChannelSettingsModel {
         guard !checking else { return }
         let candidate = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard Telegram.looksLikeToken(candidate) else {
-            problem = "Ese token no tiene el formato de @BotFather (123456789:AA…). Cópialo completo."
+            problem = String(localized: "Ese token no tiene el formato de @BotFather (123456789:AA…). Cópialo completo.")
             return
         }
         checking = true
@@ -57,11 +57,12 @@ final class ChannelSettingsModel {
         case .valid:
             token = ""
         case .rejected:
-            problem = "Telegram no reconoce ese token. Revísalo en @BotFather (/mybots → tu bot → API Token)."
+            problem = String(localized: "Telegram no reconoce ese token. Revísalo en @BotFather (/mybots → tu bot → API Token).")
         case .unreachable:
-            problem = "No pude hablar con Telegram. Revisa la conexión a internet y vuelve a intentar."
+            problem = String(localized: "No pude hablar con Telegram. Revisa la conexión a internet y vuelve a intentar.")
         case .notSaved:
-            problem = "No pude guardar el token en el Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar."
+            problem = String(
+                localized: "No pude guardar el token en el Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar.")
         }
         reload()
     }
@@ -75,7 +76,8 @@ final class ChannelSettingsModel {
 
     func removeBot() {
         if engine.controller.channel.removeBot() == .keychainFailed {
-            problem = "No pude borrar el token del Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar."
+            problem = String(
+                localized: "No pude borrar el token del Llavero de macOS. Revisa que el Llavero esté desbloqueado y vuelve a intentar.")
         }
         reload()
     }
@@ -109,7 +111,7 @@ struct ChannelSettingsView: View {
             }
             Section("Avisos en la Mac") {
                 LabeledContent("Notificaciones") {
-                    Text(model.notificationsAllowed ? "Permitidas" : "Sin permiso")
+                    Text(model.notificationsAllowed ? String(localized: "Permitidas") : String(localized: "Sin permiso"))
                         .foregroundStyle(model.notificationsAllowed ? Color.secondary : Color.orange)
                 }
                 Text(Self.fallbackExplanation)
@@ -210,14 +212,24 @@ struct ChannelSettingsView: View {
     }
 
     static let misconfiguredText =
-        "Faltan los ajustes del canal dentro de la app (canal.json). Vuelve a instalarla con scripts/bundle.sh --install."
+        String(
+            localized: "Faltan los ajustes del canal dentro de la app (canal.json). Vuelve a instalarla con scripts/bundle.sh --install.")
     static let noUsernameWarning =
-        "Esta cuenta no tiene usuario de Telegram, así que el nombre se puede copiar: revisa que el mensaje sea el tuyo."
+        String(
+            localized: """
+                Esta cuenta no tiene usuario de Telegram, así que el nombre se puede copiar: revisa que el \
+                mensaje sea el tuyo.
+                """)
     static let fallbackExplanation =
-        "Si Telegram no está configurado o un mensaje no llega, el aviso aparece como notificación y al tocarlo se abre el panel."
+        String(
+            localized:
+                """
+                Si Telegram no está configurado o un mensaje no llega, el aviso aparece como notificación y al \
+                tocarlo se abre el panel.
+                """)
 
     static func describe(_ owner: ChannelOwner) -> String {
-        let name = owner.name.isEmpty ? "Tu cuenta" : owner.name
+        let name = owner.name.isEmpty ? String(localized: "Tu cuenta") : owner.name
         return owner.username.map { "\(name) (@\($0))" } ?? name
     }
 }
@@ -225,14 +237,14 @@ struct ChannelSettingsView: View {
 enum ChannelStatusText {
     static func describe(_ state: ChannelState) -> String {
         switch state {
-        case .misconfigured: return "Falta reinstalar la app"
-        case .notConfigured: return "Telegram sin configurar"
-        case .tokenRejected: return "El token ya no sirve"
-        case .unlinked, .expired: return "Falta vincular tu cuenta"
-        case .waitingForHello: return "Esperando tu hola"
-        case .confirming: return "Confirma tu cuenta en Ajustes"
+        case .misconfigured: return String(localized: "Falta reinstalar la app")
+        case .notConfigured: return String(localized: "Telegram sin configurar")
+        case .tokenRejected: return String(localized: "El token ya no sirve")
+        case .unlinked, .expired: return String(localized: "Falta vincular tu cuenta")
+        case .waitingForHello: return String(localized: "Esperando tu hola")
+        case .confirming: return String(localized: "Confirma tu cuenta en Ajustes")
         case .connected(let owner, _):
-            return owner.name.isEmpty ? "Telegram conectado" : "Conectado como \(owner.name)"
+            return owner.name.isEmpty ? String(localized: "Telegram conectado") : String(localized: "Conectado como \(owner.name)")
         }
     }
 

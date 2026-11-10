@@ -53,7 +53,7 @@ extension Telegram {
                     result = TelegramHTTP.postMultipart(url, fields: fields, fileField: "photo", file: file)
                 }
                 if (result?["ok"] as? Bool) != true {
-                    let reason = result?["description"] ?? "sin respuesta"
+                    let reason = result?["description"] ?? String(localized: "sin respuesta")
                     log.write("Telegram: no se pudo enviar la imagen \(file.lastPathComponent) (\(reason))")
                 }
             }

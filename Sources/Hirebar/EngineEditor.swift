@@ -12,16 +12,16 @@ struct EngineEditor: View {
     @Bindable var model: SettingsModel
 
     static let customWarning =
-        "Hirebar no puede verificar qué permisos tienen estos comandos. El de lectura no debería poder enviar, "
-        + "publicar ni escribir fuera de la carpeta de trabajo. Igual, cada acción que reporte el de ejecución "
-        + "se compara con lo que aprobaste."
+        String(localized: "Hirebar no puede verificar qué permisos tienen estos comandos. El de lectura no debería poder enviar, ")
+        + String(localized: "publicar ni escribir fuera de la carpeta de trabajo. Igual, cada acción que reporte el de ejecución ")
+        + String(localized: "se compara con lo que aprobaste.")
     static let variablesFooter =
-        "Se ejecutan en una terminal con estas variables:\n" + AIEngineSettings.variablesHelp
-        + "\nLo que imprima es la respuesta que te llega a Telegram."
+        String(localized: "Se ejecutan en una terminal con estas variables:\n") + AIEngineSettings.variablesHelp
+        + String(localized: "\nLo que imprima es la respuesta que te llega a Telegram.")
     static let presetFooter =
-        "Con esta IA, las tareas que leen con el navegador (redes, tus portales, seguimientos, clientes y revisión "
-        + "de rendimiento) no corren: solo Claude Code puede leer con el navegador sin poder actuar. Si tu versión "
-        + "usa otras opciones, elige \"Otra IA\" y copia estos comandos para ajustarlos."
+        String(localized: "Con esta IA, las tareas que leen con el navegador (redes, tus portales, seguimientos, clientes y revisión ")
+        + String(localized: "de rendimiento) no corren: solo Claude Code puede leer con el navegador sin poder actuar. Si tu versión ")
+        + String(localized: "usa otras opciones, elige \"Otra IA\" y copia estos comandos para ajustarlos.")
 
     var body: some View {
         Form {
@@ -40,8 +40,11 @@ struct EngineEditor: View {
                 Text("Qué IA hace el trabajo")
             } footer: {
                 Text(
-                    "La búsqueda en los portales incluidos no usa IA. La IA se usa para enviar propuestas, postular, "
-                        + "hacer seguimientos, escribir correos y publicaciones, y actualizar tu perfil."
+                    String(
+                        localized: """
+                            La búsqueda en los portales incluidos no usa IA. La IA se usa para enviar propuestas, postular,\u{20}
+                            """)
+                        + String(localized: "hacer seguimientos, escribir correos y publicaciones, y actualizar tu perfil.")
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -50,7 +53,7 @@ struct EngineEditor: View {
             if model.engine.kind == .custom {
                 Section {
                     TextField(
-                        "Comando de lectura y redacción",
+                        String(localized: "Comando de lectura y redacción"),
                         text: $model.engine.readCommand,
                         prompt: Text("mi-ia --solo-lectura --prompt \"$HIREBAR_FULL_PROMPT\""),
                         axis: .vertical
@@ -58,7 +61,7 @@ struct EngineEditor: View {
                     .font(.system(.body, design: .monospaced))
                     .lineLimit(2...5)
                     TextField(
-                        "Comando de ejecución",
+                        String(localized: "Comando de ejecución"),
                         text: $model.engine.actCommand,
                         prompt: Text("mi-ia --prompt \"$HIREBAR_FULL_PROMPT\""),
                         axis: .vertical
@@ -95,7 +98,7 @@ struct EngineEditor: View {
 
             Section {
                 HStack {
-                    Button(model.checkingEngine ? "Probando…" : "Probar") { model.checkEngine() }
+                    Button(model.checkingEngine ? String(localized: "Probando…") : String(localized: "Probar")) { model.checkEngine() }
                         .disabled(model.checkingEngine)
                     if let text = model.engineCheck {
                         Label(text, systemImage: model.engineCheckOK ? "checkmark.circle.fill" : "info.circle")

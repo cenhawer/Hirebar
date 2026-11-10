@@ -15,9 +15,9 @@ struct PanelView: View {
     }
 
     private let sections = [
-        AgentSection(id: "Buscar trabajo", kinds: [.jobs, .freelance]),
-        AgentSection(id: "Conseguir clientes", kinds: [.clients, .content]),
-        AgentSection(id: "Tú", kinds: [.profile, .analyst]),
+        AgentSection(id: String(localized: "Buscar trabajo"), kinds: [.jobs, .freelance]),
+        AgentSection(id: String(localized: "Conseguir clientes"), kinds: [.clients, .content]),
+        AgentSection(id: String(localized: "Tú"), kinds: [.profile, .analyst]),
     ]
 
     var body: some View {
@@ -78,9 +78,9 @@ struct PanelView: View {
 
     private var footer: some View {
         HStack(spacing: 2) {
-            FooterButton(symbol: "doc.text", help: "Informes") { model.open(Paths.reports) }
-            FooterButton(symbol: "list.bullet", help: "Registro") { model.openLog() }
-            FooterButton(symbol: "folder", help: "Carpeta de datos") { model.open(Paths.root) }
+            FooterButton(symbol: "doc.text", help: String(localized: "Informes")) { model.open(Paths.reports) }
+            FooterButton(symbol: "list.bullet", help: String(localized: "Registro")) { model.openLog() }
+            FooterButton(symbol: "folder", help: String(localized: "Carpeta de datos")) { model.open(Paths.root) }
             Spacer()
             Button {
                 model.editSettings(nil)
@@ -220,9 +220,11 @@ struct AgentRow: View {
                     .fixedSize()
                     .help("Hace todo menos enviar y te cuenta lo que habría hecho")
                 Spacer()
-                Button(agent.id == .profile ? "Regenerar HV" : "Correr ahora") { model.runNow(agent.id) }
-                    .controlSize(.small)
-                    .disabled(!agent.enabled)
+                Button(agent.id == .profile ? String(localized: "Regenerar HV") : String(localized: "Correr ahora")) {
+                    model.runNow(agent.id)
+                }
+                .controlSize(.small)
+                .disabled(!agent.enabled)
                 Menu {
                     if !agent.sources.isEmpty {
                         Section("Portales") {

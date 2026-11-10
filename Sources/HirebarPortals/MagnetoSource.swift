@@ -47,7 +47,7 @@ public struct MagnetoSource: JobSource {
                     Hit(
                         id: "mg:" + offerId, platform: name, fit: fit, title: title,
                         url: "\(Self.base)/co/empleos/\(html[slugRange])-\(offerId)",
-                        detail: "Magneto · revisar salario", score: 300))
+                        detail: String(localized: "Magneto · revisar salario"), score: 300))
             }
             await fetcher.pause(1)
         }
@@ -64,6 +64,6 @@ public struct MagnetoSource: JobSource {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withFullDate]
         guard let date = formatter.date(from: posted), now().timeIntervalSince(date) > Self.maxAgeDays * 86400 else { return nil }
-        return "publicada el \(posted)"
+        return String(localized: "publicada el \(posted)")
     }
 }

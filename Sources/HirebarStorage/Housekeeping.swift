@@ -19,16 +19,16 @@ public enum Housekeeping {
         var notes: [String] = []
 
         let removedRuns = removeOlder(than: keepRunsDays, in: Paths.runs, now: now)
-        if removedRuns > 0 { notes.append("\(removedRuns) archivos de ejecuciones") }
+        if removedRuns > 0 { notes.append(String(localized: "\(removedRuns) archivos de ejecuciones")) }
 
         do {
             try FileExecutionStateStore.standard.removeRecords(before: now.addingTimeInterval(-keepRunsDays * 86400))
         } catch {
-            notes.append("no pude limpiar el estado de ejecución (\(error.localizedDescription))")
+            notes.append(String(localized: "no pude limpiar el estado de ejecución (\(error.localizedDescription))"))
         }
 
         let removedReports = removeOlder(than: keepReportsDays, in: Paths.reports, now: now, except: ["cambios.md"])
-        if removedReports > 0 { notes.append("\(removedReports) informes de hace más de un año") }
+        if removedReports > 0 { notes.append(String(localized: "\(removedReports) informes de hace más de un año")) }
 
         let followUps = Paths.workspaceFile("seguimiento.json")
         if var root = readJSON(followUps) as? [String: Any], let list = root["propuestas"] as? [[String: Any]] {
@@ -41,7 +41,7 @@ public enum Housekeeping {
             if kept.count < list.count {
                 root["propuestas"] = kept
                 writeJSON(root, followUps)
-                notes.append("\(list.count - kept.count) propuestas terminadas del seguimiento")
+                notes.append(String(localized: "\(list.count - kept.count) propuestas terminadas del seguimiento"))
             }
         }
 
@@ -64,13 +64,13 @@ public enum Housekeeping {
             }
             if changed {
                 writeJSON(root, Metrics.url)
-                notes.append("métricas de la app")
+                notes.append(String(localized: "métricas de la app"))
             }
         }
         if let root = readJSON(Metrics.agentURL) as? [String: Any], root.count > keepWeeks {
             let keep = Set(root.keys.sorted().suffix(keepWeeks))
             writeJSON(root.filter { keep.contains($0.key) }, Metrics.agentURL)
-            notes.append("métricas de Claude")
+            notes.append(String(localized: "métricas de Claude"))
         }
 
         for name in growingFiles where trim(Paths.workspaceFile(name), max: textMaxBytes, keep: textKeepBytes, newestAtTop: true) {
@@ -82,7 +82,9 @@ public enum Housekeeping {
 
     private static func removeOlder(than days: Double, in folder: URL, now: Date, except: Set<String> = []) -> Int {
         let fm = FileManager.default
-        guard let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.contentModificationDateKey]) else { return 0 }
+        guard let files = try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.contentModificationDateKey]) else {
+            return 0
+        }
         var removed = 0
         for file in files where !except.contains(file.lastPathComponent) {
             let date = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? now
@@ -117,7 +119,7 @@ public enum Housekeeping {
         if newestAtTop {
             kept = String(decoding: data.prefix(keep), as: UTF8.self)
             if let cut = kept.lastIndex(of: "\n") { kept = String(kept[..<cut]) }
-            kept += "\n\n(Lo más antiguo se borró en la limpieza automática.)\n"
+            kept += String(localized: "\n\n(Lo más antiguo se borró en la limpieza automática.)\n")
         } else {
             kept = String(decoding: data.suffix(keep), as: UTF8.self)
             if let cut = kept.firstIndex(of: "\n") { kept = String(kept[kept.index(after: cut)...]) }

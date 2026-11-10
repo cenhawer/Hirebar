@@ -6,18 +6,19 @@ public enum AutoSend {
 
     static func whatItDoes(_ kind: AgentKind) -> String {
         switch kind {
-        case .jobs: return "postula a las vacantes que encuentre"
-        case .freelance: return "envía propuestas, y seguimientos a proyectos donde ya escribiste"
-        case .clients: return "manda seguimientos a empresas que ya recibieron un correo tuyo"
+        case .jobs: return String(localized: "postula a las vacantes que encuentre")
+        case .freelance: return String(localized: "envía propuestas, y seguimientos a proyectos donde ya escribiste")
+        case .clients: return String(localized: "manda seguimientos a empresas que ya recibieron un correo tuyo")
         case .content, .profile, .analyst: return ""
         }
     }
 
     public static func explanation(for kinds: [AgentKind], agents repository: AgentRepository) -> String {
         let lines = kinds.filter(Self.agents.contains).map { "• \(repository.load($0).name) \(whatItDoes($0))" }
-        return "Con el envío automático, sin esperar tu \"si\":\n" + lines.joined(separator: "\n")
-            + "\n\nNunca salen solos: respuestas a clientes, publicaciones, correos en frío y seguimientos a alguien nuevo. "
-            + "El cupo diario de cada agente sigue igual y todo se verifica como siempre."
+        return String(localized: "Con el envío automático, sin esperar tu \"si\":\n") + lines.joined(separator: "\n")
+            + String(
+                localized: "\n\nNunca salen solos: respuestas a clientes, publicaciones, correos en frío y seguimientos a alguien nuevo. ")
+            + String(localized: "El cupo diario de cada agente sigue igual y todo se verifica como siempre.")
     }
 
     public static func turnOn(_ kind: AgentKind, from origin: String, agents repository: AgentRepository) {

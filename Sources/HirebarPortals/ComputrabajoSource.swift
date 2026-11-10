@@ -30,7 +30,7 @@ public struct ComputrabajoSource: JobSource {
                 guard TextTools.normalize("\(offer.modality) \(offer.title)").contains(" remoto ") else { continue }
                 if JobScreener.lowPay(offer.salary, profile: jobs) { continue }
                 let age = TextTools.ageMinutes(offer.posted) ?? 600
-                var detail = "Computrabajo · \(offer.company) · \(TextTools.ageText(age)) · \(offer.modality)"
+                var detail = String(localized: "Computrabajo · \(offer.company) · \(TextTools.ageText(age)) · \(offer.modality)")
                 if !offer.salary.isEmpty { detail += " · \(offer.salary)" }
                 hits.append(
                     Hit(

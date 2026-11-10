@@ -13,16 +13,18 @@ struct TaskEditor: View {
     @State private var hoursText = ""
 
     static let days = [
-        DayOption(id: "lun", title: "L"), DayOption(id: "mar", title: "M"), DayOption(id: "mie", title: "X"),
-        DayOption(id: "jue", title: "J"), DayOption(id: "vie", title: "V"), DayOption(id: "sab", title: "S"),
-        DayOption(id: "dom", title: "D"),
+        DayOption(id: "lun", title: String(localized: "L")), DayOption(id: "mar", title: String(localized: "M")),
+        DayOption(id: "mie", title: String(localized: "X")),
+        DayOption(id: "jue", title: String(localized: "J")), DayOption(id: "vie", title: String(localized: "V")),
+        DayOption(id: "sab", title: String(localized: "S")),
+        DayOption(id: "dom", title: String(localized: "D")),
     ]
     static let workdays: Set<String> = ["lun", "mar", "mie", "jue", "vie"]
 
     var body: some View {
         Section {
             if task.mode == .linkedInDraft {
-                LabeledContent("Días", value: "los de cada cuenta (Contenido → Cuentas de contenido)")
+                LabeledContent("Días", value: String(localized: "los de cada cuenta (Contenido → Cuentas de contenido)"))
             } else {
                 LabeledContent("Días") {
                     HStack(spacing: 4) {
@@ -42,14 +44,17 @@ struct TaskEditor: View {
                         .filter { (0...23).contains($0) }
                 }
             Stepper(value: $task.windowHours, in: 1...48) {
-                LabeledContent("Si el Mac estaba dormido, puede correr hasta", value: "\(task.windowHours) h después")
+                LabeledContent("Si el Mac estaba dormido, puede correr hasta", value: String(localized: "\(task.windowHours) h después"))
             }
         } header: {
             Text(task.mode.title)
         } footer: {
-            Text(task.hours.isEmpty ? "Sin horas: esta tarea no corre sola." : "Corre \(task.scheduleText).")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Text(
+                task.hours.isEmpty
+                    ? String(localized: "Sin horas: esta tarea no corre sola.") : String(localized: "Corre \(task.scheduleText).")
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -96,8 +101,11 @@ struct SkillsEditor: View {
                 Text("Habilidades")
             } footer: {
                 Text(
-                    "Domino: se busca y cuenta como ENCAJA. Conozco: se busca como RETO. Evito: se descarta. "
-                        + "Los otros nombres sirven para reconocerla en los avisos (por ejemplo, Node.js: node, nodejs)."
+                    String(localized: "Domino: se busca y cuenta como ENCAJA. Conozco: se busca como RETO. Evito: se descarta. ")
+                        + String(
+                            localized: """
+                                Los otros nombres sirven para reconocerla en los avisos (por ejemplo, Node.js: node, nodejs).
+                                """)
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -163,7 +171,7 @@ struct CustomPortalsSection: View {
                         .help("Quitar este portal")
                     }
                     TextField(
-                        "Indicaciones (opcional)", text: $portal.notes,
+                        String(localized: "Indicaciones (opcional)"), text: $portal.notes,
                         prompt: Text("Ej.: filtra por remoto y Colombia; ignora las de inglés")
                     )
                     .font(.caption)
@@ -181,9 +189,9 @@ struct CustomPortalsSection: View {
             Text("Tus portales")
         } footer: {
             Text(
-                "Pega el enlace de una búsqueda ya filtrada en el portal que quieras. La IA lo revisa con tu Chrome "
-                    + "(sirve aunque pida sesión iniciada) a las horas de la tarea \"Revisar tus portales\" "
-                    + "y te manda lo que encuentre en la lista de siempre."
+                String(localized: "Pega el enlace de una búsqueda ya filtrada en el portal que quieras. La IA lo revisa con tu Chrome ")
+                    + String(localized: "(sirve aunque pida sesión iniciada) a las horas de la tarea \"Revisar tus portales\" ")
+                    + String(localized: "y te manda lo que encuentre en la lista de siempre.")
             )
             .font(.caption)
             .foregroundStyle(.secondary)

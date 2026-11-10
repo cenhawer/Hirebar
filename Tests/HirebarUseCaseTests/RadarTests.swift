@@ -28,7 +28,7 @@ struct FakeJobSource: JobSource {
 }
 
 struct SilentFetcher: WebPageFetcher {
-    func text(_ address: String) async -> String? { nil }
+    func data(_ url: URL) async -> Data? { nil }
     func pause(_ seconds: Double) async {}
 }
 

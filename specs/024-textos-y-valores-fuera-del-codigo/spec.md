@@ -43,6 +43,10 @@ todos los textos del código, y un test falla si un punto de salida recibe un li
 - **FR-003**: Un texto largo MUST ser una sola clave aunque ocupe varias líneas en el código.
 - **FR-004**: Palabras de búsqueda, plazos y tiempos de espera MUST vivir en recursos versionados.
 
+## Assumptions
+
+- La retención de datos va en la spec `029`; las constantes técnicas (tamaño del video, tiempos de red, ajuste de la alineación de la voz) no son valores de dominio y quedan en el código.
+
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: `scripts/strings.sh --check` en verde en el CI.

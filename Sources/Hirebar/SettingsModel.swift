@@ -10,6 +10,7 @@ import SwiftUI
 
 enum SettingsPage: Hashable {
     case agent(AgentKind)
+    case profile
     case skills
     case content
     case engine
@@ -21,7 +22,7 @@ final class SettingsWindowController {
     let channel: ChannelSettingsModel
 
     init(engine: Engine) {
-        model = SettingsModel(agentRepository: engine.controller.stores.agents)
+        model = SettingsModel(agentRepository: engine.controller.stores.agents, profileRepository: engine.controller.stores.profile)
         channel = ChannelSettingsModel(engine: engine)
     }
     private var window: NSWindow?
@@ -66,14 +67,17 @@ struct DayOption: Identifiable {
 @Observable
 final class SettingsModel {
     let agentRepository: AgentRepository
+    let profileRepository: ProfileRepository
 
-    init(agentRepository: AgentRepository) {
+    init(agentRepository: AgentRepository, profileRepository: ProfileRepository) {
         self.agentRepository = agentRepository
+        self.profileRepository = profileRepository
     }
 
     var agents: [AgentSettings] = []
     var sources: [String: Bool] = [:]
     var skills: [EditableSkill] = []
+    var profileDocument = ProfileDocument()
     var portals: [CustomPortal] = []
     var contentAccounts: [EditableAccount] = []
     var engine = AIEngineSettings()
@@ -90,6 +94,7 @@ final class SettingsModel {
         let config = Config.load()
         sources = Dictionary(uniqueKeysWithValues: (Config.jobSources + Config.freelanceSources).map { ($0, config.isEnabled($0)) })
         skills = Profile.load().skills.map { EditableSkill(skill: $0) }
+        profileDocument = profileRepository.document()
         portals = PortalStore.load()
         contentAccounts = ContentAccountStore.load().map { EditableAccount(account: $0) }
         engine = Config.load().aiEngine
@@ -103,6 +108,11 @@ final class SettingsModel {
             message = String(localized: "Revisa los portales: cada uno necesita nombre y un enlace que empiece por https://")
             return
         }
+        if let problem = profileDocument.problems.first {
+            message = problem.message
+            selection = .profile
+            return
+        }
         guard let accounts = validatedAccounts() else { return }
         saveAgents()
         var config = Config.load()
@@ -113,10 +123,12 @@ final class SettingsModel {
         do {
             try PortalStore.save(portals)
             try ContentAccountStore.save(accounts)
+            try profileRepository.saveDocument(profileDocument)
             try ProfileEditor.saveSkills(skills.map(\.skill))
             result = String(localized: "Guardado. Aplica desde la próxima búsqueda.")
         } catch {
-            result = String(localized: "Los agentes se guardaron, pero no pude guardar las habilidades: \(error.localizedDescription)")
+            result = String(
+                localized: "Los agentes se guardaron, pero no pude guardar el perfil ni las habilidades: \(error.localizedDescription)")
         }
         reload()
         message = result
@@ -218,7 +230,7 @@ final class SettingsModel {
         Paths.ensure()
         AgentStore.writeMissingDefaults()
         switch selection {
-        case .skills:
+        case .profile, .skills:
             NSWorkspace.shared.activateFileViewerSelecting([Profile.url])
         case .engine, .channel:
             NSWorkspace.shared.activateFileViewerSelecting([Paths.config])

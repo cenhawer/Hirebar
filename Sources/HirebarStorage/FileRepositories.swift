@@ -54,9 +54,11 @@ public struct FileMetricsRepository: MetricsRepository {
 
 public struct FileProfileRepository: ProfileRepository {
     let url: URL
+    let searchDefaults: SearchProfile
 
-    public init(url: URL = Profile.url) {
+    public init(url: URL = Profile.url, searchDefaults: SearchProfile) {
         self.url = url
+        self.searchDefaults = searchDefaults
     }
 
     public func pastEmployers() -> [String] { ProfileExperience.pastEmployers(from: url) }
@@ -64,7 +66,7 @@ public struct FileProfileRepository: ProfileRepository {
     public func load() -> Profile { Profile.load() }
     public func saveSkills(_ skills: [Skill]) throws { try ProfileEditor.saveSkills(skills) }
     public func setSkill(_ name: String, level: SkillLevel) -> SkillChange { ProfileEditor.setSkill(name, level: level) }
-    public func effectiveSearch() -> SearchProfile { SearchProfile.loadEffective() }
+    public func effectiveSearch() -> SearchProfile { SearchProfile.loadEffective(defaults: searchDefaults) }
     public func appendChangeRequest(_ kind: String, _ text: String, at date: Date) { ProfileRequests.append(kind, text, at: date) }
     public func changeRequests() -> String { ProfileRequests.read() }
     public func clearChangeRequests() { ProfileRequests.clear() }
@@ -99,10 +101,11 @@ public struct FilePracticeLogRepository: PracticeLogRepository {
 }
 
 extension Repositories {
-    public static var files: Repositories {
+    public static func files(searchDefaults: SearchProfile) -> Repositories {
         Repositories(
             config: FileConfigRepository(), batches: FileBatchRepository(), agents: FileAgentRepository(),
-            contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(), profile: FileProfileRepository(),
+            contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(),
+            profile: FileProfileRepository(searchDefaults: searchDefaults),
             quotas: FileQuotaRepository(), portals: FilePortalRepository(), prospecting: FileProspectingRepository(),
             runState: FileRunStateRepository(), workspace: FileWorkspaceRepository(), practice: FilePracticeLogRepository(),
             executionState: FileExecutionStateStore.standard)

@@ -9,6 +9,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Ajustes → Datos y experiencia: datos personales, preferencias, empleos con logros y hojas de vida se editan sin tocar JSON; se conservan los demás campos de `perfil.json`.
 - La limpieza del domingo borra también las grabaciones de voz (14 días), los videos armados (30 días) y los borradores y listas descartadas (90 días); todos los plazos viven en `Resources/retencion.json` y la guía los lista.
 - Bandeja "Pendientes de aprobar" en la Mac: cada lista con sus envíos para aprobar todos, elegir o descartar, y las publicaciones listas con su texto, láminas y video para publicar o descartar.
+- Asistente de primer uso: nombre, IA con prueba, Telegram, agentes y permisos de macOS sin editar archivos; el panel muestra lo que falta configurar.
 - Los textos de Hirebar están en un String Catalog (`Resources/Localizable.xcstrings`), listo para traducirse.
 - Cada tarea de la IA corre con el perfil que necesita: lectura (sin escribir ni actuar), redacción (escribe solo en su carpeta) o ejecución (actúa solo sobre lo aprobado).
 - Registro y verificación de cada envío contra lo aprobado; una acción que no coincide pone al agente en pausa, con aviso y botones para reanudar (`reanudar <agente>`).

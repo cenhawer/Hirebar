@@ -1,4 +1,3 @@
-import HirebarApplication
 
 public struct AI: Sendable {
     public let settings: AIEngineSettings

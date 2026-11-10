@@ -1,9 +1,4 @@
-import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 enum TaskProfiles {
     static func profile(for mode: Mode, account: ContentAccount?) -> RunProfile {
@@ -47,10 +42,10 @@ enum TaskProfiles {
         }
     }
 
-    static func needsBrowser(_ mode: Mode, account: ContentAccount?) -> Bool {
+    static func needsBrowser(_ mode: Mode, performanceCheckDue: Bool) -> Bool {
         switch mode {
         case .linkedInDraft:
-            return account?.needsPerformanceCheck ?? false
+            return performanceCheckDue
         case .profileUpdate, .weeklyReport:
             return false
         case .social, .portalScanJobs, .portalScanFreelance, .followUp, .prospecting, .jobs, .freelance, .followUpSend,

@@ -10,6 +10,7 @@ final class TestClock: Clock {
 
     var moment: Date
     private(set) var pending: [(at: Date, action: @MainActor () -> Void)] = []
+    private var repeating: [(work: Work, action: @MainActor () -> Void)] = []
 
     init(_ moment: Date = Date(timeIntervalSince1970: 1_800_000_000)) {
         self.moment = moment
@@ -17,10 +18,18 @@ final class TestClock: Clock {
 
     func now() -> Date { moment }
 
-    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) -> ScheduledWork { Work() }
+    func every(_ interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) -> ScheduledWork {
+        let work = Work()
+        repeating.append((work, action))
+        return work
+    }
 
     func after(_ delay: TimeInterval, _ action: @escaping @MainActor () -> Void) {
         pending.append((moment.addingTimeInterval(delay), action))
+    }
+
+    func tick() {
+        for entry in repeating where !entry.work.cancelled { entry.action() }
     }
 
     func advance(by interval: TimeInterval) {

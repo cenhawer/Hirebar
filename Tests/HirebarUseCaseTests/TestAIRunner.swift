@@ -9,13 +9,16 @@ final class TestAIRunner: AIRunner {
 
     var failure: AIRunFailure?
     private(set) var requests: [AIRunRequest] = []
+    private(set) var runs: [Run] = []
     private(set) var completions: [@MainActor @Sendable (AIRunResult) -> Void] = []
 
     func start(_ request: AIRunRequest, completion: @escaping @MainActor @Sendable (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure> {
         requests.append(request)
         if let failure { return .failure(failure) }
         completions.append(completion)
-        return .success(Run())
+        let run = Run()
+        runs.append(run)
+        return .success(run)
     }
 
     func loginHint(_ kind: AIEngineKind) -> String { "" }

@@ -3,6 +3,7 @@ import HirebarDomain
 
 private let log = Log(.telegram)
 
+@MainActor
 struct TelegramExecutionAlerts: ExecutionAlerts {
     let notifier: Notifier
     let agents: AgentRepository
@@ -20,7 +21,7 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
             buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
     }
 
-    static func message(agentName: String, alias: String, verification: ExecutionVerification, pauseSaved: Bool) -> String {
+    nonisolated static func message(agentName: String, alias: String, verification: ExecutionVerification, pauseSaved: Bool) -> String {
         var lines = ["\(agentName) quedó en pausa: revisé la lista \(verification.batch) y algo no coincide con lo que aprobaste."]
         if let reason = verification.unverifiedReason {
             lines.append(unverifiedText(reason))
@@ -36,7 +37,7 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
         return lines.joined(separator: "\n")
     }
 
-    static func unverifiedText(_ reason: UnverifiedReason) -> String {
+    nonisolated static func unverifiedText(_ reason: UnverifiedReason) -> String {
         switch reason {
         case .logMissing: return "La IA no dejó el registro de lo que hizo, así que no puedo confirmar qué se envió."
         case .logInvalid: return "El registro de lo que hizo la IA no se puede leer."
@@ -44,7 +45,7 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
         }
     }
 
-    static func violationText(_ reason: ViolationReason?) -> String {
+    nonisolated static func violationText(_ reason: ViolationReason?) -> String {
         switch reason {
         case .notApproved: return "no estaba en lo que aprobaste"
         case .actionMismatch: return "hizo una acción distinta de la aprobada"

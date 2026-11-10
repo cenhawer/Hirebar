@@ -5,11 +5,19 @@ final class ResponseBox: @unchecked Sendable {
 }
 
 enum TelegramHTTP {
+    static func encode(_ body: [String: Any]) -> Data? {
+        try? JSONSerialization.data(withJSONObject: body)
+    }
+
     static func postJSON(_ url: URL, _ body: [String: Any], timeout: TimeInterval = 30) -> [String: Any]? {
+        postJSON(url, data: encode(body), timeout: timeout)
+    }
+
+    static func postJSON(_ url: URL, data body: Data?, timeout: TimeInterval = 30) -> [String: Any]? {
         var request = URLRequest(url: url, timeoutInterval: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        request.httpBody = body
         let box = ResponseBox()
         let done = DispatchSemaphore(value: 0)
         URLSession.shared.dataTask(with: request) { data, _, _ in

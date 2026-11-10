@@ -3,6 +3,7 @@ import HirebarDomain
 
 private let log = Log(.ai)
 
+@MainActor
 public final class Controller {
     let targetRules: TargetRules
     lazy var executionGuard = ExecutionGuard(
@@ -36,9 +37,9 @@ public final class Controller {
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }
     var prompts: AgentPrompts { AgentPrompts(stores: stores, ai: ai) }
     var commandParser: CommandParser?
-    static let noNewsMarker = "SIN_NOVEDADES"
-    static let maxRunSeconds: TimeInterval = 3600
-    static let authAlertEvery: TimeInterval = 3600
+    nonisolated static let noNewsMarker = "SIN_NOVEDADES"
+    nonisolated static let maxRunSeconds: TimeInterval = 3600
+    nonisolated static let authAlertEvery: TimeInterval = 3600
 
     public var onStatusChange: ((String) -> Void)?
     public private(set) var status = "en espera"
@@ -51,8 +52,8 @@ public final class Controller {
     private var watchdog: ScheduledWork?
     private var lastAuthAlert: Date?
 
-    static let watchdogInterval: TimeInterval = 60
-    static let recoveryDelay: TimeInterval = 5
+    nonisolated static let watchdogInterval: TimeInterval = 60
+    nonisolated static let recoveryDelay: TimeInterval = 5
 
     public var isIdle: Bool { running == nil && queue.isEmpty }
     public var runningAgent: AgentKind? { runningMode.map(AgentKind.owner) }
@@ -338,7 +339,7 @@ public final class Controller {
         reply("\(ai.capitalizedName) cambió archivos que no debía tocar (\(restored.joined(separator: ", "))); los dejé como estaban.")
     }
 
-    static let practiceSummaryLimit = 15
+    nonisolated static let practiceSummaryLimit = 15
 
     func simulateIfPracticing(_ batch: Batch) -> Bool {
         let kind = AgentKind.owner(of: batch.mode)
@@ -361,8 +362,8 @@ public final class Controller {
         return true
     }
 
-    static let practiceResult = "práctica"
-    static let practiceMetric = "practica"
+    nonisolated static let practiceResult = "práctica"
+    nonisolated static let practiceMetric = "practica"
 
     static func practiceSummary(agentName: String, items: [Proposal]) -> String {
         let lines = items.prefix(practiceSummaryLimit).map { "• \($0.action.rawValue) · \($0.title) · \($0.target.displayText)" }
@@ -490,7 +491,7 @@ public final class Controller {
     /// Cuenta cuyo video está esperando la nota de voz de la persona.
 
     /// Texto de un archivo para mandarlo a Telegram tal cual, listo para copiar y pegar.
-    static let proposalSeenWindow: TimeInterval = 30 * 86400
+    nonisolated static let proposalSeenWindow: TimeInterval = 30 * 86400
 
     private func offerProposals(from output: String, mode: Mode) {
         guard let execution = TaskProfiles.executionMode(for: mode) else { return }

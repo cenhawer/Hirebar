@@ -7,12 +7,13 @@ import HirebarStorage
 import HirebarTelegram
 import SwiftUI
 
-final class ChannelSettingsModel: ObservableObject {
-    @Published var state: ChannelState = .notConfigured
-    @Published var token = ""
-    @Published var checking = false
-    @Published var problem: String?
-    @Published var notificationsAllowed = false
+@Observable
+final class ChannelSettingsModel {
+    var state: ChannelState = .notConfigured
+    var token = ""
+    var checking = false
+    var problem: String?
+    var notificationsAllowed = false
     var onStateChange: (() -> Void)?
 
     static let botFather = URL(string: "https://t.me/BotFather")
@@ -43,8 +44,9 @@ final class ChannelSettingsModel: ObservableObject {
         }
         checking = true
         problem = nil
+        let channel = engine.controller.channel
         Task { @MainActor [weak self] in
-            let result = await engine.controller.channel.useToken(candidate)
+            let result = await channel.useToken(candidate)
             self?.finishCheck(result)
         }
     }
@@ -94,7 +96,7 @@ final class ChannelSettingsModel: ObservableObject {
 }
 
 struct ChannelSettingsView: View {
-    @ObservedObject var model: ChannelSettingsModel
+    @Bindable var model: ChannelSettingsModel
 
     var body: some View {
         Form {

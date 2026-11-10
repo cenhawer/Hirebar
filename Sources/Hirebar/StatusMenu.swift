@@ -59,7 +59,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         engine.freelanceRadar.onStatusChange = { [weak self] _ in self?.refresh() }
         engine.jobRadar.onStatusChange = { [weak self] _ in self?.refresh() }
         engine.controller.onStatusChange = { [weak self] _ in self?.refresh() }
-        let timer = Timer(timeInterval: 20, repeats: true) { [weak self] _ in self?.refresh() }
+        let timer = Timer(timeInterval: 20, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.refresh() } }
         RunLoop.main.add(timer, forMode: .common)
         ticker = timer
         refresh()

@@ -38,8 +38,8 @@ public enum BotCheck: Equatable, Sendable {
 public typealias ChatButtons = [[(String, String)]]
 
 public protocol ChatChannel: AnyObject, Sendable {
-    var onMessage: ((ChatMessage) -> Void)? { get set }
-    var onTokenStateChange: (() -> Void)? { get set }
+    var onMessage: (@MainActor (ChatMessage) -> Void)? { get set }
+    var onTokenStateChange: (@MainActor () -> Void)? { get set }
     var isConfigured: Bool { get }
     var tokenRejected: Bool { get }
     func start()
@@ -48,10 +48,10 @@ public protocol ChatChannel: AnyObject, Sendable {
     func removeToken() -> Bool
     func botUsername() async -> String?
     func chatName(_ chatId: Int64) async -> String?
-    func send(_ text: String, chatId: Int64, buttons: ChatButtons, completion: ((Int?) -> Void)?)
+    func send(_ text: String, chatId: Int64, buttons: ChatButtons, completion: (@MainActor @Sendable (Int?) -> Void)?)
     func sendDocument(_ file: URL, caption: String, chatId: Int64)
-    func sendPhotos(_ files: [URL], caption: String, chatId: Int64, completion: (() -> Void)?)
-    func sendVideo(_ file: URL, caption: String, chatId: Int64, completion: (() -> Void)?)
+    func sendPhotos(_ files: [URL], caption: String, chatId: Int64, completion: (@MainActor @Sendable () -> Void)?)
+    func sendVideo(_ file: URL, caption: String, chatId: Int64, completion: (@MainActor @Sendable () -> Void)?)
     func download(fileId: String, to target: URL, maxBytes: Int?) -> Bool
     func answerCallback(_ id: String, text: String?)
     func removeButtons(chatId: Int64, messageId: Int)
@@ -62,7 +62,7 @@ extension ChatChannel {
         send(text, chatId: chatId, buttons: buttons, completion: nil)
     }
 
-    public func send(_ text: String, chatId: Int64, completion: @escaping (Int?) -> Void) {
+    public func send(_ text: String, chatId: Int64, completion: @escaping @MainActor @Sendable (Int?) -> Void) {
         send(text, chatId: chatId, buttons: [], completion: completion)
     }
 }

@@ -5,9 +5,9 @@ private let log = Log(.portals)
 
 public final class JobRadar: Radar {
     public weak var controller: Controller?
-    static let maxReviewed = 15
-    static let maxStrong = 6
-    static let maxStretchOnly = 2
+    nonisolated static let maxReviewed = 15
+    nonisolated static let maxStrong = 6
+    nonisolated static let maxStretchOnly = 2
 
     let stores: Repositories
     let portals: PortalAccess

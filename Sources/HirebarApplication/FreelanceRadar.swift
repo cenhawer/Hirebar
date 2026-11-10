@@ -5,7 +5,7 @@ private let log = Log(.portals)
 
 public final class FreelanceRadar: Radar {
     public weak var controller: Controller?
-    static let maxPerBatch = 5
+    nonisolated static let maxPerBatch = 5
 
     let stores: Repositories
     let portals: PortalAccess

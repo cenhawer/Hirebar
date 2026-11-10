@@ -5,7 +5,9 @@ import HirebarDomain
 public struct ProcessAIRunner: AIRunner {
     public init() {}
 
-    public func start(_ request: AIRunRequest, completion: @escaping (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure> {
+    public func start(_ request: AIRunRequest, completion: @escaping @MainActor @Sendable (AIRunResult) -> Void) -> Result<
+        AIRun, AIRunFailure
+    > {
         try? FileManager.default.createDirectory(at: Paths.runs, withIntermediateDirectories: true)
         let output = Paths.runs.appendingPathComponent("\(request.runId).txt")
         let errors = Paths.runs.appendingPathComponent("\(request.runId).log")
@@ -28,7 +30,7 @@ public struct ProcessAIRunner: AIRunner {
             let result = AIRunResult(
                 code: code, output: text, authFailed: code != 0 && ClaudeCLI.isAuthFailure(text + "\n" + problems),
                 restoredFiles: restored)
-            DispatchQueue.main.async { completion(result) }
+            Task { @MainActor in completion(result) }
         }
         do {
             try process.run()

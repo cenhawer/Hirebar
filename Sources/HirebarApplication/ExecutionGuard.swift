@@ -6,6 +6,7 @@ public enum ExecutionGuardFailure: Error, Equatable, Sendable {
     case verificationNotSaved(ExecutionVerification)
 }
 
+@MainActor
 public struct ExecutionGuard: Sendable {
     let store: ExecutionStateStore
     let alerts: ExecutionAlerts

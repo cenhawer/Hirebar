@@ -5,7 +5,7 @@ import HirebarDomain
 public enum EngineCheck {
     public static let timeout: TimeInterval = 180
 
-    public static func run(_ engine: AIEngineSettings, completion: @escaping (Bool, String) -> Void) {
+    public static func run(_ engine: AIEngineSettings, completion: @escaping @MainActor @Sendable (Bool, String) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             try? FileManager.default.createDirectory(at: Paths.workspace, withIntermediateDirectories: true)
             let folder = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-check", isDirectory: true)
@@ -48,7 +48,7 @@ public enum EngineCheck {
         }
     }
 
-    private static func finish(_ ok: Bool, _ message: String, _ completion: @escaping (Bool, String) -> Void) {
-        DispatchQueue.main.async { completion(ok, message) }
+    private static func finish(_ ok: Bool, _ message: String, _ completion: @escaping @MainActor @Sendable (Bool, String) -> Void) {
+        Task { @MainActor in completion(ok, message) }
     }
 }

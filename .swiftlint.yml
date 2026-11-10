@@ -23,3 +23,5 @@ custom_rules:
       - doccomment
     message: "El código no lleva comentarios: los nombres deben explicar el código"
     severity: error
+    excluded:
+      - Package.swift

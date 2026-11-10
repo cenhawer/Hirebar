@@ -10,8 +10,6 @@ extension Paths {
         }
     }
 
-    /// Huellas de versiones anteriores de las plantillas. Si el archivo instalado es una de ellas (no lo editaste),
-    /// se reemplaza por la versión nueva; si lo editaste, se deja como está.
     static let previousVersions: [String: Set<String>] = [
         "instrucciones-contenido-publicar.md": [
             "c84254fb1ade7117e9289e504c73a1851d07b9912eaf9c6aca9eb170c6b8ae5d",

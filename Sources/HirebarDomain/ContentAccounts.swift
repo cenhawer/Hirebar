@@ -1,6 +1,5 @@
 import Foundation
 
-/// Red donde se publica una cuenta de contenido.
 public enum ContentNetwork: String, Codable, CaseIterable, Sendable {
     case linkedin
     case instagram
@@ -8,7 +7,6 @@ public enum ContentNetwork: String, Codable, CaseIterable, Sendable {
     public var title: String { self == .linkedin ? "LinkedIn" : "Instagram" }
 }
 
-/// Colores de las imágenes, en hexadecimal (#RRGGBB).
 public struct ContentPalette: Codable, Equatable, Sendable {
     public var background: String
     public var surface: String
@@ -25,7 +23,6 @@ public struct ContentPalette: Codable, Equatable, Sendable {
     }
 }
 
-/// Paleta lista para escoger, con el estilo de letra que la acompaña.
 public struct PalettePreset: Identifiable, Sendable {
     public let id: String
     public let title: String
@@ -56,27 +53,18 @@ public extension PalettePreset {
     static var standard: PalettePreset { all[1] }
 }
 
-/// Una cuenta para la que el agente Contenido prepara publicaciones (por ejemplo, la de la empresa y la personal).
 public struct ContentAccount: Codable, Identifiable, Equatable, Sendable {
     public var id: String
     public var enabled: Bool
     public var network: ContentNetwork
-    /// Nombre que firma las imágenes.
     public var name: String
-    /// Línea corta bajo el nombre (qué hace).
     public var tagline: String
-    /// Usuario o enlace de la cuenta (@usuario).
     public var handle: String
-    /// De qué habla la cuenta y para quién.
     public var focus: String
-    /// Cómo se ven las imágenes, en palabras (letras, detalles).
     public var style: String
     public var palette: ContentPalette
-    /// Días en que se prepara publicación sola (lun, mar, mie, jue, vie, sab, dom, todos, habiles).
     public var days: [String]
-    /// Además del carrusel, un video vertical corto (Reel o Short) que la persona narra con una nota de voz.
     public var video: Bool
-    /// Subtítulos palabra por palabra sobre el video narrado.
     public var captions: Bool
 
     public static let defaultIdentifier = "personal"

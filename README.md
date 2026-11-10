@@ -6,8 +6,8 @@ Está dividida en agentes independientes, cada uno con su horario: **Empleo, Fre
 
 ## Requisitos
 
-- macOS 13 o superior.
-- Xcode 15, o las herramientas de línea de comandos con Swift 5.9 o superior, para compilar.
+- macOS 26 o superior.
+- Xcode 26, o las herramientas de línea de comandos con Swift 6.2 o superior, para compilar.
 - Una IA de terminal con sesión iniciada. Por defecto, [Claude Code](https://claude.com/claude-code) (`claude` en la terminal) con la extensión Claude in Chrome. Para usar otra, mira "Motor de IA" en la [guía de uso](GUIA.md).
 - Google Chrome con tu sesión iniciada en los portales donde quieres que postule.
 - Un bot de Telegram (se crea con @BotFather en un minuto).

@@ -23,6 +23,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Plantillas de PR e issues, y Dependabot para GitHub Actions.
 
 ### Cambiado
+- Hirebar requiere macOS 26 y se compila con Swift 6 en modo estricto; la interfaz usa Observation y el armado del video usa las APIs actuales de AVFoundation.
 - Se quitó el envío de avisos a ntfy.sh.
 - El video narrado usa el ffmpeg del sistema (`brew install ffmpeg`): Hirebar ya no instala Python ni ffmpeg por su cuenta y borra la copia vieja. Las notas de voz tienen un máximo de 5 minutos o 20 MB.
 - El registro usa el del sistema (OSLog) con una categoría por agente y por área; el botón **Registro** exporta los últimos 3 días.

@@ -24,7 +24,7 @@ extension Repositories {
     static func forTests(
         runState: RunStateRepository = MemoryRunState(), workspace: WorkspaceRepository = RecordingWorkspace()
     ) -> Repositories {
-        let files = Repositories.files
+        let files = Repositories.files(searchDefaults: Controller.repositorySearchDefaults)
         return Repositories(
             config: files.config, batches: files.batches, agents: files.agents, contentAccounts: files.contentAccounts,
             metrics: files.metrics, profile: files.profile, quotas: files.quotas, portals: files.portals,

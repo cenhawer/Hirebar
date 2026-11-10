@@ -4,7 +4,7 @@ import XCTest
 @testable import HirebarPortals
 
 final class JobScreenerTests: XCTestCase {
-    let profile = JobProfile.defaults
+    let profile = RepositoryDefaults.searchProfile.jobs
 
     func testRejectsEnglishRequirement() {
         let text = "Buscamos desarrollador backend con Node.js. Requisito: inglés avanzado. Trabajo remoto."
@@ -47,18 +47,20 @@ final class JobScreenerTests: XCTestCase {
 }
 
 final class FreelanceClassifierTests: XCTestCase {
-    let profile = FreelanceProfile.defaults
+    let profile = RepositoryDefaults.searchProfile.freelance
 
     func testBackendProjectFits() {
-        let fit = FreelanceClassifier.classify(head: "Desarrollo de API REST en Node.js con PostgreSQL",
-                                               body: "Necesitamos una API para integrar nuestro sistema con la base de datos.",
-                                               title: "Desarrollo de API REST en Node.js", profile: profile)
+        let fit = FreelanceClassifier.classify(
+            head: "Desarrollo de API REST en Node.js con PostgreSQL",
+            body: "Necesitamos una API para integrar nuestro sistema con la base de datos.",
+            title: "Desarrollo de API REST en Node.js", profile: profile)
         XCTAssertEqual(fit, .strong)
     }
 
     func testChatbotTitleIsRejected() {
-        let fit = FreelanceClassifier.classify(head: "Chatbot con IA para WhatsApp", body: "Bot con API de WhatsApp y webhook",
-                                               title: "Chatbot con IA para WhatsApp", profile: profile)
+        let fit = FreelanceClassifier.classify(
+            head: "Chatbot con IA para WhatsApp", body: "Bot con API de WhatsApp y webhook",
+            title: "Chatbot con IA para WhatsApp", profile: profile)
         XCTAssertNil(fit)
     }
 

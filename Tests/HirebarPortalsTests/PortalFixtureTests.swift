@@ -26,10 +26,10 @@ final class PortalFixtureTests: XCTestCase {
     static let capturedAt = Date(timeIntervalSince1970: 1_794_314_546)
     static let getOnBoardRemotePublishedAt = Date(timeIntervalSince1970: 1_793_985_774)
     static let fullStackPublishedAt = Date(timeIntervalSince1970: 1_793_811_368)
-    let defaults = SearchProfile.defaults
+    let defaults = RepositoryDefaults.searchProfile
 
     func freelanceProfile(strong: [String]) -> SearchProfile {
-        var freelance = FreelanceProfile.defaults
+        var freelance = RepositoryDefaults.searchProfile.freelance
         freelance.strong = strong
         freelance.hardBlocked = []
         freelance.stackBlocked = []
@@ -40,7 +40,7 @@ final class PortalFixtureTests: XCTestCase {
         freelance.frontendOnly = []
         freelance.minFixedUSD = 0
         freelance.minHourlyUSD = 0
-        return SearchProfile(freelance: freelance, jobs: .defaults)
+        return SearchProfile(freelance: freelance, jobs: RepositoryDefaults.searchProfile.jobs)
     }
 
     func testLinkedInCardsBecomeHitsAndSeenOnesAreSkipped() async throws {
@@ -108,12 +108,13 @@ final class PortalFixtureTests: XCTestCase {
     }
 
     func testGetOnBoardKeepsRemoteSpanishOffersForThePersonCountry() async {
-        var jobs = JobProfile.defaults
+        var jobs = RepositoryDefaults.searchProfile.jobs
         jobs.country = "remoto"
         let source = GetOnBoardSource(
             fetcher: FixtureFetcher(routes: ["search/jobs": "getonboard-busqueda.json"]),
             now: { Self.fullStackPublishedAt.addingTimeInterval(3600) })
-        let found = await source.search(skip: [], profile: SearchProfile(freelance: .defaults, jobs: jobs)).hits
+        let found = await source.search(skip: [], profile: SearchProfile(freelance: RepositoryDefaults.searchProfile.freelance, jobs: jobs))
+            .hits
         XCTAssertEqual(Set(found.map(\.id)), ["gob:desarrollador-a-full-stack-frontend-datos-bc-tecnologia-remote"])
     }
 

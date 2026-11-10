@@ -11,7 +11,7 @@ final class ProfileTests: XCTestCase {
     ])
 
     func testSkillsExtendSearchTerms() {
-        let effective = SearchProfile.defaults.applying(profile)
+        let effective = RepositoryDefaults.searchProfile.applying(profile)
         XCTAssertTrue(effective.jobs.strong.contains("elixir"))
         XCTAssertTrue(effective.freelance.strong.contains("elixir"))
         XCTAssertTrue(effective.jobs.weak.contains("golang"))
@@ -21,16 +21,16 @@ final class ProfileTests: XCTestCase {
     }
 
     func testAvoidedSkillChangesClassification() {
-        let before = SearchProfile.defaults
+        let before = RepositoryDefaults.searchProfile
         let after = before.applying(profile)
         XCTAssertTrue(before.freelance.stretch.contains("python"))
         XCTAssertTrue(after.freelance.titleBlocked.contains("python"))
     }
 
     func testEmptyProfileKeepsDefaults() {
-        let effective = SearchProfile.defaults.applying(Profile())
-        XCTAssertEqual(effective.jobs.strong, JobProfile.defaults.strong)
-        XCTAssertEqual(effective.freelance.stretch, FreelanceProfile.defaults.stretch)
+        let effective = RepositoryDefaults.searchProfile.applying(Profile())
+        XCTAssertEqual(effective.jobs.strong, RepositoryDefaults.searchProfile.jobs.strong)
+        XCTAssertEqual(effective.freelance.stretch, RepositoryDefaults.searchProfile.freelance.stretch)
     }
 
     func testParseLevels() {
@@ -70,10 +70,11 @@ final class SaveSkillsTests: XCTestCase {
     func testSaveSkillsKeepsTheRestOfTheProfile() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("perfil-\(UUID().uuidString).json")
         try Data(#"{"person": {"name": "Ana"}, "cvVariants": [], "skills": []}"#.utf8).write(to: url)
-        try ProfileEditor.saveSkills([
-            Skill(name: " Go ", level: .familiar, years: 1, aliases: ["golang", " "]),
-            Skill(name: "  ", level: .expert),
-        ], at: url)
+        try ProfileEditor.saveSkills(
+            [
+                Skill(name: " Go ", level: .familiar, years: 1, aliases: ["golang", " "]),
+                Skill(name: "  ", level: .expert),
+            ], at: url)
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         XCTAssertEqual((object["person"] as? [String: Any])?["name"] as? String, "Ana")
         let profile = try JSONDecoder().decode(Profile.self, from: Data(contentsOf: url))

@@ -23,6 +23,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Plantillas de PR e issues, y Dependabot para GitHub Actions.
 
 ### Cambiado
+- Los archivos de configuración, perfil, agentes y cuentas llevan versión; al actualizar, Hirebar los respalda en `respaldos/` antes de migrarlos. El estado de corrida ya no se guarda en las preferencias del sistema.
 - Computrabajo vuelve a reconocer las ofertas con su HTML actual.
 - Hirebar requiere macOS 26 y se compila con Swift 6 en modo estricto; la interfaz usa Observation y el armado del video usa las APIs actuales de AVFoundation.
 - Se quitó el envío de avisos a ntfy.sh.

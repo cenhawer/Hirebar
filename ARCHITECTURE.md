@@ -195,7 +195,7 @@ propios (test). Los casos de uso leen y escriben datos solo a
 través de los puertos de repositorio de `HirebarApplication`, agrupados en `Repositories`; la raíz
 de composición pasa las implementaciones de archivos de `HirebarStorage` (`Repositories.files`). El estado
 de corrida (vistos de los radares, turnos ya ejecutados y la cuenta que espera la nota de voz) entra
-por `RunStateRepository`, guardado hoy en `UserDefaults` hasta la spec `022`. La hora y los
+por `RunStateRepository`, guardado en `estado/corrida.json`. La hora y los
 temporizadores entran por `Clock`. La IA corre a través de `AIRunner`: `ProcessAIRunner` arma el proceso por
 perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos antes de entregar el
 resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
@@ -319,15 +319,17 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `workspace/ejecuciones/<lote>.practica.json` | Lo que habría enviado un agente en modo práctica, en lugar de ejecutar |
 | `estado/propuestas/<lote>.json` · `estado/aprobados/<lote>.json` · `estado/verificaciones/<lote>.json` | Copia de cada lista tal como se mostró, de lo aprobado (con su agente) y verificación de cada acción; fuera del workspace, donde la IA no escribe |
 | `estado/pausas.json` · `estado/vistos.json` | Pausas de agentes y propuestas ya mostradas en los últimos 30 días |
+| `estado/corrida.json` | Avisos ya vistos por cada radar, turnos del programador ya ejecutados (14 días), cuenta que espera la nota de voz y posición de lectura de Telegram |
+| `respaldos/` | Copia de cada archivo antes de migrarlo a una versión nueva |
 
-**Estado actual:** los archivos no tienen `schemaVersion` y parte del estado vive en `UserDefaults`
-(`telegram.offset`, `video.esperandoVoz`, `radar.seen`, `jobradar.seen` y las
-marcas del programador). La spec `022-version-datos` lleva todo al workspace con versión, migración
-y respaldo previo.
+**Versión de los datos:** `config.json`, `perfil.json`, `agentes/<agente>.json`,
+`contenido/cuentas.json` y `estado/corrida.json` llevan `schemaVersion`; las cuentas se guardan como
+objeto con la lista en `cuentas`. `UserDefaults` no guarda estado de la app.
 
-**Estrategia de migraciones:** cada repositorio conoce la versión que escribe; al leer una anterior,
-respalda el archivo junto al original y migra paso a paso; nunca sobrescribe un campo que la persona
-editó. Al primer arranque se copian las plantillas de `Resources/inicial/` sin pisar las existentes.
+**Estrategia de migraciones:** al arrancar, `WorkspaceMigration` revisa cada archivo versionado; si
+no tiene versión o tiene una anterior, lo copia a `respaldos/` y lo reescribe con la versión actual
+sin tocar sus campos. Un archivo de una versión más nueva no se migra ni se sobrescribe. El estado que
+versiones anteriores dejaban en `UserDefaults` pasa a `estado/corrida.json` y sus claves se borran. Al primer arranque se copian las plantillas de `Resources/inicial/` sin pisar las existentes.
 
 ## 5. Modelo de error
 

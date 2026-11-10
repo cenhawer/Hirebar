@@ -4,6 +4,7 @@ import HirebarTelegram
 
 @testable import HirebarApplication
 
+@MainActor
 extension Controller {
     static func forTests(aiRunner: AIRunner = TestAIRunner(), media: MediaRenderer = TestMediaRenderer()) -> Controller {
         let adapters = EngineAdapters(

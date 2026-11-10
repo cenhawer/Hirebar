@@ -8,8 +8,9 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class ChannelSetupTests: XCTestCase {
-    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-channel-\(UUID().uuidString)")
+    nonisolated static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-channel-\(UUID().uuidString)")
     let started = Date(timeIntervalSince1970: 1_800_000_000)
     let clock = TestClock()
     var sent: [(String, Int64)] = []
@@ -41,7 +42,7 @@ final class ChannelSetupTests: XCTestCase {
         return ChannelSetup(settings: settings, chat: telegram, configs: FileConfigRepository(), clock: clock)
     }
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         var config = Config()
         config.botUsername = "hirebar_bot"
         config.save()

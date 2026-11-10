@@ -18,9 +18,10 @@ final class SilentAlerts: ExecutionAlerts {
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool) {}
 }
 
+@MainActor
 final class PauseCommandTests: XCTestCase {
     var controller: Controller!
-    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-pause-\(UUID().uuidString)")
+    nonisolated static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-pause-\(UUID().uuidString)")
 
     var store: FileExecutionStateStore!
     var replies: [String] = []
@@ -34,7 +35,7 @@ final class PauseCommandTests: XCTestCase {
         try? FileManager.default.removeItem(at: home)
     }
 
-    override func setUp() {
+    override func setUp() async throws {
         controller = Controller.forTests()
         store = FileExecutionStateStore(
             stateFolder: Self.home.appendingPathComponent("estado-\(UUID().uuidString)"),
@@ -45,7 +46,7 @@ final class PauseCommandTests: XCTestCase {
         controller.replies = { [weak self] text in self?.replies.append(text) }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
     }
 
     func testPauseIsVisibleAndOnlyLiftedOnce() throws {

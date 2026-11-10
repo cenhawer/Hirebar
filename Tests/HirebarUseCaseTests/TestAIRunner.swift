@@ -9,9 +9,9 @@ final class TestAIRunner: AIRunner {
 
     var failure: AIRunFailure?
     private(set) var requests: [AIRunRequest] = []
-    private(set) var completions: [(AIRunResult) -> Void] = []
+    private(set) var completions: [@MainActor @Sendable (AIRunResult) -> Void] = []
 
-    func start(_ request: AIRunRequest, completion: @escaping (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure> {
+    func start(_ request: AIRunRequest, completion: @escaping @MainActor @Sendable (AIRunResult) -> Void) -> Result<AIRun, AIRunFailure> {
         requests.append(request)
         if let failure { return .failure(failure) }
         completions.append(completion)

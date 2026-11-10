@@ -5,11 +5,12 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class AudioCheckTests: XCTestCase {
     var media: TestMediaRenderer!
     var controller: Controller!
 
-    override func setUp() {
+    override func setUp() async throws {
         media = TestMediaRenderer()
         controller = Controller.forTests(media: media)
     }

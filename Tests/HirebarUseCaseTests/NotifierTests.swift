@@ -5,6 +5,7 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class NotifierTests: XCTestCase {
     final class MemoryConfig: ConfigRepository, @unchecked Sendable {
         var config = Config()

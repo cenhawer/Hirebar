@@ -8,9 +8,10 @@ import XCTest
 
 @testable import HirebarApplication
 
+@MainActor
 final class AutoSendTests: XCTestCase {
     var controller: Controller!
-    static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-auto-\(UUID().uuidString)")
+    nonisolated static let home = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-auto-\(UUID().uuidString)")
     var replies: [String] = []
     var questions: [(String, [[(String, String)]])] = []
 
@@ -22,7 +23,7 @@ final class AutoSendTests: XCTestCase {
         try? FileManager.default.removeItem(at: home)
     }
 
-    override func setUp() {
+    override func setUp() async throws {
         controller = Controller.forTests()
         for kind in AutoSend.agents { AgentStore.update(kind) { $0.autoApprove = false } }
         replies = []
@@ -31,7 +32,7 @@ final class AutoSendTests: XCTestCase {
         controller.questions = { [weak self] text, buttons in self?.questions.append((text, buttons)) }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
     }
 
     func testAskingFromTelegramDoesNotTurnItOnUntilThePersonConfirms() {

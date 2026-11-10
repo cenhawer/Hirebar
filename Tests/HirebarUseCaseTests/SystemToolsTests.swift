@@ -8,10 +8,11 @@ import XCTest
 
 @testable import HirebarMedia
 
+@MainActor
 final class SystemToolsTests: XCTestCase {
     var tools: SystemTools!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         tools = try SystemTools.load(from: EngineProfileTests.repositoryRoot.appendingPathComponent("Resources/herramientas.json"))
     }
 

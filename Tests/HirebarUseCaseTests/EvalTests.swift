@@ -9,13 +9,14 @@ import XCTest
 @testable import HirebarAI
 @testable import HirebarApplication
 
+@MainActor
 final class EvalTests: XCTestCase {
-    static let root = EngineProfileTests.repositoryRoot
-    static let evals = root.appendingPathComponent("evals")
+    nonisolated static let root = EngineProfileTests.repositoryRoot
+    nonisolated static let evals = root.appendingPathComponent("evals")
     var suite: EvalSuite!
     var rules: TargetRules!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         suite = try JSONDecoder().decode(EvalSuite.self, from: Data(contentsOf: Self.evals.appendingPathComponent("casos.json")))
         rules = try TargetRulesFile.load(from: Self.root.appendingPathComponent("Resources/destinos.json"))
     }
@@ -65,8 +66,9 @@ final class EvalTests: XCTestCase {
     }
 }
 
+@MainActor
 final class LiveEvalTests: XCTestCase {
-    static let liveVariable = "HIREBAR_LIVE_EVALS"
+    nonisolated static let liveVariable = "HIREBAR_LIVE_EVALS"
 
     func testCasesAgainstTheRealEngine() throws {
         guard ProcessInfo.processInfo.environment[Self.liveVariable] == "1" else {

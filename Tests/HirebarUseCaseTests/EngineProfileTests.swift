@@ -9,10 +9,11 @@ import XCTest
 @testable import HirebarAI
 @testable import HirebarApplication
 
+@MainActor
 final class EngineProfileTests: XCTestCase {
-    static let repositoryRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+    nonisolated static let repositoryRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent()
-    static let actingBrowserTools = [
+    nonisolated static let actingBrowserTools = [
         "computer", "form_input", "javascript_tool", "file_upload", "upload_image", "shortcuts_execute",
         "browser_batch",
     ]
@@ -20,7 +21,7 @@ final class EngineProfileTests: XCTestCase {
     var profiles: EngineProfiles!
     let playbook = URL(fileURLWithPath: "/tmp/instrucciones-redes.md")
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         profiles = try EngineProfiles.load(from: Self.repositoryRoot.appendingPathComponent("Resources/perfiles-ia.json"))
     }
 

@@ -5,6 +5,7 @@ import XCTest
 
 @testable import HirebarStorage
 
+@MainActor
 final class AIEngineTests: XCTestCase {
     func testOldConfigDefaultsToClaude() throws {
         let config = try JSONDecoder().decode(Config.self, from: Data(#"{"chatId": 1}"#.utf8))

@@ -43,11 +43,18 @@ extension EnginePolicy {
     }
 }
 
+extension RetentionPolicy {
+    public static func load(from url: URL) throws -> RetentionPolicy { try decode(Data(contentsOf: url)) }
+    public static func bundled(in bundle: Bundle = .main) throws -> RetentionPolicy {
+        try decode(BundledResource.data(fileName, in: bundle))
+    }
+}
+
 extension EngineResources {
     public static func bundled(in bundle: Bundle = .main) throws -> EngineResources {
         EngineResources(
             targetRules: TargetRulesFile.bundled(in: bundle), commands: try? CommandVocabularyFile.bundled(in: bundle),
             channel: try? ChannelSettings.bundled(in: bundle), policy: try EnginePolicy.bundled(in: bundle),
-            searchDefaults: try SearchProfile.bundledDefaults(in: bundle))
+            searchDefaults: try SearchProfile.bundledDefaults(in: bundle), retention: try RetentionPolicy.bundled(in: bundle))
     }
 }

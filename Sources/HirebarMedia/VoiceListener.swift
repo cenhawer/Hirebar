@@ -6,8 +6,6 @@ import Speech
 
 private let log = Log(.media)
 
-/// Escucha la nota de voz con el reconocimiento de voz de macOS (en el Mac, gratis) para saber en qué segundo
-/// se dice cada palabra. Si no hay permiso o no se reconoce, devuelve una lista vacía y el video se reparte por largo.
 public enum VoiceListener {
     public static let locales = ["es-CO", "es-MX", "es-US", "es-419", "es-ES"]
 
@@ -34,7 +32,6 @@ public enum VoiceListener {
         let task = recognizer.recognitionTask(with: request) { result, error in
             guard !box.finished else { return }
             if let result {
-                // En audios largos el reconocimiento puede entregar varias partes: se juntan todas por su tiempo.
                 for segment in result.bestTranscription.segments {
                     box.segments[segment.timestamp] = WordTiming(word: segment.substring, start: segment.timestamp,
                                                                  end: segment.timestamp + segment.duration)

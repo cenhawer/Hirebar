@@ -38,7 +38,6 @@ public enum AudioTools {
         var result = run(tool, ["-y", "-i", input.path, "-vn", "-af", filters, "-ar", "48000", "-ac", "1",
                                 "-c:a", "aac", "-b:a", "192k", output.path], timeout: 180)
         if !result.ok {
-            // Si algún filtro no está disponible, al menos se convierte.
             result = run(tool, ["-y", "-i", input.path, "-vn", "-ar", "48000", "-ac", "1", "-c:a", "aac", "-b:a", "192k", output.path],
                          timeout: 180)
         }

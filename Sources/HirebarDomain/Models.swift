@@ -123,7 +123,6 @@ public struct Batch: Codable, Sendable {
     public var status: BatchStatus
     public var messageId: Int?
     public var result: String?
-    /// Cuenta de contenido (solo para publicaciones).
     public var account: String?
 
     public init(mode: Mode, items: [BatchItem] = [], status: BatchStatus, manual: Bool = false, account: String? = nil) {

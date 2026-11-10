@@ -9,7 +9,6 @@ public enum SlideRenderer {
     public static let height = 1350
     public static let timeout: TimeInterval = 60
 
-    /// Deja la carpeta de láminas vacía antes de un borrador nuevo; lo anterior queda en laminas-anteriores/.
     public static func prepare(_ account: ContentAccount) {
         let fm = FileManager.default
         let previous = account.folder.appendingPathComponent("laminas-anteriores", isDirectory: true)

@@ -38,7 +38,8 @@ public enum ProfileEditor {
             if let years = skill.years { entry["years"] = years }
             return entry
         }
-        let data = try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+        root[WorkspaceSchema.versionKey] = WorkspaceSchema.current
+        let data = try JSONSerialization.data(withJSONObject: root, options: VersionedJSON.formatting)
         try data.write(to: url, options: .atomic)
     }
 
@@ -64,7 +65,8 @@ public enum ProfileEditor {
             outcome = .added
         }
         root["skills"] = skills
-        guard let data = try? JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+        root[WorkspaceSchema.versionKey] = WorkspaceSchema.current
+        guard let data = try? JSONSerialization.data(withJSONObject: root, options: VersionedJSON.formatting)
         else {
             return .failed("no pude guardar perfil.json")
         }

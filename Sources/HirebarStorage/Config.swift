@@ -13,8 +13,6 @@ extension Config {
         Paths.ensure()
         var copy = self
         copy.updated = ISO8601DateFormatter().string(from: Date())
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        if let data = try? encoder.encode(copy) { try? data.write(to: Paths.config, options: .atomic) }
+        try? VersionedJSON.write(copy, to: Paths.config)
     }
 }

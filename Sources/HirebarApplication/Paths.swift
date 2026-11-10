@@ -19,6 +19,7 @@ public enum Paths {
     public static var prospecting: URL { workspace.appendingPathComponent("prospeccion", isDirectory: true) }
     public static var linkedIn: URL { workspace.appendingPathComponent("linkedin", isDirectory: true) }
     public static var state: URL { root.appendingPathComponent("estado", isDirectory: true) }
+    public static var backups: URL { root.appendingPathComponent("respaldos", isDirectory: true) }
     public static var logs: URL { home.appendingPathComponent("Library/Logs/Hirebar", isDirectory: true) }
     public static var log: URL { logs.appendingPathComponent("hirebar.log") }
 

@@ -67,6 +67,11 @@ extension ChatChannel {
     }
 }
 
+public protocol ChatOffsetStore: Sendable {
+    func chatOffset() -> Int
+    func saveChatOffset(_ offset: Int)
+}
+
 public protocol DesktopNotifications: Sendable {
     func show(title: String, body: String)
 }

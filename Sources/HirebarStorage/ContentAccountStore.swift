@@ -22,10 +22,12 @@ extension ContentAccount {
 
 public enum ContentAccountStore {
     public static var url: URL { Paths.content.appendingPathComponent("cuentas.json") }
+    static let listKey = "cuentas"
 
     public static func load() -> [ContentAccount] {
-        guard let data = try? Data(contentsOf: url) else { return [defaultAccount()] }
+        guard let stored = try? Data(contentsOf: url) else { return [defaultAccount()] }
         do {
+            let data = VersionedJSON.list(from: stored, key: listKey) ?? stored
             let accounts = try JSONDecoder().decode([ContentAccount].self, from: data)
             return accounts.isEmpty ? [defaultAccount()] : accounts
         } catch {
@@ -36,9 +38,7 @@ public enum ContentAccountStore {
 
     public static func save(_ accounts: [ContentAccount]) throws {
         try FileManager.default.createDirectory(at: Paths.content, withIntermediateDirectories: true)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        try encoder.encode(accounts).write(to: url, options: .atomic)
+        try VersionedJSON.write(accounts, to: url, listKey: listKey)
     }
 
     public static func defaultAccount() -> ContentAccount {

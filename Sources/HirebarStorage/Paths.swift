@@ -5,7 +5,7 @@ import HirebarDomain
 
 extension Paths {
     public static func ensure() {
-        for dir in [root, workspace, runs, reports, prospecting, linkedIn, content, state, logs] {
+        for dir in [root, workspace, runs, reports, prospecting, linkedIn, content, state, backups, logs] {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
     }

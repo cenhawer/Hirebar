@@ -24,6 +24,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Plantillas de PR e issues, y Dependabot para GitHub Actions.
 
 ### Cambiado
+- Las palabras de búsqueda, los descartes y las palabras del filtro de vacantes por defecto viven en `Resources/perfil-busqueda.json`.
 - Los plazos, intervalos y límites del motor, los radares y el programador viven en `Resources/motor.json`.
 - Los archivos de configuración, perfil, agentes y cuentas llevan versión; al actualizar, Hirebar los respalda en `respaldos/` antes de migrarlos. El estado de corrida ya no se guarda en las preferencias del sistema.
 - Computrabajo vuelve a reconocer las ofertas con su HTML actual.

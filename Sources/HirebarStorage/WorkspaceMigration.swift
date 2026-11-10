@@ -11,7 +11,7 @@ public enum WorkspaceMigration {
     static let claimPrefix = "sched."
 
     public static func run(
-        defaults: UserDefaults = .standard, runState: FileRunStateRepository = FileRunStateRepository(), at date: Date = Date()
+        defaults: UserDefaults = .standard, runState: FileRunStateRepository, at date: Date = Date()
     ) {
         Paths.ensure()
         for file in versionedFiles() { upgrade(file, at: date) }

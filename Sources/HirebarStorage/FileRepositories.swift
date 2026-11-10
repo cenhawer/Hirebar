@@ -9,9 +9,14 @@ public struct FileConfigRepository: ConfigRepository {
 }
 
 public struct FileBatchRepository: BatchRepository {
-    public init() {}
+    let retention: TimeInterval
+
+    public init(retention: TimeInterval) {
+        self.retention = retention
+    }
+
     public func load() -> [Batch] { BatchStore.load() }
-    public func upsert(_ batch: Batch) { BatchStore.upsert(batch) }
+    public func upsert(_ batch: Batch) { BatchStore.upsert(batch, keeping: retention) }
     public func find(id: String) -> Batch? { BatchStore.find(id: id) }
     public func find(messageId: Int) -> Batch? { BatchStore.find(messageId: messageId) }
     public func latestPending() -> Batch? { BatchStore.latestPending() }
@@ -88,9 +93,14 @@ public struct FilePortalRepository: PortalRepository {
 }
 
 public struct FileWorkspaceRepository: WorkspaceRepository {
-    public init() {}
+    let retention: RetentionPolicy
+
+    public init(retention: RetentionPolicy) {
+        self.retention = retention
+    }
+
     public func prepare() { Paths.ensure() }
-    public func cleanUp() { Housekeeping.run() }
+    public func cleanUp() { Housekeeping.run(policy: retention) }
 }
 
 public struct FilePracticeLogRepository: PracticeLogRepository {
@@ -101,13 +111,14 @@ public struct FilePracticeLogRepository: PracticeLogRepository {
 }
 
 extension Repositories {
-    public static func files(searchDefaults: SearchProfile) -> Repositories {
+    public static func files(searchDefaults: SearchProfile, retention: RetentionPolicy) -> Repositories {
         Repositories(
-            config: FileConfigRepository(), batches: FileBatchRepository(), agents: FileAgentRepository(),
+            config: FileConfigRepository(), batches: FileBatchRepository(retention: retention.batches), agents: FileAgentRepository(),
             contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(),
             profile: FileProfileRepository(searchDefaults: searchDefaults),
             quotas: FileQuotaRepository(), portals: FilePortalRepository(), prospecting: FileProspectingRepository(),
-            runState: FileRunStateRepository(), workspace: FileWorkspaceRepository(), practice: FilePracticeLogRepository(),
+            runState: FileRunStateRepository(claimRetention: retention.claims),
+            workspace: FileWorkspaceRepository(retention: retention), practice: FilePracticeLogRepository(),
             executionState: FileExecutionStateStore.standard)
     }
 }

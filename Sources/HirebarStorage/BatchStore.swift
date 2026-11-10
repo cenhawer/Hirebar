@@ -4,7 +4,6 @@ import HirebarDomain
 
 public enum BatchStore {
     public static var url: URL { Paths.workspaceFile("lotes.json") }
-    static let retentionDays = 14.0
 
     private struct Lossy: Decodable {
         let batch: Batch?
@@ -18,9 +17,9 @@ public enum BatchStore {
         return ((try? decoder.decode([Lossy].self, from: data)) ?? []).compactMap(\.batch)
     }
 
-    public static func save(_ batches: [Batch]) {
+    public static func save(_ batches: [Batch], keeping window: TimeInterval) {
         Paths.ensure()
-        let cutoff = Date().addingTimeInterval(-retentionDays * 86400)
+        let cutoff = Date().addingTimeInterval(-window)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -29,10 +28,10 @@ public enum BatchStore {
         }
     }
 
-    public static func upsert(_ batch: Batch) {
+    public static func upsert(_ batch: Batch, keeping window: TimeInterval) {
         var all = load()
         if let index = all.firstIndex(where: { $0.id == batch.id }) { all[index] = batch } else { all.append(batch) }
-        save(all)
+        save(all, keeping: window)
     }
 
     public static func find(id: String) -> Batch? { load().first { $0.id == id } }

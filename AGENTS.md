@@ -30,6 +30,8 @@ publicaciones. La usa una persona por instalación.
 
 - Código en inglés y autoexplicativo; textos para la persona y documentación en español.
 - Reglas de Swift de este repo: `.claude/rules/swift.md`.
+- Todo texto para la persona pasa por `String(localized:)` (o `LocalizedStringKey` en SwiftUI); después de
+  cambiar textos se corre `scripts/strings.sh` y se commitea el catálogo.
 - Git, ramas y commits: `Lineamientos/git/` y la sección "Flujo de desarrollo" de la constitución.
   Validados por `scripts/check-conventions.sh`.
 
@@ -45,6 +47,7 @@ publicaciones. La usa una persona por instalación.
 swift build
 scripts/coverage.sh
 scripts/lint.sh origin/develop
+scripts/strings.sh
 scripts/check-conventions.sh origin/develop
 scripts/bundle.sh --install
 graphify update .

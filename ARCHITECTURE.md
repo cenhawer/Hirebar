@@ -202,7 +202,10 @@ resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`;
 radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. Los recursos del
 bundle (`destinos.json`, `comandos.json`, `canal.json`) se validan en la aplicación y llegan al
 motor en `EngineResources`. Los mensajes con la persona pasan por `ChatChannel` (Telegram) y el respaldo por
-`DesktopNotifications` (macOS); el `Controller` recibe todos sus adaptadores en `EngineAdapters`. El paso 3 de la spec
+`DesktopNotifications` (macOS); el `Controller` recibe todos sus adaptadores en `EngineAdapters`. Los
+coordinadores del motor y los puertos `Clock`, `AIRunner`, `MediaRenderer` y `ExecutionAlerts` están
+aislados al actor principal; `ChatChannel` entrega sus respuestas en cierres `@MainActor @Sendable`
+y la app está aislada al actor principal por defecto. El paso 3 de la spec
 `017-arquitectura-hexagonal` pasa esos casos de uso a `HirebarApplication` con puertos.
 
 | Archivo actual | Destino | Nota |

@@ -7,7 +7,6 @@ import HirebarStorage
 import HirebarTelegram
 import SwiftUI
 
-/// Ajustes → Cuentas de contenido: una sección por cuenta (empresa, personal…), cada una con su red, nombre, días y paleta.
 struct ContentAccountsEditor: View {
     @Binding var accounts: [EditableAccount]
 

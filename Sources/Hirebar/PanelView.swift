@@ -26,6 +26,12 @@ struct PanelView: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
+            if !model.pendingSetup.isEmpty {
+                SetupChecklistSection(pending: model.pendingSetup) { model.onOpenSetup?() }
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 6)
+                Divider()
+            }
             ForEach(sections) { section in
                 Text(section.id)
                     .font(.system(size: 11, weight: .semibold))
@@ -95,6 +101,7 @@ struct PanelView: View {
                 Button("Cuentas de contenido…") { model.editContentAccounts() }
                 Divider()
                 Button("Telegram y avisos…") { model.editChannel() }
+                Button("Asistente de configuración…") { model.onOpenSetup?() }
                 Divider()
                 Toggle("Abrir al iniciar sesión", isOn: Binding(get: { model.opensAtLogin }, set: { _ in model.toggleLogin() }))
                 Divider()

@@ -194,10 +194,18 @@ final class SettingsModel {
             })
     }
 
+    static func markVerified(_ kind: AIEngineKind) {
+        var config = Config.load()
+        config.verifiedEngine = kind
+        config.save()
+    }
+
     func checkEngine() {
         checkingEngine = true
         engineCheck = String(localized: "Probando… puede tardar hasta un minuto.")
+        let kind = engine.kind
         EngineCheck.run(engine) { [weak self] ok, text in
+            if ok { Self.markVerified(kind) }
             self?.checkingEngine = false
             self?.engineCheckOK = ok
             self?.engineCheck = text

@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var panelTimer: Timer?
     private lazy var settings = SettingsWindowController(engine: engine)
     private lazy var activityWindow = ActivityWindowController(engine: engine)
+    private lazy var inbox = InboxWindowController(engine: engine)
     private let notificationRouter = NotificationRouter()
 
     init(engine: Engine) {
@@ -53,6 +54,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
         panel.onQuit = { NSApp.terminate(nil) }
         panel.onOpenSettings = { [weak self] page in self?.closePanel { self?.settings.show(page) } }
+        panel.onOpenInbox = { [weak self] in self?.closePanel { self?.inbox.show() } }
+        inbox.model.onChange = { [weak self] in self?.panel.refresh() }
         statusMenu.onOpenSettings = { [weak self] kind in self?.settings.show(.agent(kind)) }
         statusMenu.onOpenActivity = { [weak self] in self?.activityWindow.show() }
         panel.onOpenActivity = { [weak self] in self?.closePanel { self?.activityWindow.show() } }

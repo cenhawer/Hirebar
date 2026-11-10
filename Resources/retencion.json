@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "ejecucionesDias": 30,
+  "listasDias": 14,
+  "turnosDias": 14,
+  "seguimientosTerminadosDias": 90,
+  "metricasSemanas": 26,
+  "eventosDias": 180,
+  "informesDias": 365,
+  "grabacionesDias": 14,
+  "videosDias": 30,
+  "descartadosDias": 90,
+  "historialMaximoBytes": 3000000,
+  "historialConservaBytes": 1500000
+}

@@ -98,10 +98,9 @@ export HIREBAR_SIGN_IDENTITY="<hash de tu identidad>"
 
 | Carpeta | Qué tiene |
 |---|---|
-| `Sources/Hirebar` | La app: panel, menú y Ajustes. |
-| `Sources/HirebarEngine` | Agentes, horarios, comandos de Telegram y lanzador de la IA. |
+| `Sources/Hirebar` | La app: panel, menú, Ajustes y la creación de todas las piezas al arrancar. |
 | `Sources/HirebarDomain` | Reglas y entidades sin E/S: agentes, perfil, avisos, cuentas, encaje. |
-| `Sources/HirebarApplication` | Casos de uso y puertos: lectura de comandos, verificación de acciones, canal. |
+| `Sources/HirebarApplication` | Casos de uso y puertos: agentes, horarios, comandos, radares, verificación de acciones y canal. |
 | `Sources/HirebarStorage` | Configuración, datos del workspace y Llavero. |
 | `Sources/HirebarTelegram` · `HirebarNotifications` · `HirebarPortals` | Telegram, notificaciones de macOS y un archivo por portal. |
 | `Sources/HirebarAI` · `HirebarMedia` | Lanzador de la IA con sus perfiles; carrusel, video, voz y hojas de vida. |

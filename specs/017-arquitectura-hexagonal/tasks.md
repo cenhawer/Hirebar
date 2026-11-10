@@ -15,7 +15,7 @@ description: "Tareas de implementación: arquitectura hexagonal"
 ## Paso 2: Adaptadores
 
 - [x] T005 `HirebarStorage` con los almacenes, `Paths`, `Config`, el Llavero (`KeychainSecretStore` sobre `Security.framework`, puerto `SecretStore`) y el estado de ejecución (FR-002)
-- [x] T006 `HirebarTelegram` (con su cliente HTTP y el token inyectado) y `HirebarNotifications`; `Notifier` queda en el motor hasta el paso 3 (FR-002)
+- [x] T006 `HirebarTelegram` (con su cliente HTTP y el token inyectado) y `HirebarNotifications`; `Notifier` vive en la aplicación (FR-002)
 - [x] T007 `HirebarPortals` con `Net` (FR-002)
 - [x] T007b `HirebarAI` y `HirebarMedia`; las rutas del workspace en la aplicación (`Paths`) y su creación en el almacén (FR-002)
 
@@ -28,5 +28,5 @@ description: "Tareas de implementación: arquitectura hexagonal"
 - [x] T008e Puertos `MediaRenderer` (láminas, video, hojas de vida y límites del audio), `ListingSource`/`JobSource` y `WebPageFetcher` en `HirebarApplication`, agrupados para los radares en `PortalAccess`; `SystemMediaRenderer` y `PortalAccess.bundled` en sus adaptadores (FR-003)
 - [x] T008f `WorkspaceRepository`, `PracticeLogRepository` y `ExecutionStateStore` en `Repositories`; `EngineResources` con las reglas de destinos, el vocabulario de comandos y los ajustes del canal, validados en la aplicación y leídos del bundle en `HirebarStorage`; la ayuda para volver a iniciar sesión sale de `AIRunner` (FR-003)
 - [x] T008g Puertos `ChatChannel` (con `ChatMessage` y `BotCheck`) y `DesktopNotifications` en `HirebarApplication`; `Telegram` y `MacDesktopNotifications` los implementan; el `Controller` recibe sus adaptadores en `EngineAdapters` (FR-003)
-- [ ] T008 Casos de uso de lotes, comandos, programación y radares en `HirebarApplication` (FR-003)
-- [x] T009 Raíz de composición (`Engine`) que crea y conecta Telegram, `Controller`, radares y programador; la app la recibe; sin `.shared` propios, vigilado por test (FR-004, SC-002)
+- [x] T008 Casos de uso de lotes, comandos, programación y radares en `HirebarApplication`, sin E/S ni imports de adaptadores (`ApplicationPurityTests`); el target `HirebarEngine` deja de existir y sus tests pasan a `HirebarUseCaseTests` (FR-003)
+- [x] T009 Raíz de composición en la app (`Engine` y `SystemClock` en `Sources/Hirebar`) que crea y conecta Telegram, `Controller`, radares y programador; la app la recibe; sin `.shared` propios, vigilado por test (FR-004, SC-002)

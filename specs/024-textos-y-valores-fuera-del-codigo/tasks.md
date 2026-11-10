@@ -16,3 +16,4 @@ description: "Tareas de implementación: textos y valores fuera del código"
 
 - [x] T005 Perfil de búsqueda por defecto y palabras del filtro de vacantes (`JobScreeningWords`) en `Resources/perfil-busqueda.json`; `workspace/search-profile.json` se lee sobre esa base; el dominio no tiene listas de palabras (FR-004)
 - [x] T006 Plazos, intervalos y límites por lista del motor, los radares y el programador en `Resources/motor.json` (`EnginePolicy`); sin ese archivo la app avisa que está incompleta en vez de arrancar (FR-004)
+- [x] T007 Ventanas de antigüedad, topes de propuestas y presupuestos descartados de cada portal en `Resources/perfil-busqueda.json` (`FreelancePortalRules`, `JobPortalRules`) (FR-004)

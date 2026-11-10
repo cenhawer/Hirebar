@@ -9,7 +9,6 @@ public struct ElempleoSource: JobSource {
     public let name = "elempleo"
     public let hitPrefix = "ee"
     static let base = "https://www.elempleo.com"
-    static let maxAgeMinutes = 3 * 1440
 
     let fetcher: WebPageFetcher
 
@@ -35,7 +34,7 @@ public struct ElempleoSource: JobSource {
                 guard TextTools.normalize("\(offer.modality) \(offer.title)").contains(" remoto ") else { continue }
                 if JobScreener.lowPay(offer.salary, profile: jobs) { continue }
                 let age = TextTools.ageMinutes(offer.posted) ?? 600
-                guard age <= Self.maxAgeMinutes else { continue }
+                guard age <= jobs.portals.elempleoMaxAgeMinutes else { continue }
                 var detail = String(localized: "elempleo · \(offer.company) · \(TextTools.ageText(age)) · remoto")
                 if !offer.salary.isEmpty { detail += " · \(offer.salary)" }
                 hits.append(

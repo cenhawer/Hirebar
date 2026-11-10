@@ -13,6 +13,7 @@ public struct FreelanceProfile: Codable, Sendable {
     public var frontendOnly: [String]
     public var minFixedUSD: Double
     public var minHourlyUSD: Double
+    public var portals: FreelancePortalRules
 
 }
 
@@ -40,6 +41,7 @@ public struct JobProfile: Codable, Sendable {
     public var maxYearsRequired: Int
     public var hasProfessionalCard: Bool
     public var screening: JobScreeningWords
+    public var portals: JobPortalRules
 
 }
 
@@ -75,7 +77,7 @@ public struct SearchProfile: Codable, Sendable {
 extension FreelanceProfile {
     enum CodingKeys: String, CodingKey {
         case workanaQueries, strong, stretch, hardBlocked, stackBlocked, titleBlocked, titleNever
-        case whatsappBotWords, offProfile, frontendOnly, minFixedUSD, minHourlyUSD
+        case whatsappBotWords, offProfile, frontendOnly, minFixedUSD, minHourlyUSD, portals
     }
 
     public init(from decoder: Decoder) throws {
@@ -93,6 +95,7 @@ extension FreelanceProfile {
         frontendOnly = try c.decode(.frontendOnly, fallback: base?.frontendOnly)
         minFixedUSD = try c.decode(.minFixedUSD, fallback: base?.minFixedUSD)
         minHourlyUSD = try c.decode(.minHourlyUSD, fallback: base?.minHourlyUSD)
+        portals = try c.decode(.portals, fallback: base?.portals)
     }
 }
 
@@ -101,7 +104,7 @@ extension JobProfile {
         case country, homeCity, linkedInQueries, linkedInRegionalQueries, linkedInContractQueries
         case getOnBoardQueries, computrabajoSlugs, elempleoQueries, magnetoRoles
         case strong, generic, weak, blocked, blockedCompanies, blockedTitleWords, frontendOnly, ownStack, otherStack
-        case minSalaryCOP, minSalaryUSD, maxYearsRequired, hasProfessionalCard, screening
+        case minSalaryCOP, minSalaryUSD, maxYearsRequired, hasProfessionalCard, screening, portals
     }
 
     public init(from decoder: Decoder) throws {
@@ -130,6 +133,7 @@ extension JobProfile {
         maxYearsRequired = try c.decode(.maxYearsRequired, fallback: base?.maxYearsRequired)
         hasProfessionalCard = try c.decode(.hasProfessionalCard, fallback: base?.hasProfessionalCard)
         screening = try c.decode(.screening, fallback: base?.screening)
+        portals = try c.decode(.portals, fallback: base?.portals)
     }
 }
 
@@ -142,6 +146,28 @@ extension SearchProfile {
         freelance = try c.decode(.freelance, fallback: base?.freelance)
         jobs = try c.decode(.jobs, fallback: base?.jobs)
     }
+}
+
+public struct BidLimits: Codable, Sendable {
+    public var strong: Int
+    public var stretch: Int
+    public var backup: Int
+}
+
+public struct FreelancePortalRules: Codable, Sendable {
+    public var workanaMaxAgeMinutes: Int
+    public var workanaOldAfterMinutes: Int
+    public var workanaOldMaxBids: Int
+    public var workanaBids: BidLimits
+    public var workanaLowBudgets: [String]
+    public var freelancerMaxAgeMinutes: Int
+    public var freelancerBids: BidLimits
+}
+
+public struct JobPortalRules: Codable, Sendable {
+    public var getOnBoardMaxAgeMinutes: Int
+    public var elempleoMaxAgeMinutes: Int
+    public var magnetoMaxAgeDays: Int
 }
 
 public struct JobScreeningWords: Codable, Sendable {

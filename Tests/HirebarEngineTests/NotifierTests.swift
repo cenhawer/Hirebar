@@ -1,26 +1,45 @@
+import Foundation
+import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
 import HirebarStorage
-import HirebarTelegram
 import XCTest
 
 @testable import HirebarEngine
 
 final class NotifierTests: XCTestCase {
-    func testLongAnnouncementsAreSplitWithoutLosingAnyItem() {
-        let blocks = ["Título", String(repeating: "a", count: 30), String(repeating: "b", count: 30), "Pie"]
-        let messages = Notifier.chunks(blocks, limit: 40)
-        XCTAssertTrue(messages.allSatisfy { $0.count <= 40 })
-        XCTAssertEqual(messages.joined(separator: "\n\n").replacingOccurrences(of: "\n\n", with: ""), blocks.joined())
+    final class MemoryConfig: ConfigRepository, @unchecked Sendable {
+        var config = Config()
+        func load() -> Config { config }
+        func save(_ config: Config) { self.config = config }
     }
 
-    func testABlockLongerThanTheLimitIsCutIntoPieces() {
-        let messages = Notifier.chunks([String(repeating: "x", count: 95)], limit: 40)
-        XCTAssertEqual(messages.map(\.count), [40, 40, 15])
+    final class RecordingDesktop: DesktopNotifications, @unchecked Sendable {
+        var shown: [String] = []
+        func show(title: String, body: String) { shown.append(body) }
     }
 
-    func testShortAnnouncementsStayInOneMessage() {
-        XCTAssertEqual(Notifier.chunks(["Título", "1. uno", "Pie"], limit: 100), ["Título\n\n1. uno\n\nPie"])
+    var sent: [(String, Int64)] = []
+    var configured = false
+    let config = MemoryConfig()
+    let desktop = RecordingDesktop()
+
+    var notifier: Notifier {
+        let chat = TestChatChannel(
+            isConfigured: { [unowned self] in self.configured }, send: { [unowned self] in self.sent.append(($0, $1)) })
+        return Notifier(chat: chat, desktop: desktop, config: config, batches: FileBatchRepository())
+    }
+
+    func testWithoutAChannelTheNoticeGoesToTheMacNotifications() {
+        notifier.tell("Lista lista")
+        XCTAssertEqual(desktop.shown, ["Lista lista"])
+        XCTAssertTrue(sent.isEmpty)
+    }
+
+    func testWithALinkedChannelTheNoticeGoesToTheOwnerChat() {
+        configured = true
+        config.config.channelOwner = ChannelOwner(userId: 7, chatId: 42, name: "Ana")
+        notifier.tell("Lista lista")
+        XCTAssertEqual(sent.map(\.1), [42])
+        XCTAssertTrue(desktop.shown.isEmpty)
     }
 }

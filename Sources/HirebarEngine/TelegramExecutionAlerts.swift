@@ -20,7 +20,7 @@ struct TelegramExecutionAlerts: ExecutionAlerts {
             notifier.tell(text)
             return
         }
-        notifier.telegram.send(
+        notifier.chat.send(
             text, chatId: notifier.chatId,
             buttons: [[("Reanudar \(name)", "resume:\(agent.rawValue)"), ("Mantener en pausa", "keep:\(agent.rawValue)")]])
     }

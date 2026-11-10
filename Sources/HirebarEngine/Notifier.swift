@@ -9,12 +9,14 @@ import HirebarTelegram
 private let log = Log(.notifications)
 
 public struct Notifier: Sendable {
-    public let telegram: Telegram
+    public let chat: ChatChannel
+    let desktop: DesktopNotifications
     let config: ConfigRepository
     let batches: BatchRepository
 
-    public init(telegram: Telegram, config: ConfigRepository, batches: BatchRepository) {
-        self.telegram = telegram
+    public init(chat: ChatChannel, desktop: DesktopNotifications, config: ConfigRepository, batches: BatchRepository) {
+        self.chat = chat
+        self.desktop = desktop
         self.config = config
         self.batches = batches
     }
@@ -22,7 +24,7 @@ public struct Notifier: Sendable {
     public var chatId: Int64 { config.load().chatId }
 
     public var canUseTelegram: Bool {
-        telegram.isConfigured && !telegram.tokenRejected && chatId != 0
+        chat.isConfigured && !chat.tokenRejected && chatId != 0
     }
 
     static let messageLimit = 3800
@@ -36,7 +38,7 @@ public struct Notifier: Sendable {
         blocks.append(footer)
         let messages = Self.chunks(blocks, limit: Self.messageLimit)
         guard canUseTelegram else {
-            MacNotifications.show(title: title, body: "Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.")
+            desktop.show(title: title, body: "Configura Telegram en Ajustes → Telegram y avisos para verla y aprobarla.")
             return
         }
         let label = batch.mode == .jobs ? "Sí, postular a todas" : "Sí, enviar todas"
@@ -93,7 +95,7 @@ public struct Notifier: Sendable {
             return
         }
         let rest = Array(messages.dropFirst())
-        telegram.send(first, chatId: chatId, buttons: rest.isEmpty ? buttons : []) { id in
+        chat.send(first, chatId: chatId, buttons: rest.isEmpty ? buttons : []) { id in
             if rest.isEmpty || id == nil {
                 completion(id)
             } else {
@@ -106,11 +108,11 @@ public struct Notifier: Sendable {
 
     public func tell(_ text: String) {
         guard canUseTelegram else {
-            MacNotifications.show(title: Self.notificationTitle, body: text)
+            desktop.show(title: Self.notificationTitle, body: text)
             return
         }
-        telegram.send(text, chatId: chatId) { id in
-            if id == nil { MacNotifications.show(title: Self.notificationTitle, body: text) }
+        chat.send(text, chatId: chatId) { id in
+            if id == nil { desktop.show(title: Self.notificationTitle, body: text) }
         }
     }
 
@@ -119,7 +121,7 @@ public struct Notifier: Sendable {
             log.write("Archivo listo sin canal para enviarlo: \(file.path)")
             return
         }
-        telegram.sendDocument(file, caption: caption, chatId: chatId)
+        chat.sendDocument(file, caption: caption, chatId: chatId)
     }
 
     public func sendPhotos(_ files: [URL], caption: String, completion: @escaping () -> Void) {
@@ -130,7 +132,7 @@ public struct Notifier: Sendable {
             completion()
             return
         }
-        telegram.sendPhotos(files, caption: caption, chatId: chatId, completion: completion)
+        chat.sendPhotos(files, caption: caption, chatId: chatId, completion: completion)
     }
 
     public func sendVideo(_ file: URL, caption: String, completion: @escaping () -> Void) {
@@ -139,6 +141,6 @@ public struct Notifier: Sendable {
             completion()
             return
         }
-        telegram.sendVideo(file, caption: caption, chatId: chatId, completion: completion)
+        chat.sendVideo(file, caption: caption, chatId: chatId, completion: completion)
     }
 }

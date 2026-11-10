@@ -6,13 +6,14 @@ private let log = Log(.telegram)
 
 public final class Telegram: @unchecked Sendable {
     let secrets: SecretStore
+    let offsets: ChatOffsetStore
 
-    public init(secrets: SecretStore) {
+    public init(secrets: SecretStore, offsets: ChatOffsetStore) {
         self.secrets = secrets
+        self.offsets = offsets
     }
 
     static let keychainAccount = "telegram-bot"
-    static let offsetKey = "telegram.offset"
     static let tokenPattern = "^\\d{5,}:[A-Za-z0-9_-]{30,}$"
     static let unauthorizedCode = 401
     static let notFoundCode = 404
@@ -65,7 +66,7 @@ public final class Telegram: @unchecked Sendable {
     @discardableResult
     public func removeToken() -> Bool {
         guard secrets.delete(Self.keychainAccount) else { return false }
-        UserDefaults.standard.set(0, forKey: Self.offsetKey)
+        offsets.saveChatOffset(0)
         markRejected(false)
         reloadToken()
         return true
@@ -98,7 +99,7 @@ public final class Telegram: @unchecked Sendable {
     @discardableResult
     public func saveToken(_ token: String) -> Bool {
         guard secrets.save(token, for: Self.keychainAccount) else { return false }
-        UserDefaults.standard.set(0, forKey: Self.offsetKey)
+        offsets.saveChatOffset(0)
         markRejected(false)
         reloadToken()
         return true
@@ -126,7 +127,7 @@ public final class Telegram: @unchecked Sendable {
     }
 
     private func pollLoop() {
-        var offset = UserDefaults.standard.integer(forKey: Self.offsetKey)
+        var offset = offsets.chatOffset()
         var lastToken = currentToken()
         while true {
             guard let token = currentToken() else {
@@ -149,7 +150,7 @@ public final class Telegram: @unchecked Sendable {
             for update in updates {
                 let updateId = (update["update_id"] as? NSNumber)?.intValue ?? 0
                 offset = max(offset, updateId + 1)
-                UserDefaults.standard.set(offset, forKey: Self.offsetKey)
+                offsets.saveChatOffset(offset)
                 if let message = Self.parse(update) {
                     DispatchQueue.main.async { [weak self] in self?.onMessage?(message) }
                 }

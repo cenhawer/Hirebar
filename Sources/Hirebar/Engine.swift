@@ -18,7 +18,7 @@ public final class Engine {
     public init() {
         let stores = Repositories.files
         let clock = SystemClock()
-        telegram = Telegram(secrets: KeychainSecretStore())
+        telegram = Telegram(secrets: KeychainSecretStore(), offsets: FileRunStateRepository())
         let adapters = EngineAdapters(
             chat: telegram, desktop: MacDesktopNotifications(), clock: clock, aiRunner: ProcessAIRunner(), media: SystemMediaRenderer(),
             resources: .bundled())
@@ -38,7 +38,7 @@ public final class Engine {
     }
 
     public func start(resources: URL?) {
-        Paths.ensure()
+        WorkspaceMigration.run()
         Paths.installTemplates(from: resources)
         AudioTools.removeLegacyCopy()
         controller.stores.agents.writeMissingDefaults()

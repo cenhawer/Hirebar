@@ -1,4 +1,5 @@
 import AppKit
+import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals
@@ -16,12 +17,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private let popover = NSPopover()
     private let engine: Engine
     private lazy var statusMenu = StatusMenu(engine: engine)
-    private lazy var panel = PanelModel(engine: engine)
+    private let permissions = MacPermissions()
+    private lazy var panel = PanelModel(engine: engine, permissions: permissions)
     private var activity: NSObjectProtocol?
     private var panelTimer: Timer?
     private lazy var settings = SettingsWindowController(engine: engine)
     private lazy var activityWindow = ActivityWindowController(engine: engine)
     private lazy var inbox = InboxWindowController(engine: engine)
+    private lazy var setup = SetupWindowController(engine: engine, channel: settings.channel, permissions: permissions)
     private let notificationRouter = NotificationRouter()
 
     init(engine: Engine) {
@@ -36,6 +39,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         engine.start(resources: Bundle.main.resourceURL)
         statusMenu.install(in: menu)
         menu.addItem(.separator())
+        let setupItem = NSMenuItem(title: String(localized: "Asistente de configuración…"), action: #selector(openSetup), keyEquivalent: "")
+        setupItem.target = self
+        menu.addItem(setupItem)
         loginItem.target = self
         menu.addItem(loginItem)
         let quit = NSMenuItem(title: String(localized: "Salir de Hirebar"), action: #selector(quit), keyEquivalent: "q")
@@ -53,6 +59,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             self?.statusMenu.refresh()
         }
         panel.onQuit = { NSApp.terminate(nil) }
+        panel.onOpenSetup = { [weak self] in self?.closePanel { self?.setup.show() } }
+        setup.model.onFinished = { [weak self] in
+            self?.setup.close()
+            self?.panel.refresh()
+            self?.statusMenu.refresh()
+        }
+        openSetupIfNeeded()
         panel.onOpenSettings = { [weak self] page in self?.closePanel { self?.settings.show(page) } }
         panel.onOpenInbox = { [weak self] in self?.closePanel { self?.inbox.show() } }
         inbox.model.onChange = { [weak self] in self?.panel.refresh() }
@@ -146,6 +159,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             StatusMenu.info(String(localized: "No pude cambiar el inicio automático: \(error.localizedDescription)"))
         }
         render(busy: !engine.controller.isIdle)
+    }
+
+    private func openSetupIfNeeded() {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let facts = await SetupFacts.current(engine: engine, permissions: permissions)
+            let dismissed = engine.controller.stores.config.load().setupDismissed
+            if SetupChecklist.needsAssistant(facts, dismissed: dismissed) { setup.show() }
+        }
+    }
+
+    @objc private func openSetup() {
+        setup.show()
     }
 
     @objc private func quit() {

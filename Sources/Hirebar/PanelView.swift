@@ -78,6 +78,7 @@ struct PanelView: View {
 
     private var footer: some View {
         HStack(spacing: 2) {
+            FooterButton(symbol: "clock.arrow.circlepath", help: String(localized: "Actividad")) { model.openActivity() }
             FooterButton(symbol: "doc.text", help: String(localized: "Informes")) { model.open(Paths.reports) }
             FooterButton(symbol: "list.bullet", help: String(localized: "Registro")) { model.openLog() }
             FooterButton(symbol: "folder", help: String(localized: "Carpeta de datos")) { model.open(Paths.root) }

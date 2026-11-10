@@ -74,6 +74,7 @@ final class PanelModel {
 
     var onQuit: (() -> Void)?
     var onOpenSettings: ((SettingsPage?) -> Void)?
+    var onOpenActivity: (() -> Void)?
 
     func refresh() {
         let running = engine.controller.runningAgent
@@ -203,5 +204,9 @@ final class PanelModel {
 
     func openLog() {
         LogExport.openRecent()
+    }
+
+    func openActivity() {
+        onOpenActivity?()
     }
 }

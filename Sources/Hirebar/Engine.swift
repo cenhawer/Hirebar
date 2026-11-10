@@ -14,9 +14,11 @@ public final class Engine {
     public let jobRadar: JobRadar
     public let freelanceRadar: FreelanceRadar
     public let scheduler: Scheduler
+    public let activity: ActivityRepository
 
     public init(resources: EngineResources) {
         let stores = Repositories.files(searchDefaults: resources.searchDefaults)
+        activity = FileExecutionStateStore.standard
         let clock = SystemClock()
         telegram = Telegram(secrets: KeychainSecretStore(), offsets: FileRunStateRepository())
         let adapters = EngineAdapters(

@@ -16,6 +16,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     var onRefresh: ((Bool) -> Void)?
     var onOpenSettings: ((AgentKind) -> Void)?
     var onOpenChannel: (() -> Void)?
+    var onOpenActivity: (() -> Void)?
     private var headers: [(NSMenuItem, AgentKind)] = []
     private var checks: [(NSMenuItem, () -> Bool)] = []
     private var labels: [(NSMenuItem, () -> String)] = []
@@ -52,6 +53,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
         claudeItem.isEnabled = false
         menu.addItem(claudeItem)
         menu.addItem(action(String(localized: "Abrir informes")) { Self.open(Paths.reports) })
+        menu.addItem(action(String(localized: "Ver actividad")) { [weak self] in self?.onOpenActivity?() })
         menu.addItem(action(String(localized: "Ver registro")) { LogExport.openRecent() })
         menu.addItem(action(String(localized: "Abrir carpeta de datos")) { Self.open(Paths.root) })
         menu.delegate = self

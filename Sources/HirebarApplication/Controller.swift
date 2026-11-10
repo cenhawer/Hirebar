@@ -1,12 +1,5 @@
 import Foundation
-import HirebarAI
-import HirebarApplication
 import HirebarDomain
-import HirebarMedia
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 private let log = Log(.ai)
 
@@ -18,9 +11,9 @@ public final class Controller {
     public let chat: ChatChannel
     public let notifier: Notifier
     public internal(set) var channel: ChannelSetup
-    weak var scheduler: Scheduler?
-    weak var jobRadar: JobRadar?
-    weak var freelanceRadar: FreelanceRadar?
+    public weak var scheduler: Scheduler?
+    public weak var jobRadar: JobRadar?
+    public weak var freelanceRadar: FreelanceRadar?
 
     let clock: Clock
     let aiRunner: AIRunner
@@ -254,7 +247,8 @@ public final class Controller {
             prompt: prompts.prompt(for: batch, items: items, owner: owner),
             playbook: Paths.playbook(for: batch.mode),
             profile: profile,
-            browser: TaskProfiles.needsBrowser(batch.mode, account: account)
+            browser: TaskProfiles.needsBrowser(
+                batch.mode, performanceCheckDue: account.map(stores.contentAccounts.needsPerformanceCheck) ?? false)
         )
         let started = aiRunner.start(request) { [weak self] result in
             self?.finished(batchId, mode: mode, items: items, result: result)

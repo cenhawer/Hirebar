@@ -1,10 +1,5 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 public enum Practice {
     public static func set(_ kind: AgentKind, on: Bool, from origin: String, agents repository: AgentRepository) {

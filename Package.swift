@@ -21,13 +21,12 @@ let package = Package(
         .target(name: "HirebarPortals", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarMedia", dependencies: ["HirebarDomain", "HirebarApplication"]),
         .target(name: "HirebarAI", dependencies: ["HirebarDomain", "HirebarApplication"]),
-        .target(name: "HirebarEngine", dependencies: adapters),
-        .executableTarget(name: "Hirebar", dependencies: adapters + ["HirebarEngine"]),
+        .executableTarget(name: "Hirebar", dependencies: adapters),
         .testTarget(name: "HirebarDomainTests", dependencies: ["HirebarDomain"]),
         .testTarget(name: "HirebarApplicationTests", dependencies: ["HirebarApplication", "HirebarDomain"]),
         .testTarget(name: "HirebarStorageTests", dependencies: ["HirebarApplication", "HirebarDomain", "HirebarStorage"]),
         .testTarget(name: "HirebarTelegramTests", dependencies: ["HirebarDomain", "HirebarTelegram"]),
         .testTarget(name: "HirebarPortalsTests", dependencies: ["HirebarDomain", "HirebarPortals"]),
-        .testTarget(name: "HirebarEngineTests", dependencies: adapters + ["HirebarEngine"]),
+        .testTarget(name: "HirebarUseCaseTests", dependencies: adapters),
     ]
 )

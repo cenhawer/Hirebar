@@ -1,0 +1,584 @@
+{
+ "data": [
+  {
+   "id": "desarrollador-a-full-stack-financia-capital-santiago",
+   "attributes": {
+    "published_at": 1793133968,
+    "remote_modality": "no_remote",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Desarrollador/a Full-Stack",
+    "description": "<ul><li>Al menos 3 años de experiencia profesional con PHP y Laravel.</li><li>Experiencia desarrollando frontends con Vue.js.</li><li>Buen manejo de SQL y modelamiento de bases de datos relacionales (MySQL o SQL Server).</li><li>Experiencia construyendo y consumiendo APIs REST.</li><li>Manejo de Git y trabajo con ramas y pull requests.</li><li>Buena comunicación y capacidad de trabajar en equipo.</li><li>Autonomía, proactividad y ganas de aprender.</li></ul>",
+    "functions": "<p>Dentro de tus principales funciones estarán:</p><ul><li>Desarrollar nuevos módulos y funcionalidades en nuestras plataformas Laravel + Vue, de punta a punta: modelo de datos, API, interfaz y despliegue.</li><li>Desarrollar y mantener servicios de datos en Python (FastAPI) desplegados en API Gateway AWS Lambda, que alimentan nuestras plataformas con información de clientes y evaluaciones.</li><li>Mantener y mejorar las plataformas existentes: corrección de errores, rendimiento y refactorización.</li><li>Integrar servicios externos (Servicio de Impuestos Internos, burós de crédito, bancos, CRM) y APIs internas.</li><li>Participar en revisiones de código (pull requests) y proponer mejoras técnicas y de arquitectura.</li><li>Colaborar con negocio y producto en la definición de requerimientos e interfaces.</li><li>Contribuir al logro de los objetivos y KPIs del equipo.</li></ul><p>Nuestro stack:</p><ul><li>Backend: PHP 8 / Laravel, Python / FastAPI, AdonisJS (Node.js + TypeScript).</li><li>Frontend: Vue.js, Inertia.js, Element UI / Element Plus, TailwindCSS, Vite.</li><li>Datos: MySQL, SQL Server, Redis.</li><li>Cloud: AWS (Lambda, S3, RDS, EC2, SNS), Cloudflare.</li><li>Herramientas: Git / GitHub, Sentry, Notion.</li></ul>",
+    "desirable": "<p>Suma puntos si tienes:</p><ul><li>Experiencia con Python (FastAPI, pandas o SQLAlchemy) y despliegues serverless en AWS Lambda.</li><li>Experiencia con Inertia.js o Vue 3.</li><li>Experiencia con Node.js / TypeScript, idealmente AdonisJS.</li><li>Experiencia con otros servicios de AWS (S3, RDS, SNS).</li><li>Experiencia escribiendo tests (PHPUnit / Pest) y usando herramientas de calidad de código.</li><li>Experiencia en factoring, fintech o integraciones con el SII.</li><li>Portafolio o repositorios públicos (GitHub, GitLab, Bitbucket).</li></ul>",
+    "benefits": "",
+    "min_salary": 1700,
+    "max_salary": 2000,
+    "applications_count": 110,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Financia Capital"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-full-stack-financia-capital-santiago"
+   }
+  },
+  {
+   "id": "aws-iot-backend-engineer-improving-remote",
+   "attributes": {
+    "published_at": 1794279747,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "AWS IoT Back-end Engineer",
+    "description": "<ul><li>4+ years in backend, integration or solutions engineering, with strong C# / .NET (ASP.NET Core).</li><li>Solid PostgreSQL experience: schema design, migrations, query tuning.</li><li>EF Core is a plus.</li><li>Hands-on AWS experience in production: S3, IAM, Secrets Manager, App Runner or ECS, CloudWatch.</li><li>You can read and change IaC.</li><li>Experience designing and consuming REST APIs, and writing unit and integration tests.</li><li>Strong written and spoken English.</li><li>You can run a technical call with a vendor, then document what was agreed.</li><li>A customer-minded, ownership-driven approach: you follow a problem from the first report to the fix.</li></ul>",
+    "functions": "<ul><li>Rework and configure the existing AWS IoT Core infrastructure for new hardware/firmware.</li><li>Configure and manage MQTT communication between devices and AWS.</li><li>Build monitoring capabilities and dashboards for device connectivity, health, and status.</li><li>Enable secure remote actions on devices, including:<ul><li>OTA firmware updates</li><li>Device restarts</li><li>Remote commands/configuration</li></ul></li><li>Review and improve AWS IoT device provisioning, authentication, certificates, policies, and security.</li><li>Migrate AWS workloads that are reaching end-of-life or are no longer appropriate, including migrating services from AWS App Runner to ECS.</li><li>Support and improve AWS infrastructure, deployment pipelines, monitoring, logging, and alerting.</li><li>Migrate the current email infrastructure from AWS to Microsoft Azure while ensuring existing AWS applications and automated email workflows continue working without disruption.</li><li>Work with the existing engineering team to understand the current architecture and safely execute infrastructure changes.</li></ul>",
+    "desirable": "<ul><li>Experience with IoT device fleets, telemetry or OTA update systems (MCUboot, firmware signing, rollback and rollout strategies).</li><li>Python (FastAPI, boto3, pytest) and AWS CDK in Python.</li><li>Experience with AWS Lambda and Step Functions, or ML pipelines.</li><li>Observability: alarms, dashboards, structured logging.</li><li>Next.js / React for small internal tools.</li><li>Security-minded engineering: least-privilege IAM, secrets handling, input validation.</li></ul>",
+    "benefits": "<p>Contrato a largo plazo.</p><ul><li>100% Remoto.</li><li>Vacaciones y PTOs.</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea.</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo.</li><li>Mucho más..</li><li>Contrato a largo plazo.</li><li>100% Remoto.</li><li>Vacaciones y PTOs.</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea.</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo.</li></ul><p> •<span></span>Mucho más..</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 59,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Improving"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/aws-iot-backend-engineer-improving-remote"
+   }
+  },
+  {
+   "id": "go-engineer-microservices-improving-remote",
+   "attributes": {
+    "published_at": 1794279672,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Senior Go Engineer",
+    "description": "<p>Bachelor’s Degree in Computer Science or related field (preferred)</p><ul><li>5-7+ years of professional software engineering experience</li><li>3+ years of experience building and operating production backend services in Go</li><li>Strong experience designing and implementing microservice architectures</li><li>Experience building RESTful APIs and/or event-driven services</li><li>Deep understanding of distributed systems concepts (service discovery, load balancing, circuit breaking, retries, idempotency)</li><li>Experience with synchronous and asynchronous communication patterns (HTTP/gRPC, messaging systems)</li><li>Experience working with relational and/or NoSQL databases in a service-oriented architecture</li><li>Deep experience with cloud platforms (AWS, Azure, or GCP), including managed services, IAM, and infrastructure-as-code</li><li>Strong debugging, performance tuning, and production support experience</li><li>Strong problem-solving skills and architectural judgment</li><li>Excellent communication skills and collaborative mindset</li><li>Strong sense of ownership and accountability</li><li>Demonstrated ability to mentor engineers and elevate team technical capability.</li><li>ADVANCED ENGLISH IS A MUST , you won't be considered if your are not fluent thank you!</li></ul>",
+    "functions": "<ul><li>Lead the design and development of scalable, resilient microservices using Go, setting patterns and standards for the broader engineering team</li><li>Define and maintain clear API contracts (REST and/or event-driven interfaces) between services</li><li>Architect distributed systems with a focus on reliability, scalability, and fault tolerance</li><li>Implement inter-service communication patterns (synchronous and asynchronous)</li><li>Design and manage service-level database schemas and data ownership models</li><li>Build and maintain responsive front-end components that consume backend services</li><li>Implement observability practices including logging, monitoring, tracing, and alerting</li><li>Lead code reviews, mentor engineers across experience levels, and champion engineering best practices organization-wide</li><li>Partner cross-functionally with DevOps, QA, product, and design teams; serve as a technical liaison and contribute to roadmap and architecture decisions</li><li>Document service architecture, APIs, and operational procedures</li></ul>",
+    "desirable": "<ul><li>Experience with event streaming platforms (Kafka, Pub/Sub, NATS)</li><li>Experience with API gateways and service meshes</li><li>Experience implementing authentication and authorization (OAuth2, JWT, SSO)</li><li>Familiarity with domain-driven design (DDD) principles</li><li>Experience working in Agile/Scrum development environments</li></ul>",
+    "benefits": "<ul><li>Contrato a largo plazo.</li><li>100% Remoto.</li><li>Vacaciones y PTOs</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo</li><li>mucho mas..</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 92,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Improving"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/go-engineer-microservices-improving-remote"
+   }
+  },
+  {
+   "id": "especialista-en-cumplimiento-de-seguridad-hf-solutions-santiago",
+   "attributes": {
+    "published_at": 1794246725,
+    "remote_modality": "no_remote",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "es",
+    "title": "Especialista en Cumplimiento de Seguridad",
+    "description": "<p>💡 <strong>Lo que buscamos:</strong><br>✔️ +4 años en cumplimiento, seguridad de la información, GRC o auditoría TI<br>✔️ Experiencia en PCI DSS, ISO 27001 y/o NIST<br>✔️ Conocimiento técnico en AWS ☁️</p><p>⭐ <strong>Suma puntos si tienes:</strong> experiencia multicloud 🌐, desarrollo backend 💻 o certificaciones de seguridad 🏅</p>",
+    "functions": "<p>🎯 <strong>Tu desafío:</strong><br>📅 Gestionar el calendario de controles PCI DSS<br>🤝 Coordinar con los equipos técnicos para cumplir a tiempo<br>🔍 Hacer seguimiento hasta cerrar cada pendiente<br>📂 Preparar la evidencia para las auditorías<br>📊 Reportar el avance a las jefaturas</p>",
+    "desirable": "",
+    "benefits": "<p>Seguro Complementario de Salud y Dental; Aguinaldos en Fiestas Patrias y Navidad; Jornada Lun - Jue 9:00 - 18:00 hrs, Vie - 17:00 hrs; Modalidad Híbrida: 4 días a la semana presencial; Ubicación: Las Condes, Santiago.</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 3,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "HF Solutions"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/especialista-en-cumplimiento-de-seguridad-hf-solutions-santiago"
+   }
+  },
+  {
+   "id": "product-builder-comunidadfeliz-remote-3495",
+   "attributes": {
+    "published_at": 1794246655,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "es",
+    "title": "Product Builder",
+    "description": "<ul><li>Entre 1 y 3 años programando con Ruby on Rails como base. Se consideran recién egresados/as que puedan mostrar proyectos reales.</li><li>Titulado de Ingeniería Civil o carreras afines.</li><li>Ruby y Ruby on Rails a nivel sólido.</li><li>GraphQL a nivel sólido.</li><li>Disposición demostrable a aprender y trabajar en otros lenguajes con apoyo de IA, por ejemplo haber construido algo en un stack que no dominabas.</li><li>Nociones de testing automatizado.</li></ul>",
+    "functions": "<ul><li>Desarrollar funcionalidades de Citofonía y Conserjería en el backend Ruby on Rails (APIs, modelos, lógica de negocio e integraciones) y en las demás partes del producto que hagan falta: app mobile, web o servicios externos, llevando cada tarjeta hasta producción.</li><li>Usar Claude Code y otros asistentes y agentes de IA como parte central de tu trabajo para programar, probar, documentar y prototipar, revisando con criterio lo que propone la IA. Eres responsable del código que entregas y de cómo funciona en producción, lo hayas escrito con o sin IA.</li><li>Aprender rápido los lenguajes, librerías y servicios que pida cada funcionalidad (por ejemplo React Native, TypeScript, telefonía VoIP o notificaciones push), y documentar lo aprendido para que el conocimiento no quede en una sola persona.</li><li>Entender el problema del conserje, del residente y de la administración antes de construir: proponer mejoras, levantar dudas a tiempo y tomar decisiones menores de diseño apoyándote en el design system.</li><li>Medir el uso y la adopción de cada funcionalidad que lanzas.</li><li>Entregar cada funcionalidad con tests unitarios y de integración, participar en code reviews y validar en ambientes de prueba antes de cada release.</li><li>Investigar y resolver bugs e incidentes del producto (backend, mobile o integraciones, incluido el servicio de citofonía), atender alertas de monitoreo y reducir deuda técnica.</li><li>Participar en las ceremonias del equipo (dailies, planning, refinamiento), comunicar avances de forma asíncrona y avisar bloqueos de inmediato.</li></ul>",
+    "desirable": "<ul><li>SQL y PostgreSQL.</li><li>TypeScript, React y React Native (se espera autonomía en ellos a los 90 días).</li><li>Experiencia en más de un lenguaje o stack.</li><li>Experiencia con telefonía, VoIP, WebRTC o plataformas como Agora.</li><li>Notificaciones push o integraciones con servicios de terceros.</li><li>Experiencia en productos SaaS o startups.</li><li>Inglés técnico para leer documentación.</li></ul>",
+    "benefits": "<p><strong>Trabajo Remoto 🏠</strong>: Tenemos una cultura remota que prioriza los valores y herramientas remotas.</p><p><strong>Excelente Cultura 🎉</strong>: Mensualmente fomentamos la cultura mediante 2 eventos digitales a nivel empresa y 1 evento a nivel de equipo.</p><p><strong>Día Libre el Día de tu Cumpleaños 🎂</strong>.</p><p><strong>Viernes Corto 🕔</strong>: ¡Los días viernes se sale a las 17:00 hrs!</p><p><strong>15 Días de Vacaciones al Año 🌴</strong>.</p><p><strong>Desarrollo de Carrera 📈</strong>: Planes de carrera y cursos formativos.</p><p><strong>Días de Salud 💊</strong>: Te pagaremos el 100% de los 3 primeros días de una licencia médica que no cubre tu previsión (en cualquier país) cada año.</p><p><strong>Provisión de Días de Salud para +3 Días 🏥</strong>.</p><p><strong>Permisos por Matrimonio, Nacimientos, Lactancia, Adopción 👰🤱</strong>.</p><p><strong>Bono de Festividades 🎁</strong>: Entregamos bono en diciembre.</p>",
+    "min_salary": 1400,
+    "max_salary": 2000,
+    "applications_count": 31,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "ComunidadFeliz"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/product-builder-comunidadfeliz-remote-3495"
+   }
+  },
+  {
+   "id": "web-app-full-stack-engineer-niuro-remote-03c6",
+   "attributes": {
+    "published_at": 1794241811,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Web App Full-Stack Engineer",
+    "description": "<p><strong>Requirements</strong></p><ul><li>Senior-level engineer with 5+ years of professional software development experience.</li><li>Proven experience developing and maintaining production web applications.</li><li>Strong backend development experience.</li><li>Hands-on experience developing AI features.</li><li>Practical experience working with large language models (LLMs).</li><li>Practical experience with computer vision.</li><li>C1 English level or higher.</li><li>Hands-on experience with production web application development, AI feature development, Web APIs, software architecture, testing, and deployment.</li></ul><p><strong>We value</strong> sound technical judgment, independent execution, and the ability to solve complex engineering problems while delivering measurable product impact.</p>",
+    "functions": "<p>We are seeking a Senior Web App Full Stack Engineer to build and improve production web applications with a strong focus on backend systems and AI-powered capabilities. You will work across the stack, taking ownership of features from design and implementation through deployment and iteration.</p><ul><li>Design, implement, test, and maintain full stack web application features for production use.</li><li>Build backend services and APIs that support reliable, scalable application functionality.</li><li>Develop and integrate AI features using LLMs and computer vision techniques.</li><li>Own technical delivery from problem definition through implementation, deployment, monitoring, and iteration.</li><li>Investigate production issues, identify root causes, and implement durable fixes.</li><li>Review performance data and use findings to improve application quality and user experience.</li></ul>",
+    "desirable": "<p><strong>Desirable (not required)</strong></p><ul><li>Experience with deploying and operating AI/ML-powered features in production (reliability, latency, and monitoring).</li><li>Track record of improving system performance using production metrics and experiments.</li><li>Experience collaborating with cross-functional stakeholders across design, implementation, and iteration.</li></ul>",
+    "benefits": "<p>This is a full-time, 100% remote engagement. You will work directly with the client's small product team and founders on a live product, with real ownership of the application and the opportunity to make a measurable impact.</p><p>Upon successful completion of the initial contract, there is potential for long-term collaboration and stable, full-time employment, reflecting our long-term commitment to our team members.</p><p>Joining Niuro means becoming part of a global community dedicated to technological excellence and benefiting from strong administrative support infrastructure that enables you to focus on impactful work without distraction.</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 37,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Niuro"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/web-app-full-stack-engineer-niuro-remote-03c6"
+   }
+  },
+  {
+   "id": "software-engineer-full-stack-xintec-santiago",
+   "attributes": {
+    "published_at": 1794235119,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Software Engineer Full-Stack",
+    "description": "<p>Para postular, buscamos un perfil con <strong>experiencia comprobable de al menos 4 años</strong> como Software Engineer Full Stack o rol similar.</p><ul><li>Dominio de <strong>Java</strong> y <strong>Spring Boot</strong> para desarrollo backend.</li><li>Experiencia sólida en desarrollo frontend con <strong>React</strong>.</li><li>Experiencia comprobable en <strong>Google Cloud Platform (GCP)</strong> (excluyente).</li><li>Manejo de <strong>APIs REST</strong> y <strong>bases de datos relacionales</strong>.</li><li>Disponibilidad para modalidad <strong>híbrida</strong> en <strong>Santiago</strong> (excluyente).</li><li>Conocimiento de <strong>CI/CD</strong> y contenedores (<strong>Docker</strong>, <strong>Kubernetes</strong>).</li><li>Disponibilidad para incorporarse <strong>lo antes posible</strong>.</li></ul><p>Valoramos especialmente la capacidad de trabajar en equipo, colaborar con negocio y analítica, comunicar bien el avance y tomar responsabilidad sobre la calidad del software. También buscamos criterio para proponer mejoras, respetar buenas prácticas y participar activamente en revisiones de código.</p>",
+    "functions": "<p>Buscamos incorporar a nuestro equipo a un/a <strong>Software Engineer Full Stack</strong> con experiencia sólida en el desarrollo de aplicaciones end-to-end sobre <strong>Google Cloud Platform</strong>. El rol forma parte de un equipo de tecnología dentro del rubro de servicios financieros, enfocado en construir y mantener soluciones escalables que soportan procesos críticos del negocio, tanto en backend como en frontend.</p><ul><li>Diseñar, desarrollar y mantener servicios backend con <strong>Java</strong> y <strong>Spring Boot</strong>.</li><li>Construir y evolucionar interfaces de usuario con <strong>React</strong>.</li><li>Desplegar y operar soluciones sobre <strong>Google Cloud Platform (GCP)</strong>.</li><li>Integrar aplicaciones con servicios internos, <strong>APIs</strong> y <strong>bases de datos</strong> relacionales.</li><li>Participar en revisiones de código, definición de arquitectura y buenas prácticas de desarrollo.</li><li>Colaborar con equipos de negocio y analítica para traducir requerimientos en soluciones técnicas escalables.</li></ul>",
+    "desirable": "<ul><li>Experiencia previa en industrias reguladas (banca, seguros, servicios financieros).</li><li>Certificaciones en <strong>GCP</strong>.</li></ul><p>Si además has trabajado en contextos de alta criticidad y trazabilidad, y conoces prácticas de desarrollo orientadas a escalabilidad, serás un gran aporte para nuestro equipo.</p>",
+    "benefits": "<p>Te ofrecemos:</p><ul><li>Aguinaldo (bonificación) de fiestas patrias y navidad.</li><li>Seguro de salud complementario, vida y catastrófico.</li><li>Caja de compensación Los Andes.</li><li>Posibilidad de capacitación vinculada a las necesidades de la empresa.</li><li>Bono de colación (almuerzo).</li><li>Bono de vacaciones.</li></ul><p>La posición es <strong>híbrida</strong> en <strong>Santiago, Chile</strong>, para que puedas combinar colaboración presencial con trabajo flexible.</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 15,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Xintec"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/software-engineer-full-stack-xintec-santiago"
+   }
+  },
+  {
+   "id": "product-builder-comunidadfeliz-remote-04e2",
+   "attributes": {
+    "published_at": 1794234994,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "es",
+    "title": "Product Builder",
+    "description": "<ul><li><sup>3 o más años de experiencia como Product Builder o Software Engineer.</sup></li><li><sup>Al menos 2 años desarrollando en Ruby on Rails.</sup></li><li><sup>Experiencia trabajando en startups.</sup></li><li><sup>Experiencia participando activamente en decisiones del producto.</sup></li></ul>",
+    "functions": "<ul><li><sup>Experiencia sólida y demostrable como Product Builder y/o Software Engineer.</sup></li><li><sup>Dominio y experiencia en tecnologías de backend como Ruby y Ruby on Rails.</sup></li><li><sup>Experiencia escribiendo pruebas automatizadas con RSpec, incluyendo pruebas unitarias, de integración y pruebas para controladores o servicios en aplicaciones Ruby on Rails.</sup></li><li><sup>Experiencia trabajando con bases de datos relacionales y/o no relacionales (ej. PostgreSQL, MySQL, MongoDB).</sup></li><li><sup>Comprensión de los principios de diseño de APIs RESTful y experiencia creándolas y consumiéndolas.</sup></li><li>Generar documentación útil para el desarrollo presente y futuro.</li><li> Labores de programación fullstack (integraciones con pasarelas: Transbank, Kushki, Toku, STP; flujo de tokenización, dispersión).</li><li> Gestión de ambientes en entornos de desarrollo.</li><li> Generar tests que mejoren la estabilidad de los desarrollos, especialmente en flujos críticos de pago.</li><li>Aportar con inteligencia y creatividad en el desarrollo y mejora de soluciones de pago.</li></ul>",
+    "desirable": "",
+    "benefits": "<p><strong>Trabajo Remoto 🏠</strong>: Tenemos una cultura remota que prioriza los valores y herramientas remotas.</p><p><strong>Excelente Cultura 🎉</strong>: Mensualmente fomentamos la cultura mediante 2 eventos digitales a nivel empresa y 1 evento a nivel de equipo.</p><p><strong>Día Libre el Día de tu Cumpleaños 🎂</strong>.</p><p><strong>Viernes Corto 🕔</strong>: ¡Los días viernes se sale a las 17:00 hrs!</p><p><strong>15 Días de Vacaciones al Año 🌴</strong>.</p><p><strong>Desarrollo de Carrera 📈</strong>: Planes de carrera y cursos formativos.</p><p><strong>Días de Salud 💊</strong>: Te pagaremos el 100% de los 3 primeros días de una licencia médica que no cubre tu previsión (en cualquier país) cada año.</p><p><strong>Provisión de Días de Salud para +3 Días 🏥</strong>.</p><p><strong>Permisos por Matrimonio, Nacimientos, Lactancia, Adopción 👰🤱</strong>.</p><p><strong>Bono de Festividades 🎁</strong>: Entregamos bono en diciembre.</p>",
+    "min_salary": 1400,
+    "max_salary": 2000,
+    "applications_count": 18,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "ComunidadFeliz"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/product-builder-comunidadfeliz-remote-04e2"
+   }
+  },
+  {
+   "id": "full-stack-software-engineer-react-python-improving-remote",
+   "attributes": {
+    "published_at": 1794166106,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Full-Stack Software Engineer (React + Python)",
+    "description": "<ul><li>Strong Python application development experience.</li><li>Strong React experience and ability to work within an existing React front end.</li><li>Experience integrating Python services/algorithms into React-based applications, including APIs and backend/frontend integration.</li><li>Comfortable working in and modifying an existing application rather than building a new application from scratch.</li><li>Experience working with Azure DevOps repositories and development environments, since the existing application/repository is hosted there.</li><li>Comfortable troubleshooting integration across an existing production system.</li></ul>",
+    "functions": "<ul><li>Work within and modify an existing application rather than building a new application from scratch.</li><li>Support future development and enhancements of the existing application.</li><li>Work within an existing React front end.</li><li>Integrate Python services and algorithms into React-based applications, including APIs and backend/frontend integration.</li><li>Work with existing manual scheduling and drag-and-drop capabilities within the application.</li><li>Troubleshoot integration across an existing production system.</li><li>Work within the existing application and repository hosted in Azure DevOps.</li><li>Support QA testing as part of the development effort.</li></ul>",
+    "desirable": "<p>Capable of supporting functional/integration testing and the QA cycle rather than requiring a dedicated QA resource initially.</p>",
+    "benefits": "<ul><li>Contrato a largo plazo.</li><li>100% Remoto.</li><li>Vacaciones y PTOs</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo</li><li>mucho mas..</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 72,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Improving"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/full-stack-software-engineer-react-python-improving-remote"
+   }
+  },
+  {
+   "id": "ai-aws-support-engineer-softserve-remote",
+   "attributes": {
+    "published_at": 1794006532,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Support Engineer (AWS & IA)",
+    "description": "<ul><li>+3 years of experience in cloud operations, application or data platform support, SRE, or DevOps, with Databricks and AWS as the main platforms.</li><li>Hands-on experience with Databricks jobs and Workflows, clusters, SQL warehouses, Unity Catalog, Spark logs, Spark UI, and familiarity with the bronze, silver, and gold medallion pattern.</li><li>Strong knowledge of SQL, plus Python for debugging and scripting, and AWS services including Lambda, DynamoDB, Cognito, CloudWatch, IAM, and S3.</li><li>Practical experience with integration and API troubleshooting, including logs, traces, browser developer tools, and understanding how React front ends interact with backend APIs.</li><li>Working knowledge of GenAI and LLM applications, including prompts, RAG, tool or function calling, agents, production failure patterns, and AI-assisted coding or operations tools.</li><li>Experience with ITIL-aligned incident and request management, including priority matrices, SLAs, escalation paths, and root cause analysis.</li><li>Clear written English and a service-minded approach, particularly for tickets, runbooks, end-user communication, and white-glove support for business users.</li><li>Additional relevant exposure to Databricks Apps, Lakebase, Delta Live Tables or Lakeflow, Databricks Asset Bundles, GitHub Actions, Terraform, ServiceNow, MCP-based integrations, Semantic Kernel, LangChain, LLM observability, Databricks AI features, SRE practices, or regulated industries is considered beneficial.</li></ul>",
+    "functions": "<ul><li>Monitor Databricks jobs, workflows, data pipelines, Oracle API ingestion processes, and AWS services, responding to failures, alerts, performance issues, and data quality problems</li><li>Own incident and service request resolution within defined SLAs, performing approved remediation such as job reruns, cluster restarts, configuration updates, and resolution of known data issues</li><li>Collaborate with internal and external stakeholders and L3 product teams to troubleshoot end-to-end integrations, escalate complex or code-level issues with clear evidence, and validate implemented fixes</li><li>Troubleshoot front-end, API, backend, database, connectivity, and integration issues using logs, traces, Spark UI, browser developer tools, monitoring tools, and system diagnostics</li><li>Manage Databricks access and permissions across workspaces, Unity Catalog, groups, and service principals while supporting applications and data platforms</li><li>Use AI-powered engineering tools such as GitHub Copilot and Cursor to accelerate troubleshooting, scripting, log analysis, and operational documentation</li><li>Develop automation scripts, operational tooling, runbooks, knowledge articles, known-error documentation, and repeatable processes that reduce manual support effort</li><li>Monitor platform health, performance, capacity, cost trends, dashboards, and observability while contributing to root cause analysis, service reviews, backlog grooming, and continuous improvement activities</li></ul>",
+    "desirable": "",
+    "benefits": "<ul><li><strong>SoftServe University:</strong> Access continuous learning opportunities, certification support, and leadership development programs to grow your skills and advance your career</li><li><strong>Medical insurance:</strong> Health coverage for you and your family</li><li><strong>Food vouchers:</strong> Additional support for your everyday expenses</li><li><strong>Extra days off:</strong> Enjoy additional time off to rest, recharge, and maintain a healthy work-life balance</li><li><strong>Dare to Care:</strong> Our holistic well-being program, designed to support your overall wellness</li><li><strong>Anniversary Program:</strong> Celebrating your milestones and recognizing your journey with SoftServe</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 18,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Softserve"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/ai-aws-support-engineer-softserve-remote"
+   }
+  },
+  {
+   "id": "full-stack-software-engineer-improving-remote",
+   "attributes": {
+    "published_at": 1794004730,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Full-Stack Software Engineer ( Angular + Microservices)",
+    "description": "<ul><li><strong>Angular:</strong> Advanced single-page application (SPA) architecture, state management, and reusable component-based frontend engineering.</li><li><strong>TypeScript &amp; Bun:</strong> End-to-end type safety, modern ECMAScript standards, and high-performance package management and runtime execution using Bun.</li><li><strong>Sass (SCSS) &amp; Maizzle:</strong> Advanced modular styling, responsive layouts, design token implementation, and responsive transactional email template development using Maizzle.</li><li><strong>Microservices &amp; LoopBack 4:</strong> Distributed microservices architecture, decoupled service-to-service communication, robust RESTful API design, and integration with third-party APIs and payment processors like Stripe.</li><li><strong>MongoDB:</strong> NoSQL database schema design, indexing strategies, complex aggregation pipelines, and data consistency across distributed services.</li><li><strong>Docker, Tilt &amp; Trunk-Based Development:</strong> Containerized microservices, local multi-service orchestration using Tilt, and fast-paced continuous integration workflows using trunk-based development.</li><li><strong>AI, RAG &amp; Vector Embeddings:</strong> Implementation of AI models, vector embeddings, and Retrieval-Augmented Generation (RAG) pipelines for contextual data retrieval, alongside utilizing AI-assisted developer workflows to accelerate coding and debugging.</li></ul>",
+    "functions": "<ul><li>Design, build, and scale high-performance web applications and distributed microservices architectures within a secure HealthTech environment.</li><li>Develop modular front-end interfaces.</li><li>Orchestrate decoupled backend microservices.</li><li>Integrate mission-critical third-party services like Stripe.</li><li>Maintain continuous integration via trunk-based development.</li><li>Implement AI-driven solutions, including RAG architectures and vector embeddings, for contextual data retrieval.</li><li>Utilize AI-assisted developer workflows to accelerate coding and debugging.</li></ul>",
+    "desirable": "<ul><li>AWS and cloud-native application experience.</li><li>Stripe or other payment-processing integrations.</li><li>Healthcare, HIPAA, or other regulated-industry experience.</li><li>GitHub-based CI/CD and automated testing.</li><li>Third-party API and webhook integrations.</li><li>GitHub Copilot, Codex, or other AI-assisted development tools.</li><li>Production monitoring and observability experience.</li><li>Experience working in Agile/Scrum product teams.</li></ul>",
+    "benefits": "<ul><li>Contrato a largo plazo.</li><li>100% Remoto.</li><li>Vacaciones y PTOs</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo</li><li>mucho mas..</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 44,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Improving"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/full-stack-software-engineer-improving-remote"
+   }
+  },
+  {
+   "id": "desarrollador-oracle-sonda-santiago",
+   "attributes": {
+    "published_at": 1793994217,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Desarrollador Oracle",
+    "description": "<ul><li>Titulado en Ingeniería en informática, Ciencias de la Computación, Ingeniería de Software u otra profesión afín.</li><li>Más de 3 años de experiencia comprobada en la ejecución de actividades de análisis, diseño y desarrollo de software.</li><li>Conocimientos técnicos en Back-End, SQL (Microsoft SQL Server).</li><li>Experiencia en diseño, modelamiento y optimización de bases de datos relacionales.</li><li>Creación de consultas, procedimientos almacenados, triggers y funciones.</li><li>Conocimiento en seguridad de datos y tuning de consultas.</li><li>Conocimiento en los siguientes lenguajes de programación: C# (.NET / .NET Core / .NET Framework.</li><li>Sólido dominio en desarrollo de aplicaciones backend, APIs REST, servicios web y componentes.</li><li>Conocimientos de Entity Framework, LINQ y patrones MVC/MVVM.</li><li>Conocimientos complementarios en Node.js y Python para microservicios o scripts de automatización.</li><li>Experiencia comprobable en Oracle-</li><li>Implementación de componentes reutilizables y rutas.</li><li>Consumo de APIs REST desde el front.</li></ul>",
+    "functions": "<ul><li>Diseñar, codificar, probar, depurar, documentar e implementar aplicaciones utilizando una variedad de lenguajes, frameworks y plataformas Oracle, PL/SQL.</li><li>Desarrollar pruebas de concepto y prototipos.</li><li>Asegurar que las aplicaciones sean compatibles en varias plataformas y navegadores.</li><li>Construir mejoras y resolver errores.</li><li>Construir y ejecutar pruebas unitarias y planes de pruebas unitarias.</li><li>Analizar los requisitos del sistema y los procesos de negocio existentes y sistemas de información.</li></ul>",
+    "desirable": "<ul><li>Microsoft Certified: .NET Developer / Azure Developer Associate.</li><li>Scrum Developer Certified (SDC).</li><li>Certificación en Angular / React / Vue.js (emitida por plataformas reconocidas).</li><li>Git &amp; DevOps Essentials (GitLab, Jenkins, CI/CD).</li></ul>",
+    "benefits": "<p>¿Qué ofrecemos? SONDA Academy, una plataforma educativa de aprendizaje constante que busca potenciar al máximo tu desarrollo profesional. Trabajo híbrido, en SONDA sabemos que la flexibilidad es importante para tu bienestar es por eso que contamos con jornadas presenciales y de teletrabajo. SONDA Wellness, un programa que busca apoyarte en el balance de tu vida personal y profesional, que promoviendo una serie de iniciativas enfocadas en tu salud física, mental y social. Y mucho más!</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 20,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "SONDA"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-oracle-sonda-santiago"
+   }
+  },
+  {
+   "id": "desarrollador-semi-senior-vue-y-c-net-alluxi-remote-d2a3",
+   "attributes": {
+    "published_at": 1793985774,
+    "remote_modality": "fully_remote",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Desarrollador Semi Senior Vue y C# (.NET)",
+    "description": "<ul><li>4+ años de experiencia como desarrollador full-stack.</li><li>Experiencia real en producción con Vue 3 (Composition API, Pinia, TypeScript).</li><li>Experiencia real en backend con C# y .NET (.NET 6+; .NET Framework es un plus).</li><li>SQL Server: consultas, stored procedures y Entity Framework.</li><li>Git con flujo de pull requests y code review.</li><li><strong>Inglés conversacional B2 o superior (indispensable)</strong>: participarás en reuniones diarias y demos en inglés. La entrevista final es en inglés.</li><li>Disponibilidad para una sesión técnica en vivo de pair programming.</li><li>Proactividad, buena comunicación y sentido de ownership.</li></ul>",
+    "functions": "<ul><li>Desarrollar nuevas funcionalidades full-stack con Vue 3 (Composition API, TypeScript) y C#/.NET.</li><li>Construir y mantener APIs REST y lógica de negocio en .NET con SQL Server y Entity Framework.</li><li>Mantener y modernizar código existente (componentes Vue y .NET Framework).</li><li>Estimar historias de usuario y participar en refinamientos, sprint planning, dailies, reviews y demos en inglés.</li><li>Hacer code reviews, escribir pruebas unitarias y colaborar con QA para entregar releases sin bugs.</li><li>Trabajar con Azure DevOps (boards y pipelines) y GitHub.</li></ul>",
+    "desirable": "<ul><li>Azure (App Services, Azure AD, Functions, Logic Apps) y Azure DevOps Pipelines.</li><li>Pruebas automatizadas (xUnit, Vitest, Cypress o Playwright).</li><li>Experiencia modernizando sistemas legados.</li><li>Experiencia trabajando en equipos remotos e internacionales.</li></ul>",
+    "benefits": "<ul><li>Prestaciones de ley y seguro de gastos médicos mayores.</li><li>Horario: lunes a viernes de 9:00 a 6:00 pm (CST).</li><li>Trabajo 100% remoto.</li><li>Beer Friday (salida 5:00 pm).</li><li>Excelente ambiente laboral.</li><li>Oportunidad de crecimiento.</li><li>Seguridad laboral.</li><li>Capacitación constante.</li><li>Apoyo para clases de inglés y certificaciones.</li></ul>",
+    "min_salary": 1500,
+    "max_salary": 2500,
+    "applications_count": 154,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Alluxi"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-semi-senior-vue-y-c-net-alluxi-remote-d2a3"
+   }
+  },
+  {
+   "id": "back-end-developer-java-springboot-apigee-42labs-santiago",
+   "attributes": {
+    "published_at": 1793982541,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "es",
+    "title": "Back-end Developer (Java/Spring Boot/apigee)",
+    "description": "<p><strong>Requisitos excluyentes</strong></p><ul><li>Al menos <strong>5 años</strong> trabajando en cargo a postular</li><li>Experiencia comprobable trabajando con <strong>Java</strong>. <strong>Spring Boot</strong> y <strong>Apigee</strong></li><li>Experiencia anteriores en el rubro financiero</li></ul><p><strong>Qué buscamos en la persona</strong></p><ul><li>Buenas prácticas de desarrollo y criterio para escribir código mantenible.</li><li>Capacidad para colaborar, compartir contexto y recibir feedback.</li><li>Enfoque en calidad y responsabilidad sobre los entregables.</li><li>Comunicación clara con el equipo para alinear objetivos y resolver bloqueos.</li><li>Actitud de aprendizaje continuo y mejora constante dentro de una cultura de colaboración.</li></ul>",
+    "functions": "<p>Buscamos un/una <strong>Back End Developer</strong> con al menos <strong>5 años</strong> de experiencia trabajando con <strong>Java</strong>, <strong>Spring Boot</strong> y <strong>Apigee</strong>.</p><p>En el rol, serás responsable de:</p><ul><li>Desarrollar y mantener funcionalidades back end con Java y Spring Boot.</li><li>Diseñar, implementar y optimizar <strong>APIs</strong> para integraciones robustas.</li><li>Trabajar con <strong>Apigee</strong> para gestionar y facilitar el consumo de servicios mediante políticas y configuraciones.</li><li>Participar en el ciclo de vida de la solución: análisis, desarrollo, revisión y despliegue.</li><li>Colaborar con el equipo para asegurar calidad técnica, documentación y buenas prácticas.</li><li>Contribuir a la mejora continua del producto y del stack, manteniendo la mantenibilidad y escalabilidad.</li></ul><p>Nos interesa que puedas moverte con autonomía dentro de un entorno híbrido, con acompañamiento técnico y alineación con el equipo.</p>",
+    "desirable": "<ul><li>Experiencia con buenas prácticas de testing, observabilidad y manejo de errores en servicios back end.</li><li>Interés por mantener documentación técnica y facilitar revisiones de código.</li></ul>",
+    "benefits": "<ul><li>Salud y protección integral, contamos con seguros complementarios de salud, dental y de vida 100% financiados por nosotros (con opción de extender a tu familia). Además, estamos integrados a la red de beneficios de Caja Los Andes y la ACHS.</li><li>Apoyos para tu estilo de vida, ya que tu hogar es tu oficina, incluimos bonos mensuales para tu conexión a internet y tus plataformas de ocio favoritas. También te acompañamos con aguinaldos en Fiestas Patrias y Navidad.</li><li>Tiempo y flexibilidad, dispones de Flexi Days y Party Time (tardes libres). Celebramos tu cumpleaños con una tarde libre y te damos tiempo extra para hitos como matrimonio, nacimiento de hijos o exámenes de título.</li><li>Crecimiento y comunidad, aquí nunca dejas de aprender con nuestra Academia 42Labs, planes de desarrollo personalizados y acceso a Udemy Business. Nos mantenemos conectados en Discord y fortalecemos lazos en los PartyTwoLabs, nuestros encuentros presenciales para compartir más allá de la pantalla.</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 97,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "42Labs"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/back-end-developer-java-springboot-apigee-42labs-santiago"
+   }
+  },
+  {
+   "id": "dev-fullstack-ror-react-integraciones-rankmi-santiago",
+   "attributes": {
+    "published_at": 1793968695,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "es",
+    "title": "Dev Full-Stack RoR/React + API RESTful",
+    "description": "<ul><li>Título universitario en Ciencias de la Computación, Ingeniería de Software o un campo relacionado, o experiencia equivalente.</li><li>Mínimo de 3 años de experiencia en desarrollo de software.</li><li>Experiencia en <strong>Ruby on Rails</strong> (Backend) y <strong>React</strong> (Frontend)<strong>. </strong></li><li>Experiencia trabajando con estándares <strong>API RESTful.</strong></li><li>Claridad y soltura para dialogar con clientes y stakeholders, combinadas con autonomía para priorizar tareas en entornos dinámicos.</li><li>Conocimiento de bases de datos relacionales y no relacionales. Experiencia en trabajar con equipos de desarrollo y en proyectos de software. Experiencia con herramientas y prácticas de desarrollo ágil (YouTrack, Git, Docker, CI/CD, etc.).</li></ul>",
+    "functions": "<ul><li>Integraciones: Diseñar e implementar APIs RESTful robustas y seguras (utilizando JWT, API Keys, Webhooks), transformando datos a través de middlewares según el formato requerido por el cliente o partner.</li><li>Consultoría Técnica: Te sentarás con clientes para realizar levantamiento de requerimientos, entender su arquitectura, proponer soluciones y destrabar bloqueos técnicos.</li><li>Entrega de Funcionalidades: Completar las tareas y funcionalidades asignadas dentro del plazo y con alta calidad. Asegurar que el código sea eficiente, mantenible y escalable.</li><li>Calidad del Código: Mantener altos estándares de calidad en el código, siguiendo las mejores prácticas de desarrollo. Contribuir a la reducción de errores y problemas mediante revisión de código y pruebas rigurosas.</li><li>Mejoramiento Continuo: Demostrar una mejora continua en habilidades técnicas y conocimiento del producto. Participar en la implementación de mejoras en procesos.</li><li>Satisfacción del Cliente: Contribuir al desarrollo de soluciones que cumplan o superen las expectativas del cliente. Responder de manera eficaz a los problemas y solicitudes del cliente.</li></ul>",
+    "desirable": "",
+    "benefits": "<p>Sabemos que el alto desempeño requiere de un gran balance. Por eso, diseñamos una propuesta de valor que cuida de ti y de los tuyos:</p><ul><li>🤸<strong> Work-Life Balance</strong>: Modelo de trabajo híbrido, flexibilidad horaria (aquí confiamos en tu responsabilidad), días de vacaciones adicionales para desconectarte y día libre por mudanza.</li><li>💖 <strong>We Care</strong>: Medio día libre en tu cumpleaños, en el de tus hij@s o cónyuge. Postnatal adicional para papás. Bono por matrimonio/unión civil, nacimiento y programa de referidos. Además, sabemos que tus mascotas también son familia, por eso te damos un día libre en caso de su partida.</li><li>✨<strong> Rankmi Vibes</strong>: Olvídate de los trajes corporativos, tenemos un dress code relajado, ambiente multicultural y trabajamos con metodologías ágiles en equipos multidisciplinarios.</li></ul><p>Si eres un eterno aprendiz, te mueve el dinamismo y quieres desafiar el statu quo del HR Tech, ¡queremos conocerte! 🚀</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 95,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Rankmi"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/dev-fullstack-ror-react-integraciones-rankmi-santiago"
+   }
+  },
+  {
+   "id": "desarrollador-a-full-stack-senior-factor-it-santiago-3250",
+   "attributes": {
+    "published_at": 1793935424,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "es",
+    "title": "Desarrollador/a Full-Stack Senior",
+    "description": "<ul><li>Formación profesional en Ingeniería de Sistemas, Informática, Computación o carreras afines.</li><li>Mínimo 5 años de experiencia en desarrollo de software.</li><li>Experiencia sólida en desarrollo frontend con React, Next.js o Vue.js.</li><li>Dominio de JavaScript y TypeScript.</li><li>Experiencia avanzada en desarrollo backend con Node.js y NestJS.</li><li>Experiencia en diseño, desarrollo e integración de APIs REST.</li><li>Manejo de bases de datos relacionales (SQL), idealmente PostgreSQL.</li><li>Experiencia utilizando herramientas de documentación y pruebas de APIs como Postman y Swagger.</li><li>Manejo de control de versiones con Git, preferiblemente Bitbucket.</li><li>Conocimientos de procesos CI/CD, idealmente Bitbucket Pipelines.</li><li>Conocimientos fundamentales de Google Cloud Platform (GCP).</li><li>Experiencia realizando pruebas unitarias o de integración con herramientas como Jest, Selenium, Cucumber o xUnit.</li></ul><p>Buscamos un perfil proactivo, autónomo y orientado a resultados, con sólida experiencia en desarrollo frontend y backend, capaz de construir soluciones escalables, eficientes y mantenibles. Trabajará en colaboración con equipos multidisciplinarios, transformando requerimientos de negocio en soluciones técnicas de calidad y participando en todo el ciclo de desarrollo de software.</p>",
+    "functions": "<p>En FactorIT estamos buscando un/a <strong>Desarrollador/a Full Stack Senior</strong> para integrarse a un equipo de desarrollo tecnológico, participando en el diseño, construcción, integración y mantenimiento de aplicaciones web y soluciones digitales.</p><ul><li>Diseñar, desarrollar y mantener aplicaciones web, construyendo soluciones tanto en frontend como en backend.</li><li>Desarrollar interfaces modernas, responsivas y escalables utilizando React, Next.js y TypeScript.</li><li>Implementar servicios backend, microservicios y lógica de negocio utilizando Node.js y NestJS.</li><li>Diseñar, consumir e integrar APIs REST, garantizando la comunicación eficiente entre sistemas internos y plataformas de terceros.</li><li>Trabajar con bases de datos relacionales, especialmente PostgreSQL, asegurando la correcta gestión y optimización de la información.</li><li>Participar en el diseño e implementación de arquitecturas basadas en microservicios, BFF y procesos asíncronos.</li><li>Colaborar con equipos UX/UI, líderes técnicos y de proyecto para convertir necesidades funcionales en soluciones tecnológicas.</li><li>Implementar pruebas unitarias y de integración para asegurar la calidad y confiabilidad del código.</li><li>Participar en procesos de integración y despliegue continuo (CI/CD), apoyando las liberaciones en ambientes de QA y producción.</li><li>Contribuir a la mejora continua de las aplicaciones, identificando oportunidades de optimización y buenas prácticas de desarrollo.</li></ul>",
+    "desirable": "<ul><li>Experiencia con React Native y/o Flutter para desarrollo de aplicaciones móviles.</li><li>Conocimientos de Google Cloud Platform, especialmente GKE, Cloud Run y Pub/Sub.</li><li>Experiencia con Docker, Helm y ArgoCD.</li><li>Conocimientos de despliegues en ambientes Cloud y On-Premise.</li><li>Experiencia con herramientas de monitoreo y visualización de métricas como Grafana.</li><li>Familiaridad con herramientas de análisis estático de código como SonarCloud.</li><li>Conocimientos de TypeORM y bases de datos SQL/NoSQL.</li><li>Experiencia con CMS como WordPress y Strapi (Headless CMS).</li><li>Conocimientos de Server Actions y arquitecturas orientadas a eventos.</li><li>Experiencia integrando aplicaciones con sistemas legacy.</li><li>Capacidad para interpretar y colaborar en diseños y maquetas desarrolladas en Figma.</li><li>Conocimientos de Google Analytics y Hotjar.</li></ul>",
+    "benefits": "<p>¡Únete a nuestro equipo!</p><p>Si te apasiona el desarrollo de soluciones tecnológicas, disfrutas trabajar con arquitecturas modernas y buscas nuevos desafíos profesionales, ¡queremos conocerte!</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 57,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Factor IT"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-full-stack-senior-factor-it-santiago-3250"
+   }
+  },
+  {
+   "id": "desarrollador-a-full-stack-agilesoft-spa-santiago-b072",
+   "attributes": {
+    "published_at": 1793885462,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "es",
+    "title": "Desarrollador/a Full-Stack DevOps",
+    "description": "<ul><li>Título profesional de Ingeniería en Informática, Computación, Sistemas o carrera afín.</li><li>Experiencia profesional como desarrollador/a <strong>Full-Stack</strong>, trabajando tanto en frontend como en backend.</li><li>Experiencia sólida en <strong>Java con Spring Boot</strong>, APIs REST y microservicios.</li><li>Conocimientos de <strong>Node.js</strong> para desarrollo backend y <strong>React</strong> para desarrollo frontend.</li><li>Experiencia o conocimientos prácticos en <strong>DevOps</strong>, incluyendo automatización, despliegues y administración de infraestructura.</li><li>Conocimientos de <strong>Terraform</strong> e infraestructura como código (IaC).</li><li>Administración y operación de sistemas <strong>Linux</strong>.</li><li>Experiencia o conocimientos en <strong>Docker y Kubernetes</strong>.</li><li>Manejo de herramientas y procesos <strong>CI/CD</strong> (GitLab CI, GitHub Actions, Jenkins o Azure DevOps).</li><li>Conocimientos de plataformas Cloud (<strong>AWS, Azure o GCP</strong>), redes, monitoreo y seguridad.</li><li>Manejo de Git y conocimientos de bases de datos relacionales y/o NoSQL.</li><li>Capacidad analítica, autonomía, proactividad, comunicación efectiva y trabajo en equipo.</li></ul>",
+    "functions": "<ul><li>Diseñar, desarrollar y mantener aplicaciones web Full-Stack, utilizando Java, Spring Boot, Node.js y React.</li><li>Desarrollar e integrar APIs REST y servicios basados en arquitecturas de microservicios.</li><li>Implementar y mantener procesos de automatización e integración y despliegue continuo (CI/CD).</li><li>Gestionar y aprovisionar infraestructura mediante Terraform, aplicando prácticas de infraestructura como código (IaC).</li><li>Administrar y configurar ambientes Linux, apoyando la operación y disponibilidad de las aplicaciones.</li><li>Implementar y gestionar contenedores y despliegues utilizando Docker y Kubernetes.</li><li>Participar en la configuración y administración de servicios en plataformas Cloud (AWS, Azure o GCP).</li><li>Monitorear aplicaciones e infraestructura, diagnosticar incidentes y resolver problemas de rendimiento y disponibilidad.</li><li>Aplicar buenas prácticas de seguridad, calidad de código y gestión de versiones.</li><li>Colaborar con el equipo técnico en la mejora continua de arquitecturas, procesos de desarrollo y operación tecnológica.</li></ul>",
+    "desirable": "",
+    "benefits": "<ul><li>Computadora de trabajo. </li><li>Modalidad: híbrida, con 1 día presencial a la semana en Santiago de Chile y el resto remoto.</li><li>Tipo de contrato: plazo fijo por 3 meses.</li><li>Posibilidad de extensión según desempeño, continuidad y necesidades del proyecto.</li><li>Integración a una nueva célula de trabajo, colaborando directamente con uno de nuestros clientes estratégicos.</li><li>Seguro complementario de Salud y Dental. (CHILE)</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 65,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Agilesoft SpA"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-full-stack-agilesoft-spa-santiago-b072"
+   }
+  },
+  {
+   "id": "desarrollador-full-stack-react-bc-tecnologia-santiago",
+   "attributes": {
+    "published_at": 1793884580,
+    "remote_modality": "hybrid",
+    "countries": [
+     "Chile"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Desarrollador Full-Stack React",
+    "description": "<ul><li>Experiencia sólida en TypeScript, React y Next.js (App Router).</li><li>Experiencia backend con Node.js y NestJS o frameworks equivalentes.</li><li>Dominio de PostgreSQL, SQL, ORM y migraciones de bases de datos.</li><li>Desarrollo e integración de APIs REST, webhooks y sistemas de mensajería.</li><li>Conocimientos de Server Components, caching y data fetching.</li><li>Experiencia con Git, Docker, CI/CD y pruebas automatizadas.</li><li>Conocimientos de transacciones, idempotencia y manejo de errores en sistemas distribuidos.</li><li>Autonomía técnica, capacidad de análisis y comunicación con áreas de negocio.</li></ul>",
+    "functions": "<ul><li>Desarrollar aplicaciones Full Stack utilizando React, Next.js, TypeScript y NestJS.</li><li>Diseñar y mantener APIs REST, microservicios y modelos de datos.</li><li>Implementar integraciones con SAP Business One, ecommerce, marketplaces, WMS y plataformas empresariales.</li><li>Desarrollar y optimizar bases de datos PostgreSQL, consultas SQL y migraciones.</li><li>Modernizar aplicaciones legacy, asegurando continuidad operacional.</li><li>Participar en proyectos de migración de infraestructura hacia Google Cloud.</li><li>Implementar pruebas automatizadas, CI/CD y buenas prácticas de desarrollo.</li><li>Diagnosticar y resolver incidentes productivos.</li><li>Incorporar herramientas de IA y MCP en procesos de desarrollo e integración.</li></ul>",
+    "desirable": "<ul><li>Google Cloud (Cloud Run, Cloud SQL, IAM, Secret Manager).</li><li>SAP Business One, ecommerce y marketplaces.</li><li>RabbitMQ y arquitectura hexagonal.</li><li>Integraciones con medios de pago y documentos tributarios electrónicos (DTE).</li><li>MCP, agentes de IA y function calling.</li><li>React Native y Kotlin.</li></ul>",
+    "benefits": "<ul><li>Participación en proyectos de modernización tecnológica e integración empresarial.</li><li>Trabajo con tecnologías modernas y arquitecturas escalables.</li><li>Uso habitual de herramientas de desarrollo asistido por IA, con acceso a Claude Code Max.</li><li>Oportunidad de participar en iniciativas de automatización e inteligencia artificial.</li></ul>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 52,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "BC Tecnología"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-full-stack-react-bc-tecnologia-santiago"
+   }
+  },
+  {
+   "id": "desarrollador-a-full-stack-frontend-datos-bc-tecnologia-remote",
+   "attributes": {
+    "published_at": 1793811368,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "lang_not_specified",
+    "title": "Desarrollador/a Full-Stack – Front-end & Datos",
+    "description": "<p>Título de Ingeniería Civil o Ingeniería de Ejecución, en sus diversas especialidades.</p><p>Al menos 2 años de experiencia en desarrollo de software.</p><p>Nivel avanzado en HTML (últimas versiones), CSS compatible con múltiples navegadores, JavaScript, AJAX y diseño adaptativo.</p><p>Experiencia con frameworks JavaScript MVC como AngularJS o Backbone.</p><p>Conocimientos de desarrollo web y móvil.</p><p>Conocimientos en Power BI, Datalake y procesos ETL.</p>",
+    "functions": "<p>Crear y modificar piezas de software por cambios y para la automatización de procesos. Programar código funcional, mantenible y de calidad en frontend y backend, en equipos ágiles junto al Product Owner y el líder técnico. Levantar y analizar requerimientos funcionales y técnicos, y proponer mejoras en procesos, sistemas y tecnologías. Desarrollar soluciones que hagan un uso eficiente de los recursos computacionales (memoria, disco y procesador). Realizar y mantener pruebas unitarias en cada sprint, y participar en la certificación de pruebas integrales. Validar las piezas de software creadas o modificadas en los distintos ambientes del banco.</p>",
+    "desirable": "<p>Experiencia en el sector bancario o financiero. Experiencia trabajando con metodologías ágiles (Scrum).</p>",
+    "benefits": "<p>Trabajo 100% remoto. Ser parte de proyectos tecnológicos en una de las instituciones más relevantes del sector financiero. Trabajar en equipos ágiles con estándares de calidad y arquitectura definidos. Desarrollar tu carrera combinando desarrollo de software y datos.</p><p>Modalidad: 100% remoto. Duración: proyecto con duración inicial de 4 meses, con posibilidad de extensión.</p><p>“Esta oferta laboral se rige bajo la Ley N.º 21.015, que incentiva la inclusión de personas con discapacidad al mundo laboral. Si requieres apoyo o alguna adaptación para realizar tu postulación, contáctanos al correo indicado en esta publicación”.</p>",
+    "min_salary": 2000,
+    "max_salary": 2400,
+    "applications_count": 99,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "BC Tecnología"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-full-stack-frontend-datos-bc-tecnologia-remote"
+   }
+  },
+  {
+   "id": "senior-full-stack-engineer-improving-remote",
+   "attributes": {
+    "published_at": 1793732847,
+    "remote_modality": "remote_local",
+    "countries": [
+     "Remoto"
+    ],
+    "lang": "en",
+    "title": "Senior Full-Stack Engineer",
+    "description": "<ul><li>5+ years of experience as a full-stack engineer and/or front-end engineer.</li><li>Hands-on experience with React and back-end development, including Java services and APIs.</li><li>Experience with Azure DevOps.</li><li>Comfort working under deadlines and adapting as project requirements evolve.</li><li>Strong verbal and written communication with team members and clients.</li><li>Collaborative mindset—willing to voice opinions and suggest improvements respectfully.</li></ul><p>We value engineers who can own problems end to end: from proposing the right approach, to reviewing code, to helping ensure stable production releases. If you enjoy working across front-end and back-end responsibilities and you bring clear, respectful communication, we’d love to meet you.</p>",
+    "functions": "<ul><li>Build modern, dynamic front-end experiences using React.</li><li>Develop back-end services and APIs to integrate cleanly across the stack.</li><li>Design solutions, propose approaches, and troubleshoot issues on the front end.</li><li>Participate in code reviews and support releases to production.</li><li>Collaborate with team members and stakeholders to align implementation with evolving project requirements.</li></ul>",
+    "desirable": "<ul><li>.NET experience (helpful because we may work across Java &amp; .NET services).</li></ul>",
+    "benefits": "<ul><li>Contrato a largo plazo.</li><li>100% remoto.</li><li>Vacaciones y PTOs.</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en línea.</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo.</li></ul><p>At Improving, we also emphasize a culture of teamwork, excellence, and fun, with open communication, personal growth, and shared rewards.</p>",
+    "min_salary": null,
+    "max_salary": null,
+    "applications_count": 170,
+    "company": {
+     "data": {
+      "attributes": {
+       "name": "Improving"
+      }
+     }
+    }
+   },
+   "links": {
+    "public_url": "https://www.getonbrd.com/jobs/senior-full-stack-engineer-improving-remote"
+   }
+  }
+ ]
+}

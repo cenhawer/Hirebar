@@ -26,7 +26,7 @@ let package = Package(
         .testTarget(name: "HirebarApplicationTests", dependencies: ["HirebarApplication", "HirebarDomain"]),
         .testTarget(name: "HirebarStorageTests", dependencies: ["HirebarApplication", "HirebarDomain", "HirebarStorage"]),
         .testTarget(name: "HirebarTelegramTests", dependencies: ["HirebarDomain", "HirebarTelegram"]),
-        .testTarget(name: "HirebarPortalsTests", dependencies: ["HirebarDomain", "HirebarPortals"]),
+        .testTarget(name: "HirebarPortalsTests", dependencies: ["HirebarApplication", "HirebarDomain", "HirebarPortals"]),
         .testTarget(name: "HirebarUseCaseTests", dependencies: adapters),
     ]
 )

@@ -23,3 +23,7 @@ public protocol ExecutionStateStore: Sendable {
 public protocol ExecutionAlerts: Sendable {
     func executionNeedsReview(agent: AgentID, verification: ExecutionVerification, pauseSaved: Bool)
 }
+
+public enum ActionLogFile {
+    public static func name(batch: String) -> String { "\(batch).acciones.json" }
+}

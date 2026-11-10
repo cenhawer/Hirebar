@@ -15,7 +15,7 @@ enum TaskProfiles {
         case .prospecting:
             return .draft(writablePaths: ["prospeccion/"])
         case .linkedInDraft:
-            return .draft(writablePaths: [(account ?? ContentAccountStore.defaultAccount()).relativeFolder + "/"])
+            return .draft(writablePaths: [(account ?? ContentAccount(id: ContentAccount.defaultIdentifier)).relativeFolder + "/"])
         case .profileUpdate:
             return .draft(writablePaths: ["perfil.json", "perfil.md", "hv/"])
         case .weeklyReport:

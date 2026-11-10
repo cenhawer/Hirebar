@@ -85,12 +85,26 @@ public struct FilePortalRepository: PortalRepository {
     public func active(for agent: AgentKind) -> [CustomPortal] { PortalStore.active(for: agent) }
 }
 
+public struct FileWorkspaceRepository: WorkspaceRepository {
+    public init() {}
+    public func prepare() { Paths.ensure() }
+    public func cleanUp() { Housekeeping.run() }
+}
+
+public struct FilePracticeLogRepository: PracticeLogRepository {
+    public init() {}
+    public func record(batch: String, agent: String, at date: Date, wouldSend: [Proposal]) throws {
+        try PracticeLog(batch: batch, agent: agent, at: date, wouldSend: wouldSend).save()
+    }
+}
+
 extension Repositories {
     public static var files: Repositories {
         Repositories(
             config: FileConfigRepository(), batches: FileBatchRepository(), agents: FileAgentRepository(),
             contentAccounts: FileContentAccountRepository(), metrics: FileMetricsRepository(), profile: FileProfileRepository(),
             quotas: FileQuotaRepository(), portals: FilePortalRepository(), prospecting: FileProspectingRepository(),
-            runState: DefaultsRunStateRepository())
+            runState: DefaultsRunStateRepository(), workspace: FileWorkspaceRepository(), practice: FilePracticeLogRepository(),
+            executionState: FileExecutionStateStore.standard)
     }
 }

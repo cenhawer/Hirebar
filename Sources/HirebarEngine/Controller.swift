@@ -11,9 +11,9 @@ import HirebarTelegram
 private let log = Log(.ai)
 
 public final class Controller {
-    let targetRules = TargetRulesFile.bundled()
+    let targetRules: TargetRules
     lazy var executionGuard = ExecutionGuard(
-        store: ExecutionApprovals.store, alerts: TelegramExecutionAlerts(notifier: notifier, agents: stores.agents), rules: targetRules)
+        store: stores.executionState, alerts: TelegramExecutionAlerts(notifier: notifier, agents: stores.agents), rules: targetRules)
     var unsavedPauses: [AgentID: AgentPause] = [:]
     public let telegram: Telegram
     public let notifier: Notifier
@@ -27,19 +27,23 @@ public final class Controller {
     let media: MediaRenderer
     public let stores: Repositories
 
-    public init(telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner, media: MediaRenderer) {
+    public init(
+        telegram: Telegram, stores: Repositories, clock: Clock, aiRunner: AIRunner, media: MediaRenderer, resources: EngineResources
+    ) {
+        targetRules = resources.targetRules
+        commandParser = resources.commands.map(CommandParser.init)
         self.clock = clock
         self.media = media
         self.aiRunner = aiRunner
         self.telegram = telegram
         self.stores = stores
         notifier = Notifier(telegram: telegram, config: stores.config, batches: stores.batches)
-        channel = ChannelSetup(settings: try? ChannelSettings.bundled(), telegram: .live(telegram), configs: stores.config, clock: clock)
+        channel = ChannelSetup(settings: resources.channel, telegram: .live(telegram), configs: stores.config, clock: clock)
     }
 
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }
     var prompts: AgentPrompts { AgentPrompts(stores: stores, ai: ai) }
-    var commandParser = (try? CommandVocabularyFile.bundled()).map(CommandParser.init)
+    var commandParser: CommandParser?
     static let noNewsMarker = "SIN_NOVEDADES"
     static let maxRunSeconds: TimeInterval = 3600
     static let authAlertEvery: TimeInterval = 3600
@@ -65,7 +69,7 @@ public final class Controller {
         if watchdog == nil {
             watchdog = clock.every(Self.watchdogInterval, tolerance: 0) { [weak self] in self?.stopIfStuck() }
         }
-        Paths.ensure()
+        stores.workspace.prepare()
         telegram.onMessage = { [weak self] message in self?.handle(message) }
         telegram.onTokenStateChange = { [weak self] in self?.channel.tokenStateChanged() }
         telegram.start()
@@ -349,7 +353,7 @@ public final class Controller {
         guard agent.practice else { return false }
         let items = executionGuard.approvedItems(batch: batch.id).map(\.proposal)
         do {
-            try PracticeLog(batch: batch.id, agent: kind.rawValue, at: Date(), wouldSend: items).save()
+            try stores.practice.record(batch: batch.id, agent: kind.rawValue, at: Date(), wouldSend: items)
         } catch {
             log.write("Práctica: no pude guardar lo que habría enviado \(batch.id): \(error.localizedDescription)")
         }
@@ -407,7 +411,7 @@ public final class Controller {
         let now = Date()
         if lastAuthAlert.map({ now.timeIntervalSince($0) > Self.authAlertEvery }) ?? true {
             lastAuthAlert = now
-            let expired = "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(ClaudeCLI.loginHint(ai.settings.kind))"
+            let expired = "La sesión de \(ai.settings.kind.title) se venció y no pude trabajar. \(aiRunner.loginHint(ai.settings.kind))"
             reply(expired + " Las listas de propuestas y postulaciones quedaron guardadas: responde \"si\" para reintentar la última.")
         }
     }
@@ -511,7 +515,7 @@ public final class Controller {
         let intake = ProposalIntake(window: Self.proposalSeenWindow, rules: targetRules).accept(
             proposals,
             allowed: TaskProfiles.allowedProposals(for: mode),
-            seen: ExecutionApprovals.store.seenProposals(),
+            seen: stores.executionState.seenProposals(),
             now: Date()
         )
         for proposal in intake.rejected {
@@ -522,7 +526,7 @@ public final class Controller {
         let batch = Batch(mode: execution, items: fresh.map { BatchItem($0) }, status: .pending)
         guard offer(batch, proposals: fresh, title: Self.proposalsTitle(for: mode, count: fresh.count)) else { return }
         do {
-            try ExecutionApprovals.store.saveSeenProposals(intake.seen)
+            try stores.executionState.saveSeenProposals(intake.seen)
         } catch {
             log.write("\(mode.rawValue): no pude guardar qué propuestas ya mostré: \(error.localizedDescription)")
         }
@@ -531,7 +535,7 @@ public final class Controller {
     @discardableResult
     private func offer(_ batch: Batch, proposals: [Proposal], title: String) -> Bool {
         do {
-            try ExecutionApprovals.store.saveProposals(proposals, batch: batch.id)
+            try stores.executionState.saveProposals(proposals, batch: batch.id)
         } catch {
             log.write("\(batch.mode.rawValue): no pude guardar la copia de las propuestas: \(error.localizedDescription)")
             reply("No pude guardar la lista para aprobar, así que no te la muestro: \(error.localizedDescription)")
@@ -608,7 +612,7 @@ public final class Controller {
         let plan: ExecutionPlan
         do {
             plan = try executionGuard.approve(
-                ExecutionApprovals.proposals(for: batch, items: chosen),
+                ExecutionApprovals.proposals(for: batch, items: chosen, store: stores.executionState),
                 batch: batch.id,
                 approvedBy: approvedBy,
                 agent: agentID,
@@ -638,7 +642,7 @@ public final class Controller {
         let ids = Set(held.map(\.proposal.id))
         let rest = Batch(mode: batch.mode, items: batch.items.filter { ids.contains($0.id) }, status: .pending)
         do {
-            try ExecutionApprovals.store.saveProposals(held.map(\.proposal), batch: rest.id)
+            try stores.executionState.saveProposals(held.map(\.proposal), batch: rest.id)
         } catch {
             reply("No pude separar los mensajes que necesitan tu revisión; quedan en la lista \(batch.id): \(error.localizedDescription)")
             return
@@ -663,9 +667,9 @@ public final class Controller {
     private func deferBeyondQuota(_ items: [BatchItem], from batch: Batch, running count: Int) {
         let rest = Batch(mode: batch.mode, items: items, status: .pending)
         let ids = Set(items.map(\.id))
-        let proposals = ExecutionApprovals.store.proposals(batch: batch.id).filter { ids.contains($0.id) }
+        let proposals = stores.executionState.proposals(batch: batch.id).filter { ids.contains($0.id) }
         do {
-            if !proposals.isEmpty { try ExecutionApprovals.store.saveProposals(proposals, batch: rest.id) }
+            if !proposals.isEmpty { try stores.executionState.saveProposals(proposals, batch: rest.id) }
         } catch {
             reply("Hoy queda cupo para \(count). No pude guardar los otros \(items.count) para mañana: vuelve a pedirlos cuando aparezcan.")
             return

@@ -28,13 +28,13 @@ public enum CVRenderer {
         Paths.workspaceFile("\(variant.file).pdf")
     }
 
-    public static func renderAll(_ profile: Profile, completion: @escaping (Result) -> Void) {
+    public static func renderAll(_ profile: Profile, completion: @escaping CVCompletion) {
         DispatchQueue.global(qos: .utility).async {
             var result = Result()
             guard let chrome = chromePath() else {
                 result.failed = profile.cvVariants.map(\.id)
                 log.write("Hojas de vida: no encontré Google Chrome para crear los PDF")
-                DispatchQueue.main.async { completion(result) }
+                Task { @MainActor in completion(result) }
                 return
             }
             let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("hirebar-chrome", isDirectory: true)
@@ -52,7 +52,7 @@ public enum CVRenderer {
                 }
             }
             log.write("Hojas de vida: \(result.made.count) PDF creados, faltan \(result.missing), fallaron \(result.failed)")
-            DispatchQueue.main.async { completion(result) }
+            Task { @MainActor in completion(result) }
         }
     }
 

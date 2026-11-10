@@ -2,116 +2,101 @@ import AppKit
 import HirebarDomain
 import WebKit
 
-/// Graba una escena HTML animada cuadro por cuadro con el motor web de macOS.
-/// Las animaciones CSS se pausan y se llevan al instante exacto de cada cuadro, así el video sale fluido
-/// sin importar lo que tarde cada captura. Se llama desde un hilo de fondo; el trabajo web corre en el principal.
+@MainActor
 public final class WebFrameCapture: NSObject, WKNavigationDelegate {
+    static let loadTimeout: Duration = .seconds(30)
     private let size: CGSize
     private var window: NSWindow?
     private var webView: WKWebView?
-    private var onLoad: ((Bool) -> Void)?
+    private var pendingLoad: CheckedContinuation<Bool, Never>?
+    private var loadNumber = 0
 
     public init(width: Int, height: Int) {
         size = CGSize(width: width, height: height)
     }
 
-    /// Carga la escena con su duración (variable CSS --dur, en segundos). Devuelve false si no cargó.
-    public func load(_ page: URL, seconds: Double) -> Bool {
-        let done = DispatchSemaphore(value: 0)
-        var ok = false
-        DispatchQueue.main.async {
-            let configuration = WKWebViewConfiguration()
-            configuration.userContentController.addUserScript(
-                WKUserScript(source: Self.prelude(seconds), injectionTime: .atDocumentStart, forMainFrameOnly: true))
-            let view = WKWebView(frame: NSRect(origin: .zero, size: self.size), configuration: configuration)
-            view.navigationDelegate = self
-            if self.window == nil {
-                let window = NSWindow(contentRect: NSRect(x: -30000, y: -30000, width: self.size.width, height: self.size.height),
-                                      styleMask: .borderless, backing: .buffered, defer: false)
-                window.isReleasedWhenClosed = false
-                window.ignoresMouseEvents = true
-                self.window = window
-            }
-            self.window?.contentView = view
-            self.window?.orderBack(nil)
-            self.webView = view
-            self.onLoad = { success in
-                ok = success
-                done.signal()
-            }
+    public func load(_ page: URL, seconds: Double) async -> Bool {
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController.addUserScript(
+            WKUserScript(source: Self.prelude(seconds), injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let view = WKWebView(frame: NSRect(origin: .zero, size: size), configuration: configuration)
+        view.navigationDelegate = self
+        hostingWindow().contentView = view
+        window?.orderBack(nil)
+        webView = view
+        loadNumber += 1
+        let number = loadNumber
+        let loaded = await withCheckedContinuation { continuation in
+            pendingLoad = continuation
             view.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
+            Task { [weak self] in
+                try? await Task.sleep(for: Self.loadTimeout)
+                guard let self, self.loadNumber == number else { return }
+                self.finishLoad(false)
+            }
         }
-        guard done.wait(timeout: .now() + 30) == .success, ok else { return false }
-        return run("await document.fonts.ready; return true;")
+        guard loaded else { return false }
+        return await run("await document.fonts.ready; return true;")
     }
 
-    /// Imagen de la escena en el segundo t.
-    func frame(at t: Double) -> CGImage? {
-        guard run("window.__hirebarSeek(t); return true;", ["t": t]) else { return nil }
-        let done = DispatchSemaphore(value: 0)
-        var image: CGImage?
-        DispatchQueue.main.async {
-            guard let view = self.webView else {
-                done.signal()
-                return
-            }
-            let configuration = WKSnapshotConfiguration()
-            configuration.afterScreenUpdates = false
-            let scale = self.window?.backingScaleFactor ?? 1
-            configuration.snapshotWidth = NSNumber(value: Double(self.size.width / scale))
-            view.takeSnapshot(with: configuration) { snapshot, _ in
-                image = snapshot?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-                done.signal()
-            }
-        }
-        guard done.wait(timeout: .now() + 10) == .success else { return nil }
-        return image
+    func frame(at second: Double) async -> CGImage? {
+        guard await run("window.__hirebarSeek(t); return true;", ["t": second]), let view = webView else { return nil }
+        let configuration = WKSnapshotConfiguration()
+        configuration.afterScreenUpdates = false
+        let scale = window?.backingScaleFactor ?? 1
+        configuration.snapshotWidth = NSNumber(value: Double(size.width / scale))
+        let snapshot = try? await view.takeSnapshot(configuration: configuration)
+        return snapshot?.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
 
     public func close() {
-        DispatchQueue.main.async {
-            self.webView?.navigationDelegate = nil
-            self.window?.contentView = nil
-            self.window?.orderOut(nil)
-            self.webView = nil
-            self.window = nil
-        }
-    }
-
-    private func run(_ body: String, _ arguments: [String: Any] = [:]) -> Bool {
-        let done = DispatchSemaphore(value: 0)
-        var ok = false
-        DispatchQueue.main.async {
-            guard let view = self.webView else {
-                done.signal()
-                return
-            }
-            view.callAsyncJavaScript(body, arguments: arguments, in: nil, in: .page) { result in
-                if case .success = result { ok = true }
-                done.signal()
-            }
-        }
-        guard done.wait(timeout: .now() + 10) == .success else { return false }
-        return ok
+        finishLoad(false)
+        webView?.navigationDelegate = nil
+        window?.contentView = nil
+        window?.orderOut(nil)
+        webView = nil
+        window = nil
     }
 
     public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        onLoad?(true)
-        onLoad = nil
+        finishLoad(true)
     }
 
     public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        onLoad?(false)
-        onLoad = nil
+        finishLoad(false)
     }
 
     public func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        onLoad?(false)
-        onLoad = nil
+        finishLoad(false)
     }
 
-    /// Se inyecta antes que la página: deja --dur y la función que lleva todas las animaciones al instante t.
-    public static func prelude(_ seconds: Double) -> String {
+    private func hostingWindow() -> NSWindow {
+        if let window { return window }
+        let created = NSWindow(
+            contentRect: NSRect(x: -30000, y: -30000, width: size.width, height: size.height), styleMask: .borderless,
+            backing: .buffered, defer: false)
+        created.isReleasedWhenClosed = false
+        created.ignoresMouseEvents = true
+        window = created
+        return created
+    }
+
+    private func finishLoad(_ loaded: Bool) {
+        pendingLoad?.resume(returning: loaded)
+        pendingLoad = nil
+    }
+
+    private func run(_ body: String, _ arguments: [String: Any] = [:]) async -> Bool {
+        guard let view = webView else { return false }
+        do {
+            _ = try await view.callAsyncJavaScript(body, arguments: arguments, contentWorld: .page)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    public nonisolated static func prelude(_ seconds: Double) -> String {
         """
         document.documentElement.style.setProperty('--dur', '\(seconds)');
         window.__hirebarSeek = function (t) {

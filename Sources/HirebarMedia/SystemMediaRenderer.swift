@@ -9,16 +9,18 @@ public struct SystemMediaRenderer: MediaRenderer {
         SlideRenderer.prepare(account)
     }
 
-    public func renderSlides(for account: ContentAccount, completion: @escaping (_ made: [URL], _ failed: Int) -> Void) {
+    public func renderSlides(for account: ContentAccount, completion: @escaping SlidesCompletion) {
         SlideRenderer.renderAll(account, completion: completion)
     }
 
-    public func renderVideoPreview(for account: ContentAccount, completion: @escaping (_ video: URL?, _ problem: String?) -> Void) {
+    public func renderVideoPreview(
+        for account: ContentAccount, completion: @escaping VideoCompletion
+    ) {
         ReelRenderer.renderPreview(account, completion: completion)
     }
 
     public func renderVideoWithVoice(
-        for account: ContentAccount, recording: URL, completion: @escaping (_ video: URL?, _ problem: String?) -> Void
+        for account: ContentAccount, recording: URL, completion: @escaping VideoCompletion
     ) {
         ReelRenderer.renderWithVoice(account, recording: recording, completion: completion)
     }
@@ -27,7 +29,7 @@ public struct SystemMediaRenderer: MediaRenderer {
         ReelRenderer.readingScript(account)
     }
 
-    public func renderCVs(for profile: Profile, completion: @escaping (CVRenderResult) -> Void) {
+    public func renderCVs(for profile: Profile, completion: @escaping CVCompletion) {
         CVRenderer.renderAll(profile, completion: completion)
     }
 

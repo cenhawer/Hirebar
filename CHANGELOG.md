@@ -6,6 +6,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 
 ### Agregado
 - **Actividad** (panel y menú): cada envío con qué se hizo, a quién, cuándo, qué agente y con qué texto; también lo que no coincidió con lo aprobado y lo que se habría enviado en práctica. Filtros por agente y período.
+- Ajustes → Datos y experiencia: datos personales, preferencias, empleos con logros y hojas de vida se editan sin tocar JSON; se conservan los demás campos de `perfil.json`.
 - Los textos de Hirebar están en un String Catalog (`Resources/Localizable.xcstrings`), listo para traducirse.
 - Cada tarea de la IA corre con el perfil que necesita: lectura (sin escribir ni actuar), redacción (escribe solo en su carpeta) o ejecución (actúa solo sobre lo aprobado).
 - Registro y verificación de cada envío contra lo aprobado; una acción que no coincide pone al agente en pausa, con aviso y botones para reanudar (`reanudar <agente>`).

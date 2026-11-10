@@ -107,12 +107,12 @@ flowchart TB
 |---|---|---|---|
 | `HirebarDomain` | Entidades y reglas puras: agentes y tareas, perfil y habilidades, avisos y su encaje, lotes, cupos, cuentas de contenido, portales propios, clasificación de avisos, alineación del guion con la voz | Librería estándar | Tipos públicos |
 | `HirebarApplication` | Casos de uso y puertos (sección 3.1) | `HirebarDomain` | Casos de uso; protocolos de los puertos |
-| `HirebarTelegram` | Recibir mensajes, botones y notas de voz; traducir comandos a casos de uso; enviar textos, fotos, video y documentos | `HirebarApplication` | `Messenger`, `CommandSource` |
+| `HirebarTelegram` | Recibir mensajes, botones y notas de voz; traducir comandos a casos de uso; enviar textos, fotos, video y documentos | `HirebarApplication` | `ChatChannel` |
 | `HirebarAI` | Lanzar el motor elegido con sus argumentos y variables `HIREBAR_*`; detectar sesión vencida | `HirebarApplication` | `AIRunner` |
-| `HirebarPortals` | Un adaptador por portal incluido y el cliente HTTP | `HirebarApplication` | `PortalSource`, `WebPageFetcher` |
+| `HirebarPortals` | Un adaptador por portal incluido y el cliente HTTP | `HirebarApplication` | `ListingSource`/`JobSource`, `WebPageFetcher` |
 | `HirebarStorage` | Archivos del workspace con `schemaVersion` y migraciones, Llavero, registro | `HirebarApplication` | Repositorios, `SecretStore`, `Logger` |
 | `HirebarMedia` | Render de carrusel, video y hojas de vida; preparar la voz con ffmpeg; reconocimiento de voz | `HirebarApplication` | `MediaRenderer`, `AudioProcessor`, `SpeechRecognizer` |
-| `HirebarNotifications` | Notificaciones de macOS cuando Telegram no está configurado o falla; abren el panel | `HirebarApplication` | `Messenger` |
+| `HirebarNotifications` | Notificaciones de macOS cuando Telegram no está configurado o falla; abren el panel | `HirebarApplication` | `DesktopNotifications` |
 | `Hirebar` | Panel, menú, Ajustes; raíz de composición: instancia adaptadores, los conecta a los puertos y arranca | Todos | Ejecutable |
 
 **Reglas de dependencia:**
@@ -129,10 +129,10 @@ flowchart TB
 
 | Puerto | Dirección | Para qué | Adaptador |
 |---|---|---|---|
-| `CommandSource` | Entrada | Órdenes, aprobaciones y notas de voz de la persona | `HirebarTelegram` |
-| `Messenger` | Salida | Avisos, listas con botones, fotos, video, documentos | `HirebarTelegram`; respaldo `HirebarNotifications` |
+| `ChatChannel` | Entrada y salida | Órdenes, aprobaciones y notas de voz de la persona; avisos, listas con botones, fotos, video y documentos | `HirebarTelegram` |
+| `DesktopNotifications` | Salida | Respaldo cuando el canal no está configurado o falla | `HirebarNotifications` |
 | `AIRunner` | Salida | Ejecutar una tarea con instrucciones, pedido y perfil (`read`, `draft` o `act`); devolver respuesta o fallo tipado | `HirebarAI` |
-| `PortalSource` | Salida | Buscar avisos en un portal incluido | `HirebarPortals` |
+| `ListingSource`/`JobSource` | Salida | Buscar avisos en un portal incluido | `HirebarPortals` |
 | `WebPageFetcher` | Salida | Leer la página de un aviso | `HirebarPortals` |
 | `MediaRenderer` | Salida | Carrusel, video corto y hojas de vida en PDF | `HirebarMedia` |
 | `AudioProcessor` | Salida | Preparar la nota de voz y detectar pausas | `HirebarMedia` |
@@ -169,14 +169,14 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 | Caso de uso | Agente | Puertos |
 |---|---|---|
-| Revisar portales incluidos | Empleo, Freelance | `PortalSource`, `WebPageFetcher`, repositorios, `Messenger` |
-| Revisar portales propios | Empleo, Freelance | `AIRunner` (solo lectura), repositorios, `Messenger` |
-| Aprobar o descartar un lote | Todos los que envían | Repositorios, `Messenger` |
-| Ejecutar un lote aprobado | Empleo, Freelance, Clientes, Contenido | `AIRunner` (con acciones), repositorios, `Messenger` |
+| Revisar portales incluidos | Empleo, Freelance | `ListingSource`/`JobSource`, `WebPageFetcher`, repositorios, `ChatChannel` |
+| Revisar portales propios | Empleo, Freelance | `AIRunner` (solo lectura), repositorios, `ChatChannel` |
+| Aprobar o descartar un lote | Todos los que envían | Repositorios, `ChatChannel` |
+| Ejecutar un lote aprobado | Empleo, Freelance, Clientes, Contenido | `AIRunner` (con acciones), repositorios, `ChatChannel` |
 | Hacer seguimientos | Freelance | `AIRunner`, repositorios |
-| Buscar clientes y preparar correos | Clientes | `AIRunner` (solo lectura), repositorios, `Messenger` |
-| Preparar publicación y video | Contenido | `AIRunner`, `MediaRenderer`, `Messenger` |
-| Narrar el video con la nota de voz | Contenido | `AudioProcessor`, `SpeechRecognizer`, `MediaRenderer`, `Messenger` |
+| Buscar clientes y preparar correos | Clientes | `AIRunner` (solo lectura), repositorios, `ChatChannel` |
+| Preparar publicación y video | Contenido | `AIRunner`, `MediaRenderer`, `ChatChannel` |
+| Narrar el video con la nota de voz | Contenido | `AudioProcessor`, `SpeechRecognizer`, `MediaRenderer`, `ChatChannel` |
 | Actualizar perfil y regenerar hojas de vida | Perfil | `AIRunner`, `MediaRenderer`, repositorios |
 | Armar el análisis semanal | Analista | `AIRunner`, repositorios |
 | Programar tareas por agente | Todos | `Clock`, repositorios |
@@ -185,11 +185,13 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 
 ### 3.3 Estado actual y destino de cada archivo
 
-Dominio, aplicación y adaptadores ya son targets propios (`HirebarStorage`, `HirebarTelegram`,
-`HirebarNotifications`, `HirebarPortals`, `HirebarMedia`, `HirebarAI`). `HirebarEngine` reúne los
-casos de uso de lotes, comandos, programación y radares; `Engine` es la raíz de composición del motor
-(crea Telegram con su almacén de secretos, el `Controller`, los radares y el programador, y los
-conecta) y la app recibe esa instancia. No hay singletons propios (test). Los casos de uso leen y escriben datos solo a
+Dominio, aplicación y adaptadores son targets propios (`HirebarStorage`, `HirebarTelegram`,
+`HirebarNotifications`, `HirebarPortals`, `HirebarMedia`, `HirebarAI`). `HirebarApplication` reúne
+los casos de uso de lotes, comandos, programación y radares, sin E/S ni imports de adaptadores
+(`ApplicationPurityTests`). La raíz de composición vive en la app: `Engine` crea Telegram con su
+almacén de secretos, los repositorios, el reloj, el runner de la IA, el renderizador, los portales y
+los recursos, arma el `Controller`, los radares y el programador, y los conecta. No hay singletons
+propios (test). Los casos de uso leen y escriben datos solo a
 través de los puertos de repositorio de `HirebarApplication`, agrupados en `Repositories`; la raíz
 de composición pasa las implementaciones de archivos de `HirebarStorage` (`Repositories.files`). El estado
 de corrida (vistos de los radares, turnos ya ejecutados y la cuenta que espera la nota de voz) entra
@@ -216,23 +218,23 @@ motor en `EngineResources`. Los mensajes con la persona pasan por `ChatChannel` 
 | `HirebarApplication/Paths.swift` · `HirebarStorage/Config.swift`, `BatchStore.swift`, `Paths.swift`, `Housekeeping.swift` | Application · Storage | `Housekeeping` usa la retención del caso de uso de mantenimiento |
 | `HirebarStorage/Keychain.swift` | Storage | `KeychainSecretStore` con `Security.framework`, puerto `SecretStore` |
 | `HirebarApplication/Log.swift` · `Hirebar/LogExport.swift` | Application · Hirebar | `os.Logger` por área y por agente; el botón "Registro" exporta los últimos días |
-| `HirebarTelegram/Telegram.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarEngine/Notifier.swift` | Telegram · Notifications · Application | `Messenger` y `CommandSource`; `Notifier` elige el canal y pasa a caso de uso en el paso 3 |
+| `HirebarTelegram/Telegram.swift`, `TelegramHTTP.swift` · `HirebarNotifications/MacNotifications.swift` · `HirebarApplication/Notifier.swift` | Telegram · Notifications · Application | `ChatChannel` y `DesktopNotifications`; `Notifier` elige el canal |
 | `HirebarPortals/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarAI/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
-| `HirebarPortals/ListingSource.swift` | Application + Portals | Protocolos a `PortalSource`; `Catalog` a la raíz de composición; `PageSlice` al adaptador |
+| `HirebarApplication/PortalSources.swift` · `HirebarPortals/PortalCatalog.swift` | Application · Portals | `ListingSource`, `JobSource` y `WebPageFetcher` en la aplicación; `PortalAccess.bundled`, `NetPageFetcher` y `PageSlice` en el adaptador |
 | `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
-| `HirebarEngine/Controller.swift` | Application | Se parte en los casos de uso de lotes |
-| `HirebarApplication/CommandParser.swift` · `HirebarEngine/Commands.swift` | Application · Telegram | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones pasan a casos de uso en la spec `017` |
-| `HirebarEngine/Scheduler.swift` | Application | Programar tareas, con `Clock` |
-| `HirebarEngine/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
-| `HirebarEngine/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |
+| `HirebarApplication/Controller.swift` | Application | Casos de uso de lotes; se parte en archivos menores en la spec `020` |
+| `HirebarApplication/CommandParser.swift` · `HirebarApplication/Commands.swift` | Application | El parser puro lee el vocabulario de `Resources/comandos.json`; las acciones son casos de uso del `Controller` |
+| `HirebarApplication/Scheduler.swift` | Application | Programar tareas, con `Clock` |
+| `HirebarApplication/Radar.swift`, `JobRadar.swift`, `FreelanceRadar.swift` | Application | Revisar portales incluidos |
+| `HirebarApplication/AgentPrompts.swift`, `ProfileRequests.swift` | Application | Armado del pedido para `AIRunner` |
 | `HirebarAI/EngineCheck.swift` | AI | Probar el motor elegido |
-| `HirebarEngine/AI.swift` · `HirebarAI/ClaudeCLI.swift`, `EngineProfiles.swift`, `ProtectedFiles.swift` | Application · AI | `AIRunner`: argumentos por perfil, comandos de Codex y Gemini, archivos protegidos |
+| `HirebarApplication/AI.swift` · `HirebarAI/ClaudeCLI.swift`, `EngineProfiles.swift`, `ProtectedFiles.swift` | Application · AI | `AIRunner`: argumentos por perfil, comandos de Codex y Gemini, archivos protegidos |
 | `HirebarMedia/ReelRenderer.swift`, `SlideRenderer.swift`, `CVRenderer.swift`, `WebFrameCapture.swift` | Media | `MediaRenderer` |
 | `HirebarMedia/AudioTools.swift`, `SystemTools.swift` | Media | `AudioProcessor`, con el ffmpeg del sistema y los límites de `Resources/herramientas.json` |
 | `HirebarMedia/VoiceListener.swift` · `HirebarDomain/ScriptAligner.swift` | Media · Domain | `VoiceListener` a `SpeechRecognizer`; alineación de la voz en el dominio |
-| `HirebarEngine/Engine.swift` | Hirebar | Arranque en la raíz de composición |
+| `Hirebar/Engine.swift`, `SystemClock.swift` | Hirebar | Raíz de composición y reloj del sistema |
 | `Hirebar/*` (8) | Hirebar | Interfaz; `PanelModel` y `SettingsModel` pasan a `@Observable` (spec `018`) |
 
 ## 4. Contratos
@@ -415,5 +417,5 @@ Los valores de esta tabla pasan a configuración (spec `024`).
 | La IA maneja el navegador en vez de APIs oficiales | Los portales no tienen API para postular | Un portal publica una API de postulación o bloquea la automatización |
 | Prerrequisitos del sistema en vez de empaquetarlos | Hoy todos los usuarios compilan con Xcode | Hirebar se distribuye a personas que no compilan (ADR en la fase 7) |
 | Archivos en vez de base de datos | Una persona, volumen bajo, datos editables a mano | Las consultas del Analista o del historial se vuelven lentas |
-| Telegram como único canal para aprobar desde el celular | Es donde la persona ya está; las notificaciones de macOS solo avisan y llevan al panel | Se agrega otro canal: entra como otro adaptador de `CommandSource` y `Messenger` |
+| Telegram como único canal para aprobar desde el celular | Es donde la persona ya está; las notificaciones de macOS solo avisan y llevan al panel | Se agrega otro canal: entra como otro adaptador de `ChatChannel` |
 | macOS 26 como mínimo | APIs actuales de SwiftUI, `@Observable` y Liquid Glass | `xcode-27` es estable en GitHub Actions: subir a macOS 27 |

@@ -89,7 +89,7 @@ public final class Scheduler {
         default: search = nil
         }
         let active = agent.tasks.filter { !Self.isIdlePortalScan($0.mode, portals: stores.portals) }
-        let tasks = active.compactMap { $0.nextStart(after: Date()) }.min()
+        let tasks = active.compactMap { $0.nextStart(after: clock.now()) }.min()
         return [search, tasks].compactMap { $0 }.min()
     }
 }

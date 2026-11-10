@@ -181,7 +181,7 @@ con navegador: las tareas que leen con Chrome solo corren con Claude Code.
 | Armar el análisis semanal | Analista | `AIRunner`, repositorios |
 | Programar tareas por agente | Todos | `Clock`, repositorios |
 | Verificar prerrequisitos | — | `AIRunner`, `AudioProcessor`, `SpeechRecognizer` |
-| Mantener datos (retención y limpieza) | — | Repositorios, `Clock` |
+| Mantener datos (retención y limpieza) | — | Repositorios con `RetentionPolicy` (`Resources/retencion.json`), `Clock` |
 
 ### 3.3 Estado actual y destino de cada archivo
 
@@ -200,7 +200,7 @@ temporizadores entran por `Clock`. La IA corre a través de `AIRunner`: `Process
 perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos antes de entregar el
 resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
 radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. Los recursos del
-bundle (`destinos.json`, `comandos.json`, `canal.json`, `motor.json`, `perfil-busqueda.json`) se validan en la aplicación y llegan al
+bundle (`destinos.json`, `comandos.json`, `canal.json`, `motor.json`, `perfil-busqueda.json`, `retencion.json`) se validan en la aplicación y llegan al
 motor en `EngineResources`. Los mensajes con la persona pasan por `ChatChannel` (Telegram) y el respaldo por
 `DesktopNotifications` (macOS); el `Controller` recibe todos sus adaptadores en `EngineAdapters`. Los
 coordinadores del motor y los puertos `Clock`, `AIRunner`, `MediaRenderer` y `ExecutionAlerts` están

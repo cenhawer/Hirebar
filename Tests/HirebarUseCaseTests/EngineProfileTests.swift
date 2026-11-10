@@ -1,5 +1,4 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals
@@ -8,7 +7,7 @@ import HirebarTelegram
 import XCTest
 
 @testable import HirebarAI
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class EngineProfileTests: XCTestCase {
     static let repositoryRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
@@ -145,8 +144,8 @@ final class EngineProfileTests: XCTestCase {
         for mode in [Mode.jobs, .freelance, .prospectingSend, .linkedInPublish] {
             XCTAssertEqual(TaskProfiles.profile(for: mode, account: nil), .act, mode.rawValue)
         }
-        XCTAssertFalse(TaskProfiles.needsBrowser(.weeklyReport, account: nil))
-        XCTAssertFalse(TaskProfiles.needsBrowser(.profileUpdate, account: nil))
+        XCTAssertFalse(TaskProfiles.needsBrowser(.weeklyReport, performanceCheckDue: false))
+        XCTAssertFalse(TaskProfiles.needsBrowser(.profileUpdate, performanceCheckDue: false))
     }
 
     func testReadingTasksCanOnlyProposeTheirOwnActions() {

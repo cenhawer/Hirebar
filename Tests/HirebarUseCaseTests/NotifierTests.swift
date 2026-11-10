@@ -1,10 +1,9 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 import HirebarStorage
 import XCTest
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class NotifierTests: XCTestCase {
     final class MemoryConfig: ConfigRepository, @unchecked Sendable {

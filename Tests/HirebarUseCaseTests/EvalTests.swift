@@ -1,5 +1,4 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
 import HirebarNotifications
 import HirebarPortals
@@ -8,7 +7,7 @@ import HirebarTelegram
 import XCTest
 
 @testable import HirebarAI
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 final class EvalTests: XCTestCase {
     static let root = EngineProfileTests.repositoryRoot

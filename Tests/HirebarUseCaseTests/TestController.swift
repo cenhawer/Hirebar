@@ -1,9 +1,8 @@
 import Foundation
-import HirebarApplication
 import HirebarStorage
 import HirebarTelegram
 
-@testable import HirebarEngine
+@testable import HirebarApplication
 
 extension Controller {
     static func forTests(aiRunner: AIRunner = TestAIRunner(), media: MediaRenderer = TestMediaRenderer()) -> Controller {

@@ -1,10 +1,5 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 public enum AutoSend {
     public static let agents: [AgentKind] = [.jobs, .freelance, .clients]

@@ -1,15 +1,10 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 private let log = Log(.portals)
 
 public final class JobRadar: Radar {
-    weak var controller: Controller?
+    public weak var controller: Controller?
     static let maxReviewed = 15
     static let maxStrong = 6
     static let maxStretchOnly = 2

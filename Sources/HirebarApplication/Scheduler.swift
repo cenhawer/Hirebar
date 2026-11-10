@@ -1,15 +1,10 @@
 import Foundation
-import HirebarApplication
 import HirebarDomain
-import HirebarNotifications
-import HirebarPortals
-import HirebarStorage
-import HirebarTelegram
 
 public final class Scheduler {
-    weak var controller: Controller?
-    weak var jobRadar: JobRadar?
-    weak var freelanceRadar: FreelanceRadar?
+    public weak var controller: Controller?
+    public weak var jobRadar: JobRadar?
+    public weak var freelanceRadar: FreelanceRadar?
 
     let stores: Repositories
     let clock: Clock

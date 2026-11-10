@@ -14,8 +14,10 @@ public enum VoiceListener {
             log.write("Contenido: sin permiso de reconocimiento de voz; el video se reparte por largo del texto")
             return []
         }
-        guard let recognizer = locales.lazy.compactMap({ SFSpeechRecognizer(locale: Locale(identifier: $0)) })
-            .first(where: { $0.isAvailable }) else {
+        guard
+            let recognizer = locales.lazy.compactMap({ SFSpeechRecognizer(locale: Locale(identifier: $0)) })
+                .first(where: { $0.isAvailable })
+        else {
             log.write("Contenido: el reconocimiento de voz en español no está disponible")
             return []
         }
@@ -33,8 +35,9 @@ public enum VoiceListener {
             guard !box.finished else { return }
             if let result {
                 for segment in result.bestTranscription.segments {
-                    box.segments[segment.timestamp] = WordTiming(word: segment.substring, start: segment.timestamp,
-                                                                 end: segment.timestamp + segment.duration)
+                    box.segments[segment.timestamp] = WordTiming(
+                        word: segment.substring, start: segment.timestamp,
+                        end: segment.timestamp + segment.duration)
                 }
             }
             if result?.isFinal == true || error != nil {
@@ -46,6 +49,22 @@ public enum VoiceListener {
         let words = box.segments.values.sorted { $0.start < $1.start }
         log.write("Contenido: reconocí \(words.count) palabras en tu audio")
         return words
+    }
+
+    public static func permissionState() -> PermissionState {
+        switch SFSpeechRecognizer.authorizationStatus() {
+        case .authorized: return .allowed
+        case .denied, .restricted: return .denied
+        default: return .undecided
+        }
+    }
+
+    public static func requestPermission() async -> PermissionState {
+        guard permissionState() == .undecided else { return permissionState() }
+        let status = await withCheckedContinuation { continuation in
+            SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
+        }
+        return status == .authorized ? .allowed : .denied
     }
 
     public static func authorize() -> Bool {

@@ -18,6 +18,7 @@ Un clic en el maletín de la barra abre el panel. Clic derecho abre el menú cl�
 
 ### Pie
 - **Informes:** análisis de cada semana.
+- **Actividad:** cada envío de los agentes: qué se hizo, a quién, cuándo y con qué texto. También muestra lo que no coincidió con lo aprobado y lo que un agente habría enviado en modo práctica. Puedes filtrar por agente y período.
 - **Registro:** lo que la app hizo en los últimos 3 días, minuto a minuto, con el agente o el área de cada línea. Mira aquí cuando algo no corre.
 - **Datos:** tu carpeta (`~/Library/Application Support/Hirebar/`).
 - **Ajustes:** ventana para configurar agentes y habilidades sin editar archivos.

@@ -1,15 +1,25 @@
 import Foundation
 import HirebarStorage
-import HirebarTelegram
 
 @testable import HirebarApplication
 
 @MainActor
 extension Controller {
-    static func forTests(aiRunner: AIRunner = TestAIRunner(), media: MediaRenderer = TestMediaRenderer()) -> Controller {
+    nonisolated static var repositoryResources: EngineResources {
+        let folder = EngineProfileTests.repositoryRoot.appendingPathComponent("Resources")
+        return EngineResources(
+            targetRules: (try? TargetRulesFile.load(from: folder.appendingPathComponent("destinos.json"))) ?? TargetRulesFile.fallback,
+            commands: try? CommandVocabularyFile.load(from: folder.appendingPathComponent("comandos.json")),
+            channel: try? ChannelSettings.load(from: folder.appendingPathComponent("canal.json")))
+    }
+
+    static func forTests(
+        stores: Repositories = .forTests(), chat: ChatChannel = TestChatChannel(), clock: Clock = TestClock(),
+        aiRunner: AIRunner = TestAIRunner(), media: MediaRenderer = TestMediaRenderer()
+    ) -> Controller {
         let adapters = EngineAdapters(
-            chat: TestChatChannel(), desktop: TestDesktopNotifications(), clock: TestClock(), aiRunner: aiRunner, media: media,
-            resources: .bundled())
-        return Controller(stores: .files, adapters: adapters)
+            chat: chat, desktop: TestDesktopNotifications(), clock: clock, aiRunner: aiRunner, media: media,
+            resources: repositoryResources)
+        return Controller(stores: stores, adapters: adapters)
     }
 }

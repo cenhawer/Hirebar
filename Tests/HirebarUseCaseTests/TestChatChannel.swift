@@ -11,6 +11,9 @@ final class TestChatChannel: ChatChannel, @unchecked Sendable {
     let remove: () -> Bool
     let begin: () -> Void
     var check: BotCheck = .unreachable
+    var downloads = false
+    private(set) var videos: [URL] = []
+    private(set) var downloadRequests = 0
 
     init(
         isConfigured: @escaping () -> Bool = { false },
@@ -44,9 +47,13 @@ final class TestChatChannel: ChatChannel, @unchecked Sendable {
         MainActor.assumeIsolated { completion?() }
     }
     func sendVideo(_ file: URL, caption: String, chatId: Int64, completion: (@MainActor @Sendable () -> Void)?) {
+        videos.append(file)
         MainActor.assumeIsolated { completion?() }
     }
-    func download(fileId: String, to target: URL, maxBytes: Int?) -> Bool { false }
+    func download(fileId: String, to target: URL, maxBytes: Int?) -> Bool {
+        downloadRequests += 1
+        return downloads
+    }
     func answerCallback(_ id: String, text: String?) {}
     func removeButtons(chatId: Int64, messageId: Int) {}
 }

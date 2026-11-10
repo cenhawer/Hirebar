@@ -4,6 +4,7 @@ import HirebarDomain
 
 final class TestMediaRenderer: MediaRenderer {
     var audio = AudioCheck.accepted
+    var voicedVideo: URL?
     private(set) var preparedSlides: [String] = []
 
     func prepareSlides(for account: ContentAccount) { preparedSlides.append(account.id) }
@@ -17,7 +18,7 @@ final class TestMediaRenderer: MediaRenderer {
     }
     func renderVideoWithVoice(
         for account: ContentAccount, recording: URL, completion: @escaping VideoCompletion
-    ) { completion(nil, nil) }
+    ) { completion(voicedVideo, voicedVideo == nil ? "sin detalle" : nil) }
     func readingScript(for account: ContentAccount) -> String? { nil }
     func renderCVs(for profile: Profile, completion: @escaping CVCompletion) {
         completion(CVRenderResult())

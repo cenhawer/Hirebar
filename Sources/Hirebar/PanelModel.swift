@@ -81,6 +81,7 @@ final class PanelModel {
     var onOpenActivity: (() -> Void)?
     var onOpenInbox: (() -> Void)?
     var pendingCount = 0
+    var update: UpdateInfo?
 
     func refresh() {
         pendingCount = engine.controller.pendingLists().count + engine.controller.pendingDrafts().count
@@ -94,10 +95,16 @@ final class PanelModel {
         telegram = ChannelStatusText.describe(channel)
         telegramReady = ChannelStatusText.isReady(channel)
         opensAtLogin = SMAppService.mainApp.status == .enabled
+        update = engine.controller.availableUpdate
         Task { @MainActor [weak self] in
             guard let self else { return }
             pendingSetup = SetupChecklist.pending(await SetupFacts.current(engine: engine, permissions: permissions))
         }
+    }
+
+    func openUpdate() {
+        guard let url = update.flatMap({ URL(string: $0.url) }) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     private func card(_ kind: AgentKind, running: AgentKind?, pauseReason: String?) -> AgentCardData {

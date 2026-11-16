@@ -13,7 +13,7 @@ struct SetupAssistantView: View {
                 .foregroundStyle(.secondary)
             Text(title).font(.title2.weight(.semibold))
             content
-            Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             HStack {
                 Button("Atrás") { model.back() }
                     .disabled(model.page == .welcome)

@@ -9,7 +9,7 @@ public enum ProfileDocumentFailure: LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .newerVersion: return String(localized: "perfil.json es de una versión más nueva de Hirebar")
-        case .unreadable: return String(localized: "perfil.json no es JSON válido")
+        case .unreadable: return String(localized: "Tu perfil quedó dañado y no se pudo leer")
         }
     }
 }

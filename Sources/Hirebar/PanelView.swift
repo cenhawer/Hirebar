@@ -20,23 +20,30 @@ struct PanelView: View {
         AgentSection(id: String(localized: "Tú"), kinds: [.profile, .analyst]),
     ]
 
+    private static let maxAgentListHeight: CGFloat = 420
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .padding(.horizontal, 14)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-            ForEach(sections) { section in
-                Text(section.id)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 14)
-                    .padding(.top, 8)
-                    .padding(.bottom, 2)
-                ForEach(model.agents.filter { section.kinds.contains($0.id) }) { agent in
-                    AgentRow(agent: agent, model: model)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(sections) { section in
+                        Text(section.id)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 14)
+                            .padding(.top, 8)
+                            .padding(.bottom, 2)
+                        ForEach(model.agents.filter { section.kinds.contains($0.id) }) { agent in
+                            AgentRow(agent: agent, model: model)
+                        }
+                    }
                 }
             }
+            .frame(maxHeight: Self.maxAgentListHeight)
             Divider()
                 .padding(.top, 8)
             footer

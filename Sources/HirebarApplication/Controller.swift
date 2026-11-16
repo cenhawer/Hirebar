@@ -21,6 +21,8 @@ public final class Controller {
     let aiRunner: AIRunner
     let media: MediaRenderer
     public let stores: Repositories
+    let release: GitHubReleaseSettings?
+    public var availableUpdate: UpdateInfo?
 
     public init(stores: Repositories, adapters: EngineAdapters) {
         let resources = adapters.resources
@@ -29,11 +31,19 @@ public final class Controller {
         media = adapters.media
         targetRules = resources.targetRules
         policy = resources.policy
+        release = resources.release
         commandParser = resources.commands.map(CommandParser.init)
         chat = adapters.chat
         self.stores = stores
         notifier = Notifier(chat: adapters.chat, desktop: adapters.desktop, config: stores.config, batches: stores.batches)
         channel = ChannelSetup(settings: resources.channel, chat: adapters.chat, configs: stores.config, clock: clock)
+    }
+
+    public func checkForUpdate(current: String, fetcher: WebPageFetcher) {
+        guard let release else { return }
+        Task { @MainActor in
+            self.availableUpdate = await UpdateChecker.check(settings: release, current: current, fetcher: fetcher)
+        }
     }
 
     public var ai: AI { AI(settings: stores.config.load().aiEngine) }

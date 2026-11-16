@@ -81,10 +81,11 @@ public struct EngineResources: Sendable {
     public let policy: EnginePolicy
     public let searchDefaults: SearchProfile
     public let retention: RetentionPolicy
+    public let release: GitHubReleaseSettings?
 
     public init(
         targetRules: TargetRules, commands: CommandVocabulary?, channel: ChannelSettings?, policy: EnginePolicy,
-        searchDefaults: SearchProfile, retention: RetentionPolicy
+        searchDefaults: SearchProfile, retention: RetentionPolicy, release: GitHubReleaseSettings? = nil
     ) {
         self.searchDefaults = searchDefaults
         self.retention = retention
@@ -92,5 +93,6 @@ public struct EngineResources: Sendable {
         self.commands = commands
         self.channel = channel
         self.policy = policy
+        self.release = release
     }
 }

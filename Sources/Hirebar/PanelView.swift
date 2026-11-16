@@ -176,13 +176,15 @@ struct AgentRow: View {
                 .contentShape(Rectangle())
                 .onTapGesture { expanded.toggle() }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel(AgentAccessibility.rowLabel(
-                    name: agent.name,
-                    enabled: agent.enabled,
-                    working: agent.working,
-                    pauseReason: agent.pauseReason,
-                    next: agent.next
-                ))
+                .accessibilityLabel(
+                    AgentAccessibility.rowLabel(
+                        name: agent.name,
+                        enabled: agent.enabled,
+                        working: agent.working,
+                        pauseReason: agent.pauseReason,
+                        next: agent.next
+                    )
+                )
                 .accessibilityAddTraits(.isButton)
 
                 Toggle("", isOn: Binding(get: { agent.enabled }, set: { _ in model.toggleEnabled(agent.id) }))

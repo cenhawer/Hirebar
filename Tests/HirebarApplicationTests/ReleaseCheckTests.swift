@@ -35,30 +35,35 @@ private struct FakeFetcher: WebPageFetcher {
 }
 
 final class UpdateCheckerTests: XCTestCase {
-    let settings = try! GitHubReleaseSettings.decode(
-        Data(#"{"schemaVersion": 1, "owner": "cenhawer", "repo": "Hirebar"}"#.utf8))
+    func settings() throws -> GitHubReleaseSettings {
+        try GitHubReleaseSettings.decode(Data(#"{"schemaVersion": 1, "owner": "cenhawer", "repo": "Hirebar"}"#.utf8))
+    }
 
-    func testNewerReleaseReturnsInfo() async {
+    func testNewerReleaseReturnsInfo() async throws {
+        let settings = try settings()
         let json = #"{"tag_name": "v0.3.0", "html_url": "https://github.com/cenhawer/Hirebar/releases/tag/v0.3.0"}"#
         let fetcher = FakeFetcher(payload: Data(json.utf8))
         let info = await UpdateChecker.check(settings: settings, current: "0.2.0", fetcher: fetcher)
         XCTAssertEqual(info, UpdateInfo(version: "v0.3.0", url: "https://github.com/cenhawer/Hirebar/releases/tag/v0.3.0"))
     }
 
-    func testSameVersionReturnsNil() async {
+    func testSameVersionReturnsNil() async throws {
+        let settings = try settings()
         let json = #"{"tag_name": "v0.2.0", "html_url": "https://github.com/cenhawer/Hirebar/releases/tag/v0.2.0"}"#
         let fetcher = FakeFetcher(payload: Data(json.utf8))
         let info = await UpdateChecker.check(settings: settings, current: "0.2.0", fetcher: fetcher)
         XCTAssertNil(info)
     }
 
-    func testNoNetworkReturnsNil() async {
+    func testNoNetworkReturnsNil() async throws {
+        let settings = try settings()
         let fetcher = FakeFetcher(payload: nil)
         let info = await UpdateChecker.check(settings: settings, current: "0.2.0", fetcher: fetcher)
         XCTAssertNil(info)
     }
 
-    func testInvalidJSONReturnsNil() async {
+    func testInvalidJSONReturnsNil() async throws {
+        let settings = try settings()
         let fetcher = FakeFetcher(payload: Data("not json".utf8))
         let info = await UpdateChecker.check(settings: settings, current: "0.2.0", fetcher: fetcher)
         XCTAssertNil(info)

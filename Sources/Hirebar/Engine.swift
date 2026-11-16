@@ -16,11 +16,15 @@ public final class Engine {
     public let scheduler: Scheduler
     public let activity: ActivityRepository
     let runState: FileRunStateRepository
+    let clock: Clock
+    let updateFetcher = NetPageFetcher()
+    let currentVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0"
 
     public init(resources: EngineResources) {
         let stores = Repositories.files(searchDefaults: resources.searchDefaults, retention: resources.retention)
         activity = FileExecutionStateStore.standard
         let clock = SystemClock()
+        self.clock = clock
         runState = FileRunStateRepository(claimRetention: resources.retention.claims)
         telegram = Telegram(secrets: KeychainSecretStore(), offsets: runState)
         let adapters = EngineAdapters(
@@ -50,6 +54,17 @@ public final class Engine {
         freelanceRadar.start()
         jobRadar.start()
         scheduler.start()
+        scheduleUpdateCheck()
         Log.write("Hirebar iniciado")
+    }
+
+    private static let updateCheckInterval: TimeInterval = 86_400
+
+    private func scheduleUpdateCheck() {
+        let check: @MainActor () -> Void = { [weak controller, updateFetcher, currentVersion] in
+            controller?.checkForUpdate(current: currentVersion, fetcher: updateFetcher)
+        }
+        check()
+        _ = clock.every(Self.updateCheckInterval, tolerance: 3_600, check)
     }
 }

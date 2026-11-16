@@ -28,7 +28,7 @@ struct PanelView: View {
                 .padding(.bottom, 8)
             ForEach(sections) { section in
                 Text(section.id)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 14)
                     .padding(.top, 8)
@@ -49,16 +49,19 @@ struct PanelView: View {
     private var header: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hirebar").font(.system(size: 13, weight: .semibold))
+                Text("Hirebar").font(.subheadline.weight(.semibold))
                 HStack(spacing: 5) {
-                    Circle()
-                        .fill(model.claudeBusy ? Color.orange : Color.green)
-                        .frame(width: 6, height: 6)
+                    Image(systemName: model.claudeBusy ? "circle.fill" : "checkmark.circle.fill")
+                        .font(.system(size: 6))
+                        .foregroundStyle(model.claudeBusy ? Color.orange : Color.green)
+                        .accessibilityHidden(true)
                     Text("\(model.aiName) \(model.claude)")
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(AgentAccessibility.engineBusyLabel(busy: model.claudeBusy) + ", \(model.aiName) \(model.claude)")
             }
             Spacer()
             Button {
@@ -71,8 +74,9 @@ struct PanelView: View {
                 }
             }
             .buttonStyle(.borderless)
-            .font(.system(size: 11))
+            .font(.caption)
             .help(model.telegram)
+            .accessibilityLabel(AgentAccessibility.telegramLabel(ready: model.telegramReady, status: model.telegram))
         }
     }
 
@@ -90,7 +94,7 @@ struct PanelView: View {
                 model.editSettings(nil)
             } label: {
                 Label("Ajustes", systemImage: "slider.horizontal.3")
-                    .font(.system(size: 11))
+                    .font(.caption)
             }
             .buttonStyle(.borderless)
             Menu {
@@ -122,13 +126,14 @@ struct FooterButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 12))
+                .font(.footnote)
                 .frame(width: 26, height: 22)
                 .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(hovering ? 0.08 : 0)))
         }
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
         .help(help)
+        .accessibilityLabel(help)
         .onHover { hovering = $0 }
     }
 }
@@ -142,37 +147,44 @@ struct AgentRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                Image(systemName: AgentStyle.symbol(agent.id))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(agent.enabled ? AgentStyle.tint(agent.id) : Color.secondary)
-                    .frame(width: 18)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(agent.name)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(agent.enabled ? Color.primary : Color.secondary)
-                    Text(agent.purpose)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Image(systemName: AgentStyle.symbol(agent.id))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(agent.enabled ? AgentStyle.tint(agent.id) : Color.secondary)
+                        .frame(width: 18)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(agent.name)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(agent.enabled ? Color.primary : Color.secondary)
+                        Text(agent.purpose)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 6)
+                    Text(agent.next)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(agent.working || agent.pauseReason != nil ? Color.orange : Color.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                    Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 10)
                 }
-                Spacer(minLength: 6)
-                Text(agent.next)
-                    .font(.system(size: 11).monospacedDigit())
-                    .foregroundStyle(agent.working || agent.pauseReason != nil ? Color.orange : Color.secondary)
-                    .lineLimit(1)
-                    .fixedSize()
+                .contentShape(Rectangle())
+                .onTapGesture { expanded.toggle() }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(AgentAccessibility.rowLabel(name: agent.name, enabled: agent.enabled, working: agent.working, pauseReason: agent.pauseReason, next: agent.next))
+                .accessibilityAddTraits(.isButton)
+
                 Toggle("", isOn: Binding(get: { agent.enabled }, set: { _ in model.toggleEnabled(agent.id) }))
                     .toggleStyle(.switch)
                     .labelsHidden()
                     .controlSize(.mini)
-                Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.tertiary)
-                    .frame(width: 10)
+                    .accessibilityLabel(AgentAccessibility.toggleLabel(name: agent.name, enabled: agent.enabled))
             }
-            .contentShape(Rectangle())
-            .onTapGesture { expanded.toggle() }
 
             if expanded {
                 details
@@ -194,7 +206,7 @@ struct AgentRow: View {
             if let reason = agent.pauseReason {
                 HStack(spacing: 8) {
                     Label("En pausa: \(reason)", systemImage: "pause.circle.fill")
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer()
@@ -203,11 +215,11 @@ struct AgentRow: View {
                 }
             }
             Text(agent.status)
-                .font(.system(size: 11))
+                .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
             if !agent.stats.isEmpty {
                 Text(agent.stats.joined(separator: " · "))
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -215,12 +227,12 @@ struct AgentRow: View {
                 if agent.canAutoApprove {
                     Toggle("Envío automático", isOn: Binding(get: { agent.autoApprove }, set: { _ in model.toggleAutoApprove(agent.id) }))
                         .toggleStyle(.checkbox)
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .fixedSize()
                 }
                 Toggle("Práctica", isOn: Binding(get: { agent.practice }, set: { _ in model.togglePractice(agent.id) }))
                     .toggleStyle(.checkbox)
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .fixedSize()
                     .help("Hace todo menos enviar y te cuenta lo que habría hecho")
                 Spacer()

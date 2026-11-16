@@ -203,6 +203,7 @@ struct ChannelSettingsView: View {
             Button("Abrir @BotFather") { model.openBotFather() }
             HStack {
                 SecureField("123456789:AA…", text: $model.token)
+                    .textFieldStyle(.roundedBorder)
                     .onSubmit { model.checkToken() }
                 Button("Comprobar") { model.checkToken() }
                     .disabled(model.checking || model.token.isEmpty)

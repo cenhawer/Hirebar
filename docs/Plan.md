@@ -140,7 +140,7 @@ Cada spec sigue el ciclo `/speckit-specify` → `/speckit-clarify` → `/speckit
 | 5 | `029-politica-datos` | Retención definida para historiales, postulaciones y grabaciones de voz (`grabacion.*`), con borrado automático |
 | 6 | `030-accesibilidad` | VoiceOver lee todos los controles; el estado nunca depende solo del color; fuentes semánticas |
 | 6 | `031-panel-uso` | Zonas de clic separadas en la fila del agente; scroll con altura máxima; copy sin jerga |
-| 7 | `032-firma-notarizacion` | App firmada con Developer ID y notarizada; Gatekeeper no la bloquea |
+| 7 | `032-firma-notarizacion` | App firmada ad-hoc/Apple Development (sin Developer ID de pago, D8); Gatekeeper puede bloquearla en otra Mac |
 | 7 | `033-aviso-version` | La app avisa de releases nuevos en GitHub sin dependencias externas |
 
 ## 3. Cierre (por fase)

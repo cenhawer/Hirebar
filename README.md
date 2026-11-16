@@ -23,6 +23,13 @@ scripts/bundle.sh --install
 
 Compila, copia la app a `~/Applications/Hirebar.app` y la abre. Aparece un maletín en la barra de menú.
 
+Hirebar se firma con el certificado gratis de Xcode (Apple Development) o, sin ese certificado,
+ad-hoc. No está notarizada: notarizar con Apple requiere una cuenta de pago del Apple Developer
+Program, que este proyecto no tiene. Eso basta para correrla en la misma Mac donde se compiló; si la
+copias a otra Mac, Gatekeeper puede bloquearla con "no se puede abrir porque su desarrollador no
+pudo verificarse". Para abrirla igual: clic derecho sobre `Hirebar.app` → **Abrir**, o en la terminal
+`xattr -dr com.apple.quarantine ~/Applications/Hirebar.app`.
+
 | Comando | Qué hace |
 |---|---|
 | `scripts/bundle.sh` | Solo arma `dist/Hirebar.app`. |

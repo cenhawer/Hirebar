@@ -48,7 +48,7 @@ public enum ProfileEditor {
         var root: [String: Any] = [:]
         if let data = try? Data(contentsOf: url) {
             guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return .failed(String(localized: "perfil.json no es JSON válido"))
+                return .failed(String(localized: "Tu perfil quedó dañado y no se pudo leer"))
             }
             root = object
         }

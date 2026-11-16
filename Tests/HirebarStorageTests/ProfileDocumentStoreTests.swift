@@ -73,4 +73,8 @@ final class ProfileDocumentStoreTests: XCTestCase {
         }
         XCTAssertEqual(try Data(contentsOf: file), newer)
     }
+
+    func testTheUnreadableMessageDoesNotNameTheFileFormat() {
+        XCTAssertEqual(ProfileDocumentFailure.unreadable.errorDescription, "Tu perfil quedó dañado y no se pudo leer")
+    }
 }

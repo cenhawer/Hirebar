@@ -35,7 +35,7 @@ struct PanelView: View {
                 Divider()
             }
             if let update = model.update {
-                updateBanner(update)
+                UpdateBanner(update: update) { model.openUpdate() }
                     .padding(.horizontal, 14)
                     .padding(.bottom, 8)
             }
@@ -96,21 +96,6 @@ struct PanelView: View {
             .help(model.telegram)
             .accessibilityLabel(AgentAccessibility.telegramLabel(ready: model.telegramReady, status: model.telegram))
         }
-    }
-
-    private func updateBanner(_ update: UpdateInfo) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "arrow.down.circle.fill")
-                .foregroundStyle(Color.blue)
-            Text("Hay una versión nueva: \(update.version)")
-                .font(.caption)
-            Spacer()
-            Button(String(localized: "Ver")) { model.openUpdate() }
-                .controlSize(.small)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue.opacity(0.1)))
     }
 
     private var footer: some View {

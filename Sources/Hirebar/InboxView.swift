@@ -34,6 +34,7 @@ struct InboxView: View {
 struct ListCard: View {
     let list: InboxList
     @Bindable var model: InboxModel
+    @State private var confirmingDiscard = false
 
     var body: some View {
         ForEach(list.items) { item in
@@ -61,7 +62,7 @@ struct ListCard: View {
             .padding(.vertical, 4)
         }
         HStack {
-            Button("Descartar", role: .destructive) { model.discard(list) }
+            Button("Descartar", role: .destructive) { confirmingDiscard = true }
             Spacer()
             Button("Aprobar elegidos (\(model.selection.count(in: list.id)))") { model.approveSelected(list) }
                 .disabled(model.selection.picks(for: list) == nil)
@@ -69,12 +70,22 @@ struct ListCard: View {
                 .buttonStyle(.borderedProminent)
         }
         .padding(.vertical, 4)
+        .confirmationDialog(
+            "¿Descartar esta lista?", isPresented: $confirmingDiscard, titleVisibility: .visible
+        ) {
+            Button("Descartar", role: .destructive) { model.discard(list) }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Se pierden los \(list.items.count) elementos revisados de esta lista.")
+        }
     }
 }
 
 struct DraftCard: View {
     let draft: InboxDraft
     let model: InboxModel
+    @State private var confirmingSkip = false
+    @State private var confirmingPublish = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -100,12 +111,28 @@ struct DraftCard: View {
                     .accessibilityLabel(Text("Video de la publicación"))
             }
             HStack {
-                Button("No publicar", role: .destructive) { model.skip(draft) }
+                Button("No publicar", role: .destructive) { confirmingSkip = true }
                 Spacer()
-                Button("Publicar") { model.publish(draft) }
+                Button("Publicar") { confirmingPublish = true }
                     .buttonStyle(.borderedProminent)
             }
         }
         .padding(.vertical, 4)
+        .confirmationDialog(
+            "¿Descartar esta publicación?", isPresented: $confirmingSkip, titleVisibility: .visible
+        ) {
+            Button("No publicar", role: .destructive) { model.skip(draft) }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("No se publica y se pierde el borrador de \(draft.title).")
+        }
+        .confirmationDialog(
+            "¿Publicar ahora?", isPresented: $confirmingPublish, titleVisibility: .visible
+        ) {
+            Button("Publicar") { model.publish(draft) }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Se publica de inmediato en \(draft.title) y no se puede deshacer.")
+        }
     }
 }

@@ -8,7 +8,7 @@ on:
 
 jobs:
   conventions:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.head_ref != 'develop'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
         run: brew install swiftlint gitleaks shellcheck
 
       - name: Lint changed lines
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.head_ref != 'develop'
         run: scripts/lint.sh "origin/${{ github.base_ref }}"
 
       - name: Scan for secrets

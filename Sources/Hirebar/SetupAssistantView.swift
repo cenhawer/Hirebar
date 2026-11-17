@@ -49,7 +49,10 @@ struct SetupAssistantView: View {
         case .channel: ChannelSettingsView(model: channel)
         case .agents: agentsStep
         case .permissions: permissionsStep
-        case .done: SetupChecklistList(pending: model.pending, emptyText: "Todo listo: Hirebar ya puede trabajar.")
+        case .done:
+            SetupChecklistList(
+                pending: model.pending, emptyText: "Todo listo: Hirebar ya puede trabajar.",
+                onOpen: { model.jump(to: $0) })
         }
     }
 

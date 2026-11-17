@@ -108,13 +108,6 @@ struct PanelView: View {
             FooterButton(symbol: "list.bullet", help: String(localized: "Registro")) { model.openLog() }
             FooterButton(symbol: "folder", help: String(localized: "Carpeta de datos")) { model.open(Paths.root) }
             Spacer()
-            Button {
-                model.editSettings(nil)
-            } label: {
-                Label("Ajustes", systemImage: "slider.horizontal.3")
-                    .font(.caption)
-            }
-            .buttonStyle(.borderless)
             Menu {
                 Button("Ajustes…") { model.editSettings(nil) }
                 Button("Cuentas de contenido…") { model.editContentAccounts() }

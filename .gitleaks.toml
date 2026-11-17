@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders del perfil de ejemplo y fixtures de tests"
+paths = [
+  '''^Resources/inicial/''',
+  '''^Tests/Fixtures/''',
+]

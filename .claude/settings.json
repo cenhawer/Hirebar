@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.p12)",
+      "Read(~/Library/Application Support/Hirebar/**)"
+    ]
+  }
+}

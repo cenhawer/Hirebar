@@ -1,6 +1,10 @@
 import AppKit
-import HirebarCore
-import HirebarEngine
+import HirebarApplication
+import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import ServiceManagement
 import SwiftUI
 
@@ -18,10 +22,12 @@ struct AgentCardData: Identifiable {
     let next: String
     let enabled: Bool
     let autoApprove: Bool
+    let practice: Bool
     let working: Bool
     let stats: [String]
     let sources: [SourceToggle]
     let schedule: [String]
+    let pauseReason: String?
 
     var canAutoApprove: Bool { [.jobs, .freelance, .clients].contains(id) }
 }
@@ -50,73 +56,100 @@ enum AgentStyle {
     }
 }
 
-final class PanelModel: ObservableObject {
-    @Published var agents: [AgentCardData] = []
-    @Published var claude = "en espera"
-    @Published var aiName = "Claude"
-    @Published var claudeBusy = false
-    @Published var telegram = ""
-    @Published var telegramReady = false
-    @Published var opensAtLogin = false
+@Observable
+final class PanelModel {
+    let engine: Engine
+    let permissions: SystemPermissions
 
-    var onConfigureTelegram: (() -> Void)?
-    var onSendTest: (() -> Void)?
-    var onForgetChat: (() -> Void)?
-    var onQuit: (() -> Void)?
-    var onOpenSettings: ((SettingsPage?) -> Void)?
-
-    func refresh() {
-        let running = Controller.shared.runningAgent
-        agents = AgentKind.allCases.map { card($0, running: running) }
-        claude = Controller.shared.status
-        aiName = AI.capitalizedName
-        claudeBusy = !Controller.shared.isIdle
-        let config = Config.load()
-        if !Telegram.shared.isConfigured {
-            telegram = "Telegram sin configurar"
-            telegramReady = false
-        } else if config.chatId == 0 {
-            telegram = "Envía /start a tu bot"
-            telegramReady = false
-        } else {
-            telegram = "Telegram conectado"
-            telegramReady = true
-        }
-        opensAtLogin = SMAppService.mainApp.status == .enabled
+    init(engine: Engine, permissions: SystemPermissions) {
+        self.engine = engine
+        self.permissions = permissions
     }
 
-    private func card(_ kind: AgentKind, running: AgentKind?) -> AgentCardData {
+    var agents: [AgentCardData] = []
+    var claude = String(localized: "en espera")
+    var aiName = "Claude"
+    var claudeBusy = false
+    var telegram = ""
+    var telegramReady = false
+    var opensAtLogin = false
+    var pendingSetup: [SetupStep] = []
+    var onOpenSetup: (() -> Void)?
+
+    var onQuit: (() -> Void)?
+    var onOpenSettings: ((SettingsPage?) -> Void)?
+    var onOpenActivity: (() -> Void)?
+    var onOpenInbox: (() -> Void)?
+    var pendingCount = 0
+    var update: UpdateInfo?
+
+    func refresh() {
+        pendingCount = engine.controller.pendingLists().count + engine.controller.pendingDrafts().count
+        let running = engine.controller.runningAgent
+        let pauses = engine.controller.pauseReasons()
+        agents = AgentKind.allCases.map { card($0, running: running, pauseReason: pauses[$0]) }
+        claude = engine.controller.status
+        aiName = engine.controller.ai.capitalizedName
+        claudeBusy = !engine.controller.isIdle
+        let channel = engine.controller.channel.state
+        telegram = ChannelStatusText.describe(channel)
+        telegramReady = ChannelStatusText.isReady(channel)
+        opensAtLogin = SMAppService.mainApp.status == .enabled
+        update = engine.controller.availableUpdate
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            pendingSetup = SetupChecklist.pending(await SetupFacts.current(engine: engine, permissions: permissions))
+        }
+    }
+
+    func openUpdate() {
+        guard let url = update.flatMap({ URL(string: $0.url) }) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func card(_ kind: AgentKind, running: AgentKind?, pauseReason: String?) -> AgentCardData {
         let agent = AgentStore.load(kind)
         let config = Config.load()
         let working = running == kind
         var status: String
         switch kind {
-        case .jobs: status = "Última búsqueda: \(JobRadar.shared.status)"
-        case .freelance: status = "Última búsqueda: \(FreelanceRadar.shared.status)"
-        case .profile: status = "\(Profile.load().cvVariants.count) hojas de vida · escribe \"logro\" o \"hv\" en Telegram"
-        case .clients, .content, .analyst: status = agent.tasks.first.map { "Corre \($0.scheduleText)" } ?? "Sin horario"
+        case .jobs: status = String(localized: "Última búsqueda: \(engine.jobRadar.status)")
+        case .freelance: status = String(localized: "Última búsqueda: \(engine.freelanceRadar.status)")
+        case .profile:
+            status = String(localized: "\(Profile.load().cvVariants.count) hojas de vida · escribe \"logro\" o \"hv\" en Telegram")
+        case .clients, .content, .analyst:
+            status = agent.tasks.first.map { String(localized: "Corre \($0.scheduleText)") } ?? String(localized: "Sin horario")
         }
-        if working { status = Self.capitalized(Controller.shared.status) }
-        let next: String
-        if !agent.enabled {
-            next = "apagado"
-        } else if working {
-            next = "trabajando"
-        } else if let date = Scheduler.shared.nextRun(of: kind) {
-            next = TextTools.countdown(date)
-        } else {
-            next = "a pedido"
-        }
+        if working { status = Self.capitalized(engine.controller.status) }
+        let next = nextText(kind, enabled: agent.enabled, working: working, paused: pauseReason != nil)
         var stats = WeeklyStats.lines(for: kind)
         if kind == .freelance {
             stats += ["Workana \(Quotas.describe("workana"))", "Freelancer \(Quotas.describe("freelancer"))"]
         }
         if !stats.isEmpty && [.jobs, .freelance, .clients].contains(kind) { stats[0] = "Esta semana: " + stats[0] }
         let ids = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []
-        return AgentCardData(id: kind, name: agent.name, purpose: agent.purpose, status: status, next: next,
-                             enabled: agent.enabled, autoApprove: agent.autoApprove, working: working, stats: stats,
-                             sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
-                             schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" })
+        return AgentCardData(
+            id: kind,
+            name: agent.name,
+            purpose: agent.purpose,
+            status: status,
+            next: next,
+            enabled: agent.enabled,
+            autoApprove: agent.autoApprove,
+            practice: agent.practice,
+            working: working,
+            stats: stats,
+            sources: ids.map { SourceToggle(id: $0, title: StatusMenu.sourceTitles[$0] ?? $0, on: config.isEnabled($0)) },
+            schedule: agent.tasks.map { "\($0.mode.title): \($0.scheduleText)" },
+            pauseReason: pauseReason
+        )
+    }
+
+    private func nextText(_ kind: AgentKind, enabled: Bool, working: Bool, paused: Bool) -> String {
+        if paused { return String(localized: "en pausa") }
+        if !enabled { return "apagado" }
+        if working { return "trabajando" }
+        return engine.scheduler.nextRun(of: kind).map(TextTools.countdown) ?? String(localized: "a pedido")
     }
 
     static func capitalized(_ text: String) -> String {
@@ -128,8 +161,15 @@ final class PanelModel: ObservableObject {
         refresh()
     }
 
+    func togglePractice(_ kind: AgentKind) {
+        Practice.set(kind, on: !AgentStore.load(kind).practice, from: Self.panelOrigin, agents: engine.controller.stores.agents)
+        refresh()
+    }
+
+    static let panelOrigin = String(localized: "el panel")
+
     func toggleAutoApprove(_ kind: AgentKind) {
-        AgentStore.update(kind) { $0.autoApprove.toggle() }
+        AutoSendConfirmation.toggle(kind, agents: engine.controller.stores.agents)
         refresh()
     }
 
@@ -140,8 +180,13 @@ final class PanelModel: ObservableObject {
         refresh()
     }
 
+    func resume(_ kind: AgentKind) {
+        engine.controller.resumeAgent(kind)
+        refresh()
+    }
+
     func runNow(_ kind: AgentKind) {
-        Controller.shared.runAgentNow(kind)
+        engine.controller.runAgentNow(kind)
         refresh()
     }
 
@@ -149,8 +194,16 @@ final class PanelModel: ObservableObject {
         onOpenSettings?(kind.map { .agent($0) })
     }
 
+    func openInbox() {
+        onOpenInbox?()
+    }
+
     func editContentAccounts() {
         onOpenSettings?(.content)
+    }
+
+    func editChannel() {
+        onOpenSettings?(.channel)
     }
 
     func toggleLogin() {
@@ -161,7 +214,7 @@ final class PanelModel: ObservableObject {
                 try SMAppService.mainApp.register()
             }
         } catch {
-            StatusMenu.shared.info("No pude cambiar el inicio automático: \(error.localizedDescription)")
+            StatusMenu.info(String(localized: "No pude cambiar el inicio automático: \(error.localizedDescription)"))
         }
         refresh()
     }
@@ -172,11 +225,10 @@ final class PanelModel: ObservableObject {
     }
 
     func openLog() {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: Paths.log.path) {
-            try? fm.createDirectory(at: Paths.logs, withIntermediateDirectories: true)
-            fm.createFile(atPath: Paths.log.path, contents: nil)
-        }
-        NSWorkspace.shared.open(Paths.log)
+        LogExport.openRecent()
+    }
+
+    func openActivity() {
+        onOpenActivity?()
     }
 }

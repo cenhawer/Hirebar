@@ -1,0 +1,186 @@
+import Foundation
+import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
+import XCTest
+
+@testable import HirebarAI
+@testable import HirebarApplication
+
+@MainActor
+final class EngineProfileTests: XCTestCase {
+    nonisolated static let repositoryRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent()
+    nonisolated static let actingBrowserTools = [
+        "computer", "form_input", "javascript_tool", "file_upload", "upload_image", "shortcuts_execute",
+        "browser_batch",
+    ]
+
+    var profiles: EngineProfiles!
+    let playbook = URL(fileURLWithPath: "/tmp/instrucciones-redes.md")
+
+    override func setUp() async throws {
+        profiles = try EngineProfiles.load(from: Self.repositoryRoot.appendingPathComponent("Resources/perfiles-ia.json"))
+    }
+
+    func claudeArguments(_ profile: RunProfile, browser: Bool = true) -> [String] {
+        ClaudeCLI.arguments(
+            prompt: "pedido", playbook: playbook, profile: profile, browser: browser, settings: profiles.claude,
+            protectedFiles: profiles.protectedFiles)
+    }
+
+    func values(after flag: String, in arguments: [String]) -> [String] {
+        guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return [] }
+        return arguments[index + 1].split(separator: ",").map(String.init)
+    }
+
+    func testReadProfileCannotWriteActOrBypassPermissions() {
+        let arguments = claudeArguments(.read)
+        XCTAssertEqual(values(after: "--permission-mode", in: arguments), ["dontAsk"])
+        XCTAssertTrue(arguments.contains("--restricted"))
+        XCTAssertFalse(arguments.joined(separator: " ").contains("bypassPermissions"))
+        let tools = values(after: "--tools", in: arguments)
+        let allowed = values(after: "--allowedTools", in: arguments)
+        XCTAssertTrue(Set(tools + allowed).isDisjoint(with: ["Write", "Edit", "Bash"]))
+        for tool in Self.actingBrowserTools {
+            XCTAssertFalse(allowed.contains("mcp__claude-in-chrome__\(tool)"), tool)
+        }
+        XCTAssertFalse(allowed.contains("mcp__claude-in-chrome"))
+        XCTAssertTrue(allowed.contains("mcp__claude-in-chrome__read_page"))
+    }
+
+    func testReadProfileCannotReadPersonalFiles() {
+        let denied = values(after: "--disallowedTools", in: claudeArguments(.read))
+        XCTAssertEqual(Set(denied), ["Read(./perfil.json)", "Read(./perfil.md)", "Read(./hv/**)"])
+    }
+
+    func testReadingAndDraftingCannotFetchArbitraryAddresses() {
+        for profile in [RunProfile.read, .draft(writablePaths: ["informes/"])] {
+            let arguments = claudeArguments(profile)
+            XCTAssertFalse((values(after: "--tools", in: arguments) + values(after: "--allowedTools", in: arguments)).contains("WebFetch"))
+        }
+    }
+
+    func testWithoutBrowserNoBrowserToolIsAllowed() {
+        let arguments = claudeArguments(.read, browser: false)
+        XCTAssertFalse(arguments.contains("--chrome"))
+        XCTAssertFalse(values(after: "--allowedTools", in: arguments).contains { $0.hasPrefix("mcp__") })
+    }
+
+    func testDraftProfileWritesOnlyInItsDeclaredPaths() {
+        let allowed = values(after: "--allowedTools", in: claudeArguments(.draft(writablePaths: ["informes/"])))
+        XCTAssertTrue(allowed.contains("Write(./informes/**)"))
+        XCTAssertTrue(allowed.contains("Edit(./informes/**)"))
+        XCTAssertFalse(allowed.contains("Write"))
+        XCTAssertFalse(allowed.contains("Edit"))
+        XCTAssertFalse(allowed.contains("mcp__claude-in-chrome__computer"))
+    }
+
+    func testDraftProfileThatUpdatesTheProfileCanReadIt() {
+        let arguments = claudeArguments(.draft(writablePaths: ["perfil.json", "perfil.md", "hv/"]), browser: false)
+        XCTAssertFalse(arguments.contains("--disallowedTools"))
+        XCTAssertTrue(values(after: "--allowedTools", in: arguments).contains("Write(./perfil.json)"))
+    }
+
+    func testActProfileCanUseTheBrowserAndWriteButNotBypassPermissions() {
+        let arguments = claudeArguments(.act)
+        let allowed = values(after: "--allowedTools", in: arguments)
+        XCTAssertTrue(allowed.contains("Write"))
+        XCTAssertTrue(allowed.contains("mcp__claude-in-chrome"))
+        XCTAssertTrue(arguments.contains("--restricted"))
+        XCTAssertEqual(values(after: "--permission-mode", in: arguments), ["dontAsk"])
+        let denied = values(after: "--disallowedTools", in: arguments)
+        XCTAssertTrue(denied.contains("Write(./instrucciones-*.md)"))
+        XCTAssertTrue(denied.contains("Edit(./perfil.json)"))
+        XCTAssertFalse(denied.contains { $0.hasPrefix("Read(") })
+    }
+
+    func testCodexAndGeminiReadWithoutPermissionToAct() {
+        XCTAssertTrue(profiles.codex.command(.read).contains("--sandbox read-only"))
+        XCTAssertTrue(profiles.gemini.command(.read).contains("--approval-mode plan"))
+        XCTAssertFalse(profiles.gemini.command(.read).contains("yolo"))
+    }
+
+    func testCodexAndGeminiDoNotRunTasksThatReadWithTheBrowser() {
+        for kind in [AIEngineKind.codex, .gemini] {
+            let reading = launch(AIEngineSettings(kind: kind), profile: .read, browser: true)
+            XCTAssertNil(try? reading.get(), kind.rawValue)
+            let acting = launch(AIEngineSettings(kind: kind), profile: .act, browser: true)
+            XCTAssertNotNil(try? acting.get(), kind.rawValue)
+            let readingWithoutBrowser = launch(AIEngineSettings(kind: kind), profile: .read, browser: false)
+            XCTAssertNotNil(try? readingWithoutBrowser.get(), kind.rawValue)
+        }
+    }
+
+    func testCustomEngineUsesTheCommandOfEachPhaseAndTellsWhichOneIsMissing() {
+        let engine = AIEngineSettings(kind: .custom, readCommand: "", actCommand: "mi-ia act")
+        guard case .failure(let problem) = launch(engine, profile: .read, browser: false) else { return XCTFail("debía fallar") }
+        XCTAssertTrue(problem.message.contains("de lectura"))
+        guard case .success(.shell(let command, let environment)) = launch(engine, profile: .act, browser: true) else {
+            return XCTFail("debía lanzar el comando de ejecución")
+        }
+        XCTAssertEqual(command, "mi-ia act")
+        XCTAssertEqual(environment["HIREBAR_PHASE"], "act")
+    }
+
+    func launch(_ engine: AIEngineSettings, profile: RunProfile, browser: Bool) -> Result<ClaudeCLI.Launch, ClaudeCLI.LaunchProblem> {
+        ClaudeCLI.launch(
+            engine: engine,
+            request: ClaudeCLI.LaunchRequest(prompt: "p", playbook: playbook, profile: profile, browser: browser),
+            profiles: profiles,
+            claudePath: { "/usr/local/bin/claude" }
+        )
+    }
+
+    func testEachTaskGetsItsProfile() {
+        XCTAssertEqual(TaskProfiles.profile(for: .social, account: nil), .read)
+        XCTAssertEqual(TaskProfiles.profile(for: .portalScanJobs, account: nil), .read)
+        XCTAssertEqual(TaskProfiles.profile(for: .followUp, account: nil), .draft(writablePaths: ["seguimiento.json"]))
+        XCTAssertEqual(TaskProfiles.profile(for: .weeklyReport, account: nil), .draft(writablePaths: ["informes/"]))
+        XCTAssertEqual(
+            TaskProfiles.profile(for: .linkedInDraft, account: ContentAccount(id: "empresa")),
+            .draft(writablePaths: ["contenido/empresa/"]))
+        for mode in [Mode.jobs, .freelance, .prospectingSend, .linkedInPublish] {
+            XCTAssertEqual(TaskProfiles.profile(for: mode, account: nil), .act, mode.rawValue)
+        }
+        XCTAssertFalse(TaskProfiles.needsBrowser(.weeklyReport, performanceCheckDue: false))
+        XCTAssertFalse(TaskProfiles.needsBrowser(.profileUpdate, performanceCheckDue: false))
+    }
+
+    func testReadingTasksCanOnlyProposeTheirOwnActions() {
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .portalScanJobs), [.apply])
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .portalScanFreelance), [.sendProposal])
+        XCTAssertTrue(TaskProfiles.allowedProposals(for: .jobs).isEmpty)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanJobs), .jobs)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .portalScanFreelance), .freelance)
+    }
+
+    func testSocialAndFollowUpsProposeAndRunThroughTheirOwnExecution() {
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .social), [.apply, .draftEmail])
+        XCTAssertEqual(TaskProfiles.allowedProposals(for: .followUp), [.sendFollowUp, .replyToClient])
+        XCTAssertEqual(TaskProfiles.executionMode(for: .social), .jobs)
+        XCTAssertEqual(TaskProfiles.executionMode(for: .followUp), .followUpSend)
+        XCTAssertEqual(TaskProfiles.profile(for: .followUpSend, account: nil), .act)
+        XCTAssertEqual(AgentKind.owner(of: .followUpSend), .freelance)
+        XCTAssertTrue(Mode.followUpSend.hasItems)
+    }
+
+    func testProspectingGetsPastEmployersAndAchievementsWithoutContactData() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("perfil-\(UUID().uuidString).json")
+        let profile = """
+            {"person": {"email": "yo@ejemplo.com", "phone": "300"},
+             "experience": [
+               {"role": "Backend", "company": "Acme", "achievements": [{"text": "Bajé el despliegue de 30 a 10 minutos"}]},
+               {"role": "Dev", "company": "Beta", "achievements": []}
+             ]}
+            """
+        try profile.write(to: file, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: file) }
+        XCTAssertEqual(ProfileExperience.pastEmployers(from: file), ["Acme", "Beta"])
+        let achievements = ProfileExperience.achievements(from: file)
+        XCTAssertEqual(achievements, ["- Bajé el despliegue de 30 a 10 minutos (Backend en Acme)"])
+        XCTAssertFalse(achievements.joined().contains("yo@ejemplo.com"))
+    }
+}

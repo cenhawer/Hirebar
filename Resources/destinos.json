@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "webSchemes": ["https", "http"],
+  "ignoredQueryParameters": [
+    "fbclid", "gclid", "msclkid", "mc_cid", "mc_eid", "igshid", "trk", "trkinfo", "trackingid", "refid", "ref", "ref_src",
+    "lipi", "originalsubdomain", "src"
+  ],
+  "ignoredQueryParameterPrefixes": ["utm_"]
+}

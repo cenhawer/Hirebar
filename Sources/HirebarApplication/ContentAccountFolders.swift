@@ -1,0 +1,16 @@
+import Foundation
+import HirebarDomain
+
+extension ContentAccount {
+    public var folder: URL { Paths.content.appendingPathComponent(id, isDirectory: true) }
+    public var slides: URL { folder.appendingPathComponent("laminas", isDirectory: true) }
+    public var draft: URL { folder.appendingPathComponent("borrador.md") }
+    public var videoFolder: URL { folder.appendingPathComponent("video", isDirectory: true) }
+    public var changes: URL { folder.appendingPathComponent("cambios.txt") }
+    public var videoScript: URL { videoFolder.appendingPathComponent("guion.json") }
+    public var videoDescription: URL { videoFolder.appendingPathComponent("texto.md") }
+    public var finalVideo: URL { videoFolder.appendingPathComponent("reel.mp4") }
+    public var previewVideo: URL { videoFolder.appendingPathComponent("vista-previa.mp4") }
+    public var performance: URL { folder.appendingPathComponent("rendimiento.md") }
+    public var relativeFolder: String { "contenido/\(id)" }
+}

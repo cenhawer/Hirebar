@@ -1,0 +1,72 @@
+import Foundation
+import HirebarApplication
+import HirebarDomain
+
+public struct FileProspectingRepository: ProspectingRepository {
+    let folder: URL
+
+    public init(folder: URL = Paths.prospecting) {
+        self.folder = folder
+    }
+
+    var pending: URL { folder.appendingPathComponent("pendientes.json") }
+
+    public func pendingEmails() -> Data? {
+        try? Data(contentsOf: pending)
+    }
+
+    public func discardPendingEmails(at date: Date) {
+        let stamp = Int(date.timeIntervalSince1970)
+        try? FileManager.default.moveItem(at: pending, to: folder.appendingPathComponent("descartados-\(stamp).json"))
+    }
+}
+
+enum ContentAccountFiles {
+    static let minimumCopyableLength = 10
+    static let maximumCopyableLength = 3800
+
+    static func takeChangeRequest(_ account: ContentAccount) -> String {
+        let note = (try? String(contentsOf: account.changes, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        try? FileManager.default.removeItem(at: account.changes)
+        return note
+    }
+
+    static func requestChange(_ account: ContentAccount, _ note: String) {
+        try? note.write(to: account.changes, atomically: true, encoding: .utf8)
+    }
+
+    static func discardDraft(_ account: ContentAccount, at date: Date) {
+        let day = ISO8601DateFormatter().string(from: date).prefix(10)
+        let name = "descartado-\(day)-\(Int(date.timeIntervalSince1970)).md"
+        try? FileManager.default.moveItem(at: account.draft, to: account.folder.appendingPathComponent(name))
+    }
+
+    static func copyableText(_ file: URL) -> String? {
+        guard let text = try? String(contentsOf: file, encoding: .utf8) else { return nil }
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.count > minimumCopyableLength ? String(clean.prefix(maximumCopyableLength)) : nil
+    }
+
+    static func hasVideoScript(_ account: ContentAccount) -> Bool {
+        FileManager.default.fileExists(atPath: account.videoScript.path)
+    }
+
+    static func slideImages(_ account: ContentAccount) -> [URL] {
+        let files = (try? FileManager.default.contentsOfDirectory(at: account.slides, includingPropertiesForKeys: nil)) ?? []
+        return files.filter { $0.pathExtension.lowercased() == "png" }
+            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+    }
+
+    static func videoPreview(_ account: ContentAccount) -> URL? {
+        [account.finalVideo, account.previewVideo].first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    static func latestRecording(_ account: ContentAccount) -> URL? {
+        let keys: [URLResourceKey] = [.contentModificationDateKey]
+        let files = (try? FileManager.default.contentsOfDirectory(at: account.videoFolder, includingPropertiesForKeys: keys)) ?? []
+        let modified = { (file: URL) in
+            (try? file.resourceValues(forKeys: Set(keys)).contentModificationDate) ?? .distantPast
+        }
+        return files.filter { $0.lastPathComponent.hasPrefix("grabacion.") }.max { modified($0) < modified($1) }
+    }
+}

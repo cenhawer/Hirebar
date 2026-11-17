@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "ffmpeg": {
+    "paths": ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"],
+    "install": "brew install ffmpeg"
+  },
+  "maxAudioMegabytes": 20,
+  "maxAudioSeconds": 300
+}

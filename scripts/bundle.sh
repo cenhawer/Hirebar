@@ -5,10 +5,12 @@ cd "$(dirname "$0")/.."
 
 VERSION=$(tr -d '[:space:]' <VERSION)
 APP=dist/Hirebar.app
+BUILD_PATH=${HIREBAR_BUILD_PATH:-.build}
+SIGN_IDENTITY=${HIREBAR_SIGN_IDENTITY:--}
 
 echo "Building Hirebar ${VERSION}..."
-swift build -c release --product Hirebar
-BIN_DIR=$(swift build -c release --show-bin-path)
+swift build -c release --product Hirebar --scratch-path "$BUILD_PATH"
+BIN_DIR=$(swift build -c release --scratch-path "$BUILD_PATH" --show-bin-path)
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
@@ -16,7 +18,17 @@ cp "$BIN_DIR/Hirebar" "$APP/Contents/MacOS/Hirebar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
 cp -R Resources/inicial "$APP/Contents/Resources/"
-codesign --force --deep --sign - "$APP"
+cp Resources/perfiles-ia.json "$APP/Contents/Resources/"
+cp Resources/destinos.json "$APP/Contents/Resources/"
+cp Resources/canal.json "$APP/Contents/Resources/"
+cp Resources/herramientas.json "$APP/Contents/Resources/"
+cp Resources/comandos.json "$APP/Contents/Resources/"
+cp Resources/motor.json "$APP/Contents/Resources/"
+cp Resources/perfil-busqueda.json "$APP/Contents/Resources/"
+cp Resources/retencion.json "$APP/Contents/Resources/"
+cp Resources/version.json "$APP/Contents/Resources/"
+xcrun xcstringstool compile Resources/Localizable.xcstrings --output-directory "$APP/Contents/Resources"
+codesign --force --deep --sign "$SIGN_IDENTITY" "$APP"
 echo "Built $APP"
 
 case "${1:-}" in

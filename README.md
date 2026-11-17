@@ -1,16 +1,17 @@
 # Hirebar
 
-App para la barra de menú de macOS que busca empleo remoto, proyectos freelance y clientes por ti. Revisa los portales cada pocos minutos, filtra con tu perfil y te avisa por Telegram. Cuando apruebas (o si activas el envío automático), una IA de terminal abre tu Chrome, redacta y envía las propuestas o postulaciones, y te cuenta qué hizo. Puedes usar [Claude Code](https://claude.com/claude-code) (recomendado), Codex de OpenAI, Gemini CLI de Google u otra que se pueda ejecutar desde la terminal.
+App para la barra de menú de macOS que busca empleo remoto, proyectos freelance y clientes por ti. Revisa los portales cada pocos minutos, filtra con tu perfil y te avisa por Telegram. Cuando apruebas (o si activas el envío automático), una IA de terminal abre tu Chrome, redacta y envía las propuestas o postulaciones, y te cuenta qué hizo. La IA solo actúa sobre lo que aprobaste, y Hirebar verifica cada envío: si algo no coincide, el agente queda en pausa hasta que lo revises. Puedes usar [Claude Code](https://claude.com/claude-code) (recomendado), Codex de OpenAI, Gemini CLI de Google u otra que se pueda ejecutar desde la terminal.
 
 Está dividida en agentes independientes, cada uno con su horario: **Empleo, Freelance, Clientes, Contenido, Perfil y Analista**. Cómo se usa cada uno está en la [guía de uso](GUIA.md).
 
 ## Requisitos
 
-- macOS 13 o superior.
-- Xcode 15, o las herramientas de línea de comandos con Swift 5.9 o superior, para compilar.
+- macOS 26 o superior.
+- Xcode 26, o las herramientas de línea de comandos con Swift 6.2 o superior, para compilar.
 - Una IA de terminal con sesión iniciada. Por defecto, [Claude Code](https://claude.com/claude-code) (`claude` en la terminal) con la extensión Claude in Chrome. Para usar otra, mira "Motor de IA" en la [guía de uso](GUIA.md).
 - Google Chrome con tu sesión iniciada en los portales donde quieres que postule.
 - Un bot de Telegram (se crea con @BotFather en un minuto).
+- ffmpeg, solo si vas a usar el video narrado con tu voz: `brew install ffmpeg`. Hirebar no instala herramientas por su cuenta.
 
 ## Instalación
 
@@ -22,6 +23,13 @@ scripts/bundle.sh --install
 
 Compila, copia la app a `~/Applications/Hirebar.app` y la abre. Aparece un maletín en la barra de menú.
 
+Hirebar se firma con el certificado gratis de Xcode (Apple Development) o, sin ese certificado,
+ad-hoc. No está notarizada: notarizar con Apple requiere una cuenta de pago del Apple Developer
+Program, que este proyecto no tiene. Eso basta para correrla en la misma Mac donde se compiló; si la
+copias a otra Mac, Gatekeeper puede bloquearla con "no se puede abrir porque su desarrollador no
+pudo verificarse". Para abrirla igual: clic derecho sobre `Hirebar.app` → **Abrir**, o en la terminal
+`xattr -dr com.apple.quarantine ~/Applications/Hirebar.app`.
+
 | Comando | Qué hace |
 |---|---|
 | `scripts/bundle.sh` | Solo arma `dist/Hirebar.app`. |
@@ -30,12 +38,11 @@ Compila, copia la app a `~/Applications/Hirebar.app` y la abre. Aparece un malet
 
 ## Primera configuración
 
-1. **Telegram:** clic en el maletín → engranaje → **Configurar bot de Telegram…**. Pega el token de @BotFather y envíale `/start` a tu bot desde el celular.
+1. **Asistente:** la primera vez se abre solo. Te pide tu nombre, la IA que hace el trabajo (con **Probar**), Telegram (pegas el token de @BotFather, le escribes "hola" a tu bot y confirmas tu nombre; desde ahí el bot solo atiende tu cuenta), los agentes que quieres prendidos y los permisos de macOS (reconocimiento de voz para el video narrado y notificaciones de respaldo). Lo que falte queda en el panel bajo **Falta configurar**; lo vuelves a abrir con engranaje → **Asistente de configuración…**.
 2. **Tu perfil:** pie del panel → **Datos** → abre `workspace/perfil.json` y llénalo con tu información real: datos, experiencia con logros, habilidades con nivel y las versiones de hoja de vida que quieres (`cvVariants`). Viene con un ejemplo para guiarte.
 3. **Hojas de vida:** escribe `hv` a tu bot. Claude genera `perfil.md` y una hoja de vida en PDF por cada versión.
-4. **IA:** pie del panel → **Ajustes → Motor de IA**. Elige cuál usar y pulsa **Probar**.
-5. **Agentes:** en la misma ventana de **Ajustes**. Prende los que quieras, ajusta horarios y portales, y decide cuáles envían solos.
-6. **Inicio automático:** engranaje → **Abrir al iniciar sesión**.
+4. **Ajustes finos:** pie del panel → **Ajustes**: horarios y portales de cada agente, cuáles envían solos y otra IA si la cambias.
+5. **Inicio automático:** engranaje → **Abrir al iniciar sesión**.
 
 ## Dónde quedan tus datos
 
@@ -59,7 +66,7 @@ La primera vez que se abre, Hirebar copia a esa carpeta los archivos de `Resourc
 ## Actualizar
 
 ```sh
-cd ~/Documents/vm_software/hirebar
+cd Hirebar
 git pull
 scripts/bundle.sh --install
 ```
@@ -67,22 +74,48 @@ scripts/bundle.sh --install
 ## Desarrollo
 
 ```sh
+brew install swiftlint gitleaks shellcheck
+git config core.hooksPath scripts/hooks
 swift build
-swift test
+scripts/coverage.sh
+scripts/lint.sh origin/develop
+scripts/strings.sh
 ```
 
-`swift test` necesita Xcode completo, porque XCTest no viene en las herramientas de línea de comandos.
+Los tests necesitan Xcode completo, porque XCTest no viene en las herramientas de línea de comandos. El hook de `scripts/hooks` revisa con gitleaks que ningún commit lleve secretos.
+
+| Comando | Qué hace |
+|---|---|
+| `scripts/coverage.sh` | Corre los tests y mide la cobertura de `Sources`. Falla si baja del mínimo de `.coverage-minimum` y lista los archivos que no tienen ningún test. |
+| `scripts/strings.sh` | Junta en `Resources/Localizable.xcstrings` los textos para la persona que hay en el código. Con `--check` falla si el catálogo no está al día (así lo corre el CI). |
+| `scripts/lint.sh <rama base>` | Revisa formato (swift-format) y estilo (SwiftLint) solo en las líneas que cambiaste respecto a esa rama. Sin rama base, revisa todo el código. |
+| `scripts/check-conventions.sh <rama base>` | Valida el nombre de la rama y los mensajes de commit con las reglas de `.conventions`. |
+| `scripts/check-spec-reference.sh <rama base> <descripción>` | Si el PR toca `Sources/` o `Package.swift`, exige que su descripción nombre una carpeta `specs/NNN-nombre` que exista en la rama. El CI lo corre también al editar la descripción. |
+
+| Variable | Para qué |
+|---|---|
+| `HIREBAR_BUILD_PATH` | Carpeta de compilación de `bundle.sh` y `coverage.sh` (por defecto `.build`). Si el repositorio está en una carpeta sincronizada con iCloud, apúntala fuera, por ejemplo a `~/Library/Caches/hirebar-build`. |
+| `HIREBAR_SIGN_IDENTITY` | Identidad con la que `bundle.sh` firma la app (por defecto `-`, firma ad-hoc). Con una identidad fija, macOS conserva entre compilaciones el permiso de Reconocimiento de voz. Sirve un certificado Apple Development: lista los tuyos con `security find-identity -v -p codesigning` y usa el hash de 40 caracteres. |
+
+Para no pasarlas en cada comando, ponlas en `~/.zshenv` (zsh lo lee también en los comandos por SSH):
+
+```sh
+export HIREBAR_BUILD_PATH="$HOME/Library/Caches/hirebar-build"
+export HIREBAR_SIGN_IDENTITY="<hash de tu identidad>"
+```
 
 | Carpeta | Qué tiene |
 |---|---|
-| `Sources/Hirebar` | La app: panel, menú y Ajustes. |
-| `Sources/HirebarEngine` | Agentes, horarios, comandos de Telegram y lanzador de Claude. |
-| `Sources/HirebarSources` | Un archivo por portal y los filtros. |
-| `Sources/HirebarCore` | Configuración, perfil, datos y Telegram. |
+| `Sources/Hirebar` | La app: panel, menú, Ajustes y la creación de todas las piezas al arrancar. |
+| `Sources/HirebarDomain` | Reglas y entidades sin E/S: agentes, perfil, avisos, cuentas, encaje. |
+| `Sources/HirebarApplication` | Casos de uso y puertos: agentes, horarios, comandos, radares, verificación de acciones y canal. |
+| `Sources/HirebarStorage` | Configuración, datos del workspace y Llavero. |
+| `Sources/HirebarTelegram` · `HirebarNotifications` · `HirebarPortals` | Telegram, notificaciones de macOS y un archivo por portal. |
+| `Sources/HirebarAI` · `HirebarMedia` | Lanzador de la IA con sus perfiles; carrusel, video, voz y hojas de vida. |
 | `Resources/inicial` | Archivos con los que arranca una instalación nueva. |
-| `scripts/bundle.sh` | Compila y empaqueta la app. |
+| `scripts/` | Compilar y empaquetar, tests con cobertura, lint, convenciones y hooks de git. |
 
-Reglas: código en inglés y sin comentarios; documentación en español; sin dependencias externas; nada personal en el repositorio.
+Reglas: código en inglés y sin comentarios; documentación en español; sin dependencias externas; nada personal en el repositorio; commits en inglés con [Conventional Commits](https://www.conventionalcommits.org/); ramas `{tipo}/HB-{número}-{descripción}` hacia `develop`.
 
 ## Desinstalar
 

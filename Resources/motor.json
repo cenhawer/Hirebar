@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "corridas": {
+    "maximoMinutos": 60,
+    "avisoSesionVencidaMinutos": 60,
+    "vigilanciaSegundos": 60,
+    "recuperacionSegundos": 5,
+    "propuestasVistasDias": 30
+  },
+  "radares": {
+    "revisionSegundos": 30,
+    "toleranciaSegundos": 5,
+    "empleo": {
+      "primeraBusquedaSegundos": 300,
+      "vistosDias": 21,
+      "revisadasPorBusqueda": 15,
+      "fuertesPorLista": 6,
+      "retoPorLista": 2
+    },
+    "freelance": {
+      "primeraBusquedaSegundos": 60,
+      "vistosDias": 14,
+      "proyectosPorLista": 5
+    }
+  },
+  "programador": {
+    "revisionSegundos": 60,
+    "toleranciaSegundos": 10,
+    "primeraRevisionSegundos": 120,
+    "horaLimpiezaDomingo": 19
+  }
+}

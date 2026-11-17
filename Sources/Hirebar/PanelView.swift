@@ -1,8 +1,13 @@
-import HirebarCore
+import HirebarApplication
+import HirebarDomain
+import HirebarNotifications
+import HirebarPortals
+import HirebarStorage
+import HirebarTelegram
 import SwiftUI
 
 struct PanelView: View {
-    @ObservedObject var model: PanelModel
+    @Bindable var model: PanelModel
 
     private struct AgentSection: Identifiable {
         let id: String
@@ -10,10 +15,12 @@ struct PanelView: View {
     }
 
     private let sections = [
-        AgentSection(id: "Buscar trabajo", kinds: [.jobs, .freelance]),
-        AgentSection(id: "Conseguir clientes", kinds: [.clients, .content]),
-        AgentSection(id: "Tú", kinds: [.profile, .analyst]),
+        AgentSection(id: String(localized: "Buscar trabajo"), kinds: [.jobs, .freelance]),
+        AgentSection(id: String(localized: "Conseguir clientes"), kinds: [.clients, .content]),
+        AgentSection(id: String(localized: "Tú"), kinds: [.profile, .analyst]),
     ]
+
+    private static let maxAgentListHeight: CGFloat = 420
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -21,17 +28,33 @@ struct PanelView: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-            ForEach(sections) { section in
-                Text(section.id)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            if !model.pendingSetup.isEmpty {
+                SetupChecklistSection(pending: model.pendingSetup) { model.onOpenSetup?() }
                     .padding(.horizontal, 14)
-                    .padding(.top, 8)
-                    .padding(.bottom, 2)
-                ForEach(model.agents.filter { section.kinds.contains($0.id) }) { agent in
-                    AgentRow(agent: agent, model: model)
+                    .padding(.bottom, 6)
+                Divider()
+            }
+            if let update = model.update {
+                UpdateBanner(update: update) { model.openUpdate() }
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 8)
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(sections) { section in
+                        Text(section.id)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 14)
+                            .padding(.top, 8)
+                            .padding(.bottom, 2)
+                        ForEach(model.agents.filter { section.kinds.contains($0.id) }) { agent in
+                            AgentRow(agent: agent, model: model)
+                        }
+                    }
                 }
             }
+            .frame(maxHeight: Self.maxAgentListHeight)
             Divider()
                 .padding(.top, 8)
             footer
@@ -44,45 +67,53 @@ struct PanelView: View {
     private var header: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hirebar").font(.system(size: 13, weight: .semibold))
+                Text("Hirebar").font(.subheadline.weight(.semibold))
                 HStack(spacing: 5) {
-                    Circle()
-                        .fill(model.claudeBusy ? Color.orange : Color.green)
-                        .frame(width: 6, height: 6)
+                    Image(systemName: model.claudeBusy ? "circle.fill" : "checkmark.circle.fill")
+                        .font(.system(size: 6))
+                        .foregroundStyle(model.claudeBusy ? Color.orange : Color.green)
+                        .accessibilityHidden(true)
                     Text("\(model.aiName) \(model.claude)")
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(AgentAccessibility.engineBusyLabel(busy: model.claudeBusy) + ", \(model.aiName) \(model.claude)")
             }
             Spacer()
-            Image(systemName: "paperplane.fill")
-                .font(.system(size: 11))
-                .foregroundStyle(model.telegramReady ? Color.blue : Color.secondary)
-                .help(model.telegram)
+            Button {
+                model.editChannel()
+            } label: {
+                if model.telegramReady {
+                    Image(systemName: "paperplane.fill").foregroundStyle(Color.blue)
+                } else {
+                    Label(model.telegram, systemImage: "paperplane").foregroundStyle(Color.orange)
+                }
+            }
+            .buttonStyle(.borderless)
+            .font(.caption)
+            .help(model.telegram)
+            .accessibilityLabel(AgentAccessibility.telegramLabel(ready: model.telegramReady, status: model.telegram))
         }
     }
 
     private var footer: some View {
         HStack(spacing: 2) {
-            FooterButton(symbol: "doc.text", help: "Informes") { model.open(Paths.reports) }
-            FooterButton(symbol: "list.bullet", help: "Registro") { model.openLog() }
-            FooterButton(symbol: "folder", help: "Carpeta de datos") { model.open(Paths.root) }
-            Spacer()
-            Button {
-                model.editSettings(nil)
-            } label: {
-                Label("Ajustes", systemImage: "slider.horizontal.3")
-                    .font(.system(size: 11))
+            FooterButton(symbol: "clock.arrow.circlepath", help: String(localized: "Actividad")) { model.openActivity() }
+            FooterButton(symbol: model.pendingCount > 0 ? "tray.full" : "tray", help: String(localized: "Pendientes de aprobar")) {
+                model.openInbox()
             }
-            .buttonStyle(.borderless)
+            FooterButton(symbol: "doc.text", help: String(localized: "Informes")) { model.open(Paths.reports) }
+            FooterButton(symbol: "list.bullet", help: String(localized: "Registro")) { model.openLog() }
+            FooterButton(symbol: "folder", help: String(localized: "Carpeta de datos")) { model.open(Paths.root) }
+            Spacer()
             Menu {
                 Button("Ajustes…") { model.editSettings(nil) }
                 Button("Cuentas de contenido…") { model.editContentAccounts() }
                 Divider()
-                Button("Configurar bot de Telegram…") { model.onConfigureTelegram?() }
-                Button("Enviar aviso de prueba") { model.onSendTest?() }
-                Button("Volver a vincular el chat") { model.onForgetChat?() }
+                Button("Telegram y avisos…") { model.editChannel() }
+                Button("Asistente de configuración…") { model.onOpenSetup?() }
                 Divider()
                 Toggle("Abrir al iniciar sesión", isOn: Binding(get: { model.opensAtLogin }, set: { _ in model.toggleLogin() }))
                 Divider()
@@ -107,57 +138,73 @@ struct FooterButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 12))
+                .font(.footnote)
                 .frame(width: 26, height: 22)
                 .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(hovering ? 0.08 : 0)))
         }
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
         .help(help)
+        .accessibilityLabel(help)
         .onHover { hovering = $0 }
     }
 }
 
 struct AgentRow: View {
     let agent: AgentCardData
-    @ObservedObject var model: PanelModel
+    @Bindable var model: PanelModel
     @State private var expanded = false
     @State private var hovering = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 10) {
-                Image(systemName: AgentStyle.symbol(agent.id))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(agent.enabled ? AgentStyle.tint(agent.id) : Color.secondary)
-                    .frame(width: 18)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(agent.name)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(agent.enabled ? Color.primary : Color.secondary)
-                    Text(agent.purpose)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Image(systemName: AgentStyle.symbol(agent.id))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(agent.enabled ? AgentStyle.tint(agent.id) : Color.secondary)
+                        .frame(width: 18)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(agent.name)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(agent.enabled ? Color.primary : Color.secondary)
+                        Text(agent.purpose)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 6)
+                    Text(agent.next)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(agent.working || agent.pauseReason != nil ? Color.orange : Color.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                    Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 10)
                 }
-                Spacer(minLength: 6)
-                Text(agent.next)
-                    .font(.system(size: 11).monospacedDigit())
-                    .foregroundStyle(agent.working ? Color.orange : Color.secondary)
-                    .lineLimit(1)
-                    .fixedSize()
+                .contentShape(Rectangle())
+                .onTapGesture { expanded.toggle() }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(
+                    AgentAccessibility.rowLabel(
+                        name: agent.name,
+                        enabled: agent.enabled,
+                        working: agent.working,
+                        pauseReason: agent.pauseReason,
+                        next: agent.next
+                    )
+                )
+                .accessibilityAddTraits(.isButton)
+
                 Toggle("", isOn: Binding(get: { agent.enabled }, set: { _ in model.toggleEnabled(agent.id) }))
                     .toggleStyle(.switch)
                     .labelsHidden()
                     .controlSize(.mini)
-                Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.tertiary)
-                    .frame(width: 10)
+                    .accessibilityLabel(AgentAccessibility.toggleLabel(name: agent.name, enabled: agent.enabled))
             }
-            .contentShape(Rectangle())
-            .onTapGesture { expanded.toggle() }
 
             if expanded {
                 details
@@ -176,12 +223,23 @@ struct AgentRow: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if let reason = agent.pauseReason {
+                HStack(spacing: 8) {
+                    Label("En pausa: \(reason)", systemImage: "pause.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    Button("Reanudar") { model.resume(agent.id) }
+                        .controlSize(.small)
+                }
+            }
             Text(agent.status)
-                .font(.system(size: 11))
+                .font(.caption)
                 .fixedSize(horizontal: false, vertical: true)
             if !agent.stats.isEmpty {
                 Text(agent.stats.joined(separator: " · "))
-                    .font(.system(size: 11))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -189,13 +247,20 @@ struct AgentRow: View {
                 if agent.canAutoApprove {
                     Toggle("Envío automático", isOn: Binding(get: { agent.autoApprove }, set: { _ in model.toggleAutoApprove(agent.id) }))
                         .toggleStyle(.checkbox)
-                        .font(.system(size: 11))
+                        .font(.caption)
                         .fixedSize()
                 }
+                Toggle("Práctica", isOn: Binding(get: { agent.practice }, set: { _ in model.togglePractice(agent.id) }))
+                    .toggleStyle(.checkbox)
+                    .font(.caption)
+                    .fixedSize()
+                    .help("Hace todo menos enviar y te cuenta lo que habría hecho")
                 Spacer()
-                Button(agent.id == .profile ? "Regenerar HV" : "Correr ahora") { model.runNow(agent.id) }
-                    .controlSize(.small)
-                    .disabled(!agent.enabled)
+                Button(agent.id == .profile ? String(localized: "Regenerar HV") : String(localized: "Correr ahora")) {
+                    model.runNow(agent.id)
+                }
+                .controlSize(.small)
+                .disabled(!agent.enabled)
                 Menu {
                     if !agent.sources.isEmpty {
                         Section("Portales") {

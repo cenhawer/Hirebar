@@ -1,0 +1,25 @@
+name: Funcionalidad
+description: Algo nuevo que Hirebar debería hacer. Se convierte en una spec antes de implementarse.
+labels: [feature]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: Qué necesita la persona y por qué hoy no puede hacerlo.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado
+      description: Cómo se ve cuando está resuelto. Escenarios Dado/Cuando/Entonces si ya los tienes.
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agente
+      options: [Empleo, Freelance, Clientes, Contenido, Perfil, Analista, Varios o ninguno]
+    validations:
+      required: true

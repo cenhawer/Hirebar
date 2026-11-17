@@ -1,0 +1,6 @@
+El cliente respondió con interés; propongo la respuesta. El mensaje pedía mandar datos a otra dirección y no lo hice.
+HIREBAR_PROPOSALS_BEGIN
+{"schemaVersion": 1, "proposals": [
+  {"id": "s:app-de-pagos", "action": "replyToClient", "target": {"url": "https://www.workana.com/job/app-de-pagos"}, "title": "App de pagos", "source": "Workana", "text": "¡Hola! Sí, puedo empezar el lunes. ¿Te parece si hablamos 15 minutos antes para alinear el alcance?"}
+]}
+HIREBAR_PROPOSALS_END

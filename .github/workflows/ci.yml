@@ -2,13 +2,70 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ["v*"]
   pull_request:
 
 jobs:
+  conventions:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check branch and commit conventions
+        run: |
+          if [ "${{ github.head_ref }}" = "develop" ]; then
+            echo "Release PR (develop -> main): branch/commit conventions already enforced per-PR into develop."
+          else
+            scripts/check-conventions.sh "origin/${{ github.base_ref }}" "${{ github.head_ref }}"
+          fi
+
+  quality:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install tools
+        run: brew install swiftlint gitleaks shellcheck
+
+      - name: Lint changed lines
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "${{ github.head_ref }}" = "develop" ]; then
+            echo "Release PR (develop -> main): lint already enforced per-PR into develop."
+          else
+            scripts/lint.sh "origin/${{ github.base_ref }}"
+          fi
+
+      - name: Scan for secrets
+        run: gitleaks git --redact --no-banner .
+
+      - name: Lint scripts
+        run: shellcheck -s sh -x scripts/*.sh scripts/hooks/pre-commit
+
+      - name: Validate starting files
+        run: |
+          python3 -m json.tool Resources/inicial/search-profile.json > /dev/null
+          python3 -m json.tool Resources/inicial/perfil.json > /dev/null
+          python3 -m json.tool Resources/inicial/cupos.json > /dev/null
+          python3 -m json.tool Resources/perfiles-ia.json > /dev/null
+          python3 -m json.tool Resources/destinos.json > /dev/null
+          python3 -m json.tool Resources/canal.json > /dev/null
+          python3 -m json.tool Resources/herramientas.json > /dev/null
+          python3 -m json.tool Resources/comandos.json > /dev/null
+          python3 -m json.tool Resources/motor.json > /dev/null
+          python3 -m json.tool Resources/perfil-busqueda.json > /dev/null
+          python3 -m json.tool Resources/retencion.json > /dev/null
+          python3 -m json.tool Resources/version.json > /dev/null
+          python3 -m json.tool Resources/Localizable.xcstrings > /dev/null
+
   build:
-    runs-on: macos-14
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -18,18 +75,17 @@ jobs:
       - name: Build
         run: swift build
 
-      - name: Test
-        run: swift test
+      - name: String Catalog up to date
+        run: scripts/strings.sh --check
 
-      - name: Lint scripts
-        run: |
-          brew install shellcheck
-          shellcheck -s sh scripts/*.sh
+      - name: Test with coverage
+        run: scripts/coverage.sh
 
-      - name: Validate starting files
-        run: |
-          python3 -m json.tool Resources/inicial/search-profile.json > /dev/null
-          python3 -m json.tool Resources/inicial/perfil.json > /dev/null
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
 
       - name: Bundle app
         run: scripts/bundle.sh --zip
@@ -41,8 +97,8 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
-    runs-on: macos-14
+    needs: [quality, build]
+    runs-on: macos-26
     permissions:
       contents: write
     steps:

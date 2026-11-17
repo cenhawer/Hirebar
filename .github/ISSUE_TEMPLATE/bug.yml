@@ -1,0 +1,28 @@
+name: Falla
+description: Algo que Hirebar hace mal o dejó de hacer.
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirla
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas y qué pasó
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Registro
+      description: Las líneas relevantes de ~/Library/Logs/Hirebar/ (sin datos personales).
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      placeholder: "0.2.0"
+    validations:
+      required: true

@@ -62,6 +62,7 @@ struct SetupAssistantView: View {
                 .fixedSize(horizontal: false, vertical: true)
             TextField("Tu nombre", text: $model.ownerName, prompt: Text("Ana Gómez"))
                 .textFieldStyle(.roundedBorder)
+                .onChange(of: model.ownerName) { _, _ in model.saveOwner() }
             Text("Firma los correos, las propuestas y las publicaciones.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -96,13 +97,18 @@ struct SetupAssistantView: View {
     }
 
     private var agentsStep: some View {
-        List(model.agents, id: \.id) { agent in
-            Toggle(isOn: Binding(get: { agent.enabled }, set: { model.setAgent(agent.id, enabled: $0) })) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(agent.name)
-                    Text(agent.purpose).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            List(model.agents, id: \.id) { agent in
+                Toggle(isOn: Binding(get: { agent.enabled }, set: { model.setAgent(agent.id, enabled: $0) })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(agent.name)
+                        Text(agent.purpose).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
+            Text("Puedes cambiar esto después en Ajustes → Agentes, incluido el horario y los portales de cada uno.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

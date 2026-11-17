@@ -149,12 +149,21 @@ struct ColorField: View {
     let title: String
     @Binding var hex: String
 
+    private var isValid: Bool { Color.isHex(hex) }
+
     var body: some View {
         LabeledContent(title) {
             HStack(spacing: 8) {
                 TextField("", text: $hex, prompt: Text("#000000"))
                     .font(.system(.body, design: .monospaced))
                     .frame(width: 90)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4).stroke(isValid ? Color.clear : Color.orange, lineWidth: 1.5))
+                if !isValid {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                        .help(String(localized: "No es un color válido: usa el formato #RRGGBB."))
+                }
                 ColorPicker("", selection: color, supportsOpacity: false)
                     .labelsHidden()
             }

@@ -120,6 +120,20 @@ final class SetupAssistantModel {
         page = Page(rawValue: page.rawValue - 1) ?? .welcome
     }
 
+    func page(for step: SetupStep) -> Page {
+        switch step {
+        case .owner: return .welcome
+        case .aiEngine: return .engine
+        case .channel: return .channel
+        case .agents: return .agents
+        case .voice, .notifications: return .permissions
+        }
+    }
+
+    func jump(to step: SetupStep) {
+        page = page(for: step)
+    }
+
     func finish() {
         var config = stores.config.load()
         config.setupDismissed = true

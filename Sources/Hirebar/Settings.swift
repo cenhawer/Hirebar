@@ -119,6 +119,15 @@ struct AgentEditor: View {
                 Toggle("Modo práctica (hace todo menos enviar y te cuenta lo que habría hecho)", isOn: $agent.practice)
             } header: {
                 Label(agent.name, systemImage: AgentStyle.symbol(agent.id))
+            } footer: {
+                Text(
+                    String(localized: "Con envío automático, este agente actúa sin pedirte el \"si\" en Telegram. ")
+                        + String(
+                            localized: "Con modo práctica, hace todo el proceso pero no envía nada: te cuenta lo que habría hecho."
+                        )
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             if agent.hasSearch {

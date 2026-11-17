@@ -6,7 +6,7 @@ struct ProfileEditorView: View {
 
     var body: some View {
         Form {
-            Section("Datos personales") {
+            Section {
                 TextField("Nombre", text: $document.person.name)
                 TextField("Titular", text: $document.person.headline, prompt: Text("Desarrollador Backend Senior"))
                 TextField("Ciudad", text: $document.person.city)
@@ -16,6 +16,10 @@ struct ProfileEditorView: View {
                 TextField("LinkedIn", text: $document.person.linkedin)
                 TextField("GitHub", text: $document.person.github)
                 TextField("Portafolio", text: $document.person.portfolio)
+            } header: {
+                Text("Datos personales")
+            } footer: {
+                Text("Así firmas los correos y las propuestas, y así aparece en tu hoja de vida. Déjalo vacío solo si de verdad no aplica.")
             }
             Section {
                 TextField("Cargos que buscas", text: commaList($document.preferences.roles), prompt: Text("Backend Senior, Tech Lead"))

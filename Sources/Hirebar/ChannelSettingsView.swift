@@ -99,6 +99,7 @@ final class ChannelSettingsModel {
 
 struct ChannelSettingsView: View {
     @Bindable var model: ChannelSettingsModel
+    @State private var confirmingRemoveBot = false
 
     var body: some View {
         Form {
@@ -124,6 +125,14 @@ struct ChannelSettingsView: View {
         }
         .formStyle(.grouped)
         .onAppear { model.reload() }
+        .confirmationDialog(
+            "¿Quitar este bot de Telegram?", isPresented: $confirmingRemoveBot, titleVisibility: .visible
+        ) {
+            Button("Quitar bot", role: .destructive) { model.removeBot() }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Hirebar deja de enviar y recibir avisos por Telegram hasta que conectes un bot de nuevo.")
+        }
     }
 
     @ViewBuilder
@@ -142,7 +151,7 @@ struct ChannelSettingsView: View {
                 Button("Vincular mi cuenta") { model.startPairing() }
                     .buttonStyle(.borderedProminent)
                 Spacer()
-                Button("Usar otro token", role: .destructive) { model.removeBot() }
+                Button("Usar otro token", role: .destructive) { confirmingRemoveBot = true }
             }
         case .waitingForHello(let bot):
             HStack(spacing: 8) {
@@ -155,7 +164,7 @@ struct ChannelSettingsView: View {
             HStack {
                 Button("Cancelar") { model.cancelPairing() }
                 Spacer()
-                Button("Usar otro token", role: .destructive) { model.removeBot() }
+                Button("Usar otro token", role: .destructive) { confirmingRemoveBot = true }
             }
         case .confirming(let candidate, let bot):
             confirmation(candidate, bot: bot)
@@ -166,7 +175,7 @@ struct ChannelSettingsView: View {
                 Button("Enviar aviso de prueba") { model.sendTest() }
                 Button("Cambiar de cuenta") { model.changeAccount() }
                 Spacer()
-                Button("Quitar bot", role: .destructive) { model.removeBot() }
+                Button("Quitar bot", role: .destructive) { confirmingRemoveBot = true }
             }
         }
     }
@@ -213,8 +222,7 @@ struct ChannelSettingsView: View {
     }
 
     static let misconfiguredText =
-        String(
-            localized: "Faltan los ajustes del canal dentro de la app (canal.json). Vuelve a instalarla con scripts/bundle.sh --install.")
+        String(localized: "Falta un archivo interno de Hirebar. Vuelve a instalar la app.")
     static let noUsernameWarning =
         String(
             localized: """

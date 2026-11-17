@@ -246,7 +246,7 @@ struct FfmpegRequirement: View {
                 }
             }
         } else if status == nil {
-            Label("Falta herramientas.json dentro de la app; vuelve a instalarla.", systemImage: "exclamationmark.triangle.fill")
+            Label("Falta un archivo interno de Hirebar. Vuelve a instalar la app.", systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
         }
     }

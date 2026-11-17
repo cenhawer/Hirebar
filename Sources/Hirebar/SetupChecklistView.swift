@@ -4,6 +4,7 @@ import SwiftUI
 struct SetupChecklistList: View {
     let pending: [SetupStep]
     let emptyText: LocalizedStringKey
+    var onOpen: ((SetupStep) -> Void)?
 
     var body: some View {
         if pending.isEmpty {
@@ -11,13 +12,20 @@ struct SetupChecklistList: View {
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(pending, id: \.self) { step in
-                    Label {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(step.title)
-                            Text(step.detail).font(.caption).foregroundStyle(.secondary)
+                    HStack {
+                        Label {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(step.title)
+                                Text(step.detail).font(.caption).foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "circle").foregroundStyle(.orange)
                         }
-                    } icon: {
-                        Image(systemName: "circle").foregroundStyle(.orange)
+                        if let onOpen {
+                            Spacer()
+                            Button("Completar") { onOpen(step) }
+                                .buttonStyle(.borderless)
+                        }
                     }
                 }
             }

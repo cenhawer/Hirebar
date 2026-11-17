@@ -11,6 +11,7 @@ import SwiftUI
 struct TaskEditor: View {
     @Binding var task: AgentTask
     @State private var hoursText = ""
+    @State private var hoursProblem: String?
 
     static let days = [
         DayOption(id: "lun", title: String(localized: "L")), DayOption(id: "mar", title: String(localized: "M")),
@@ -39,10 +40,16 @@ struct TaskEditor: View {
             TextField("Horas (0 a 23, separadas por coma)", text: $hoursText, prompt: Text("8, 14"))
                 .onAppear { hoursText = task.hours.sorted().map(String.init).joined(separator: ", ") }
                 .onChange(of: hoursText) { _, text in
-                    task.hours = text.split(whereSeparator: { $0 == "," || $0 == " " })
-                        .compactMap { Int($0) }
-                        .filter { (0...23).contains($0) }
+                    let pieces = text.split(whereSeparator: { $0 == "," || $0 == " " }).filter { !$0.isEmpty }
+                    let parsed = pieces.compactMap { Int($0) }.filter { (0...23).contains($0) }
+                    task.hours = parsed
+                    hoursProblem =
+                        parsed.count == pieces.count
+                        ? nil : String(localized: "Se ignoran los valores que no son horas de 0 a 23.")
                 }
+            if let hoursProblem {
+                Text(hoursProblem).font(.caption).foregroundStyle(.orange)
+            }
             Stepper(value: $task.windowHours, in: 1...48) {
                 LabeledContent("Si el Mac estaba dormido, puede correr hasta", value: String(localized: "\(task.windowHours) h después"))
             }

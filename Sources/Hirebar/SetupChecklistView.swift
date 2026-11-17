@@ -44,7 +44,7 @@ struct SetupChecklistSection: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Abrir asistente", action: open)
+                Button("Completar", action: open)
                     .buttonStyle(.borderless)
                     .font(.system(size: 11))
             }

@@ -25,6 +25,11 @@ Prevalece sobre la regla global de Swift en lo que difiere.
   `schemaVersion` y migración con respaldo.
 - Nada de estado en `UserDefaults` salvo preferencias de interfaz.
 
+## Campos de texto
+
+- Todo `TextField`/`SecureField` fuera de un `Form` lleva `.textFieldStyle(.roundedBorder)`: sin eso
+  no tiene borde ni affordance visual y parece texto estático, no un campo editable.
+
 ## Comentarios y textos
 
 - Cero comentarios, sin excepción de "porqué". Solo `///` en contratos públicos que consume un

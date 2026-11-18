@@ -130,11 +130,10 @@ final class RadarTests: XCTestCase {
     }
 
     func testRejectedVacancyNeverReachesScoring() async throws {
-        let source = FakeReadJobSource(hits: [
-            Hit(
-                id: "faker:1", platform: "Portal de prueba con descripción", fit: .strong, title: "App faker:1",
-                url: "https://example.com/faker:1", detail: "remoto", score: 10),
-        ])
+        let rejectableHit = Hit(
+            id: "faker:1", platform: "Portal de prueba con descripción", fit: .strong, title: "App faker:1",
+            url: "https://example.com/faker:1", detail: "remoto", score: 10)
+        let source = FakeReadJobSource(hits: [rejectableHit])
         let rejectableText = "Desarrollador .NET con 7 años de experiencia, 100% remoto."
         let portals = PortalAccess(jobs: [source], freelance: [], fetcher: FixedTextFetcher(text: rejectableText))
         let radar = JobRadar(stores: harness.stores, clock: harness.clock, portals: portals, policy: Controller.repositoryPolicy)

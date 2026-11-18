@@ -27,6 +27,23 @@ struct FakeJobSource: JobSource {
     func descriptionCheck(for hit: Hit) -> DescriptionCheck { .skip }
 }
 
+struct FakeReadJobSource: JobSource {
+    let id = "fake-read-empleo"
+    let name = "Portal de prueba con descripción"
+    let hitPrefix = "faker"
+    let hits: [Hit]
+
+    func search(skip: Set<String>, profile: SearchProfile) async -> SourceResult {
+        SourceResult(hits: hits.filter { !skip.contains($0.id) })
+    }
+}
+
+struct FixedTextFetcher: WebPageFetcher {
+    let text: String
+    func data(_ url: URL) async -> Data? { Data(text.utf8) }
+    func pause(_ seconds: Double) async {}
+}
+
 struct SilentFetcher: WebPageFetcher {
     func data(_ url: URL) async -> Data? { nil }
     func pause(_ seconds: Double) async {}
@@ -110,6 +127,21 @@ final class RadarTests: XCTestCase {
         await waitForResult(of: radar)
         let batch = try XCTUnwrap(pendingList(.jobs))
         XCTAssertEqual(batch.items.map(\.id), ["fake:1"])
+    }
+
+    func testRejectedVacancyNeverReachesScoring() async throws {
+        let source = FakeReadJobSource(hits: [
+            Hit(
+                id: "faker:1", platform: "Portal de prueba con descripción", fit: .strong, title: "App faker:1",
+                url: "https://example.com/faker:1", detail: "remoto", score: 10),
+        ])
+        let rejectableText = "Desarrollador .NET con 7 años de experiencia, 100% remoto."
+        let portals = PortalAccess(jobs: [source], freelance: [], fetcher: FixedTextFetcher(text: rejectableText))
+        let radar = JobRadar(stores: harness.stores, clock: harness.clock, portals: portals, policy: Controller.repositoryPolicy)
+        radar.controller = harness.controller
+        await waitForResult(of: radar)
+        let itemIds = pendingList(.jobs)?.items.map(\.id) ?? []
+        XCTAssertFalse(itemIds.contains("faker:1"))
     }
 
     func testATurnedOffRadarDoesNotSearch() {

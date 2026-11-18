@@ -65,4 +65,33 @@ final class JobScoreBreakdownTests: XCTestCase {
         XCTAssertEqual(normalized.skills + normalized.experience + normalized.location + normalized.careerFit, 100, accuracy: 0.001)
         XCTAssertEqual(normalized.skills, normalized.experience)
     }
+
+    func testMixedStackTieScoresMedioNotBajo() {
+        let text = "Backend Node Go, 2 años de experiencia, 100% remoto desde Colombia."
+        let breakdown = JobScreener.score(text, location: "Colombia", profile: profile)
+        XCTAssertEqual(breakdown.level(for: .skills), .medio)
+    }
+
+    func testMissingScoringWeightsSectionFallsBackToEqualWeights() throws {
+        let withoutSection = Data(
+            """
+            {"jobs":{}}
+            """.utf8)
+        let merged = try XCTUnwrap(try? SearchProfile.decode(withoutSection, over: RepositoryDefaults.searchProfile))
+        XCTAssertEqual(merged.jobs.scoringWeights.skills, 25)
+        XCTAssertEqual(merged.jobs.scoringWeights.experience, 25)
+        XCTAssertEqual(merged.jobs.scoringWeights.location, 25)
+        XCTAssertEqual(merged.jobs.scoringWeights.careerFit, 25)
+    }
+}
+
+enum RepositoryDefaults {
+    static let searchProfile: SearchProfile = {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Resources/perfil-busqueda.json")
+        guard let data = try? Data(contentsOf: url), let profile = try? SearchProfile.decode(data, over: nil) else {
+            fatalError("Resources/perfil-busqueda.json no se pudo leer")
+        }
+        return profile
+    }()
 }

@@ -50,7 +50,7 @@ public final class JobRadar: Radar {
         for hit in examined {
             guard let source = portals.jobs.first(where: { $0.owns(hit) }) else { continue }
             guard case .read(let address) = source.descriptionCheck(for: hit) else {
-                kept.append(scored(hit, text: hit.title, location: "", profile: profile))
+                kept.append(scored(hit, text: hit.title, location: "", profile: profile, titleOnly: true))
                 continue
             }
             guard let page = await portals.fetcher.text(address), let text = source.descriptionText(from: page) else {
@@ -77,10 +77,11 @@ public final class JobRadar: Radar {
         return (kept, examined)
     }
 
-    static func scored(_ hit: Hit, text: String, location: String, profile: JobProfile) -> Hit {
+    static func scored(_ hit: Hit, text: String, location: String, profile: JobProfile, titleOnly: Bool = false) -> Hit {
         let breakdown = JobScreener.score(text, location: location, profile: profile)
-        let detail = hit.detail + "\n" + breakdown.lines.joined(separator: " · ")
-        return hit.with(detail: detail, score: Int((100 - breakdown.total).rounded()))
+        var detail = hit.detail + "\n" + breakdown.lines.joined(separator: " · ")
+        if titleOnly { detail += String(localized: " (estimado solo con el título)") }
+        return hit.with(detail: detail, fitScore: breakdown.total)
     }
 
     private func finish(_ found: [Hit], examined: [Hit]) {

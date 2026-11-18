@@ -72,6 +72,65 @@ public enum JobScreener {
         return nil
     }
 
+    public static func score(_ text: String, location: String = "", profile: JobProfile) -> JobScoreBreakdown {
+        let t = TextTools.normalize(text)
+        let loc = TextTools.normalize(location)
+        func hits(_ words: [String]) -> Int { words.filter { TextTools.containsWord(t, $0) }.count }
+
+        let mine = TextTools.countWords(t, profile.ownStack)
+        let other = TextTools.countWords(t, profile.otherStack)
+        let skills: ScoreLevel
+        if mine == 0 && other == 0 {
+            skills = .sinDatos
+        } else if other > mine * 2 {
+            skills = .bajo
+        } else if mine > 0 && other == 0 {
+            skills = .alto
+        } else {
+            skills = .medio
+        }
+
+        let experience: ScoreLevel
+        if let top = maxYears(t) {
+            experience = top <= profile.maxYearsRequired ? .alto : .bajo
+        } else {
+            experience = .sinDatos
+        }
+
+        let locationLevel: ScoreLevel
+        if loc.trimmingCharacters(in: .whitespaces).isEmpty {
+            locationLevel = .sinDatos
+        } else if TextTools.containsWord(loc, profile.country.lowercased()) || TextTools.containsWord(t, profile.country.lowercased()) {
+            locationLevel = .alto
+        } else if profile.screening.regionWide.contains(where: { t.contains($0) }) {
+            locationLevel = .medio
+        } else {
+            locationLevel = .bajo
+        }
+
+        let careerFitHits = hits(profile.strong) + hits(profile.generic)
+        let careerFit: ScoreLevel
+        if careerFitHits == 0 && hits(profile.weak) == 0 {
+            careerFit = .sinDatos
+        } else if hits(profile.strong) >= 1 {
+            careerFit = .alto
+        } else if careerFitHits >= 1 {
+            careerFit = .medio
+        } else {
+            careerFit = .bajo
+        }
+
+        return JobScoreBreakdown(
+            scores: [
+                DimensionScore(dimension: .skills, level: skills),
+                DimensionScore(dimension: .experience, level: experience),
+                DimensionScore(dimension: .location, level: locationLevel),
+                DimensionScore(dimension: .careerFit, level: careerFit),
+            ],
+            weights: profile.scoringWeights
+        )
+    }
+
     public static func salaryCOP(_ text: String) -> Double? {
         let t = text.lowercased()
         guard let regex = try? NSRegularExpression(pattern: "\\d[\\d.,]*") else { return nil }

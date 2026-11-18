@@ -14,7 +14,7 @@ public enum ProposalParser {
     public static let endMarker = "HIREBAR_PROPOSALS_END"
     public static let currentSchemaVersion = 1
 
-    private struct ProposalList: Decodable {
+    private struct ProposalList: Codable {
         let schemaVersion: Int
         let proposals: [Proposal]
     }
@@ -30,6 +30,14 @@ public enum ProposalParser {
         let duplicates = Dictionary(grouping: list.proposals, by: \.id).filter { $0.value.count > 1 }.keys.sorted()
         guard duplicates.isEmpty else { return .failure(.duplicateIds(duplicates)) }
         return .success(list.proposals)
+    }
+
+    public static func encodeBlock(_ proposals: [Proposal]) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let list = ProposalList(schemaVersion: currentSchemaVersion, proposals: proposals)
+        let json = (try? encoder.encode(list)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        return "\(beginMarker)\n\(json)\n\(endMarker)"
     }
 
     public static func removingBlock(from output: String) -> String {

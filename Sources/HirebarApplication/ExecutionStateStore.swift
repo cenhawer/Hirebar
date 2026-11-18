@@ -14,6 +14,8 @@ public protocol ExecutionStateStore: Sendable {
     func contactedTargets(agent: AgentID) -> [Target]
     func seenProposals() -> [String: Date]
     func saveSeenProposals(_ seen: [String: Date]) throws
+    func reviewedDraft(batch: String) -> ReviewedDraft?
+    func saveReviewedDraft(_ draft: ReviewedDraft, batch: String) throws
     func pauses() -> [AgentPause]
     func pause(_ pause: AgentPause) throws
     func resume(_ agent: AgentID) throws

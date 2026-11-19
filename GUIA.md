@@ -241,6 +241,7 @@ Los guiones, tu perfil, tus hojas de vida y los borradores vigentes no se borran
 | Contenido | `post` · `post <cuenta>` · `post <cuenta> cambia <qué>` · `post <cuenta> salta` · `publica <cuenta>` (con una sola cuenta no hace falta nombrarla) |
 | Perfil | `logro …` · `trabajo …` · `habilidad <nombre> <nivel>` · `habilidades` · `hv` |
 | Nota para el análisis del domingo | `anota entrevista con Acme el jueves` |
+| Prepararte para una entrevista | `entrevista <palabras de la vacante>` (o `entrevista` a solas si tienes una sola postulación enviada) |
 
 Cualquier otra cosa: el bot responde con la lista completa.
 

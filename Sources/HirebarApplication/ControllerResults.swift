@@ -34,6 +34,8 @@ extension Controller {
         case .profileUpdate: finishProfileUpdate()
         case .linkedInDraft:
             sendSlides(stores.batches.find(id: batchId)?.account)
+        case .interviewPrep:
+            reply(String(localized: "Documento completo en workspace/entrevistas/\(batchId).md"))
         default: break
         }
         return false

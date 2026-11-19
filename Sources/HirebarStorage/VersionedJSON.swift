@@ -4,7 +4,8 @@ import HirebarApplication
 private let log = Log(.storage)
 
 public enum WorkspaceSchema {
-    public static let current = 1
+    public static let current = 2
+    public static let freelanceLoosening = 2
     public static let versionKey = "schemaVersion"
 }
 
@@ -21,7 +22,9 @@ enum VersionedJSON {
         return version(of: data) > WorkspaceSchema.current
     }
 
-    static func stamped(_ data: Data, listKey: String? = nil) -> Data? {
+    static func stamped(
+        _ data: Data, listKey: String? = nil, adjusting adjust: ([String: Any]) -> [String: Any] = { $0 }
+    ) -> Data? {
         guard let object = try? JSONSerialization.jsonObject(with: data) else { return nil }
         var root: [String: Any]
         if let list = object as? [Any], let listKey {
@@ -31,6 +34,7 @@ enum VersionedJSON {
         } else {
             return nil
         }
+        root = adjust(root)
         root[WorkspaceSchema.versionKey] = WorkspaceSchema.current
         return try? JSONSerialization.data(withJSONObject: root, options: formatting)
     }

@@ -11,6 +11,7 @@ public struct FreelanceProfile: Codable, Sendable {
     public var whatsappBotWords: [String]
     public var offProfile: [String]
     public var frontendOnly: [String]
+    public var aiWords: [String]
     public var minFixedUSD: Double
     public var minHourlyUSD: Double
     public var portals: FreelancePortalRules
@@ -78,7 +79,7 @@ public struct SearchProfile: Codable, Sendable {
 extension FreelanceProfile {
     enum CodingKeys: String, CodingKey {
         case workanaQueries, strong, stretch, hardBlocked, stackBlocked, titleBlocked, titleNever
-        case whatsappBotWords, offProfile, frontendOnly, minFixedUSD, minHourlyUSD, portals
+        case whatsappBotWords, offProfile, frontendOnly, aiWords, minFixedUSD, minHourlyUSD, portals
     }
 
     public init(from decoder: Decoder) throws {
@@ -94,6 +95,7 @@ extension FreelanceProfile {
         whatsappBotWords = try c.decode(.whatsappBotWords, fallback: base?.whatsappBotWords)
         offProfile = try c.decode(.offProfile, fallback: base?.offProfile)
         frontendOnly = try c.decode(.frontendOnly, fallback: base?.frontendOnly)
+        aiWords = try c.decode(.aiWords, fallback: base?.aiWords)
         minFixedUSD = try c.decode(.minFixedUSD, fallback: base?.minFixedUSD)
         minHourlyUSD = try c.decode(.minHourlyUSD, fallback: base?.minHourlyUSD)
         portals = try c.decode(.portals, fallback: base?.portals)

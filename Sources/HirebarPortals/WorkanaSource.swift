@@ -39,14 +39,18 @@ public struct WorkanaSource: ListingSource {
             let title = TextTools.clean(result["title"] as? String ?? slug)
             let description = TextTools.clean(result["description"] as? String ?? "")
             let skills = ((result["skills"] as? [[String: Any]]) ?? []).compactMap { $0["anchorText"] as? String }
-            guard
-                let fit = FreelanceClassifier.classify(
-                    head: "\(title) \(skills.joined(separator: " "))", body: description,
-                    title: title, profile: profile.freelance)
-            else { continue }
+            let verdict = FreelanceClassifier.verdict(
+                head: "\(title) \(skills.joined(separator: " "))", body: description, title: title, profile: profile.freelance)
+            guard let fit = verdict.fit else {
+                if let reason = verdict.reason { outcome.discarded.append(FreelanceDiscardNote(reason: reason, title: title)) }
+                continue
+            }
             matching += 1
             let budgetText = TextTools.normalize(result["budget"] as? String ?? "")
-            if rules.workanaLowBudgets.contains(where: { budgetText.contains(" \($0) ") }) { continue }
+            if rules.workanaLowBudgets.contains(where: { budgetText.contains(" \($0) ") }) {
+                outcome.discarded.append(FreelanceDiscardNote(reason: .budgetTooLow, title: title))
+                continue
+            }
             guard let page = await fetcher.text("\(Self.base)/job/" + slug) else { continue }
             if page.contains(">Esperando depósito") { continue }
             let pageText = TextTools.clean(page)
@@ -69,13 +73,19 @@ public struct WorkanaSource: ListingSource {
             }
             await fetcher.pause(0.5)
         }
+        let hours = rules.workanaMaxAgeMinutes / 60
         let found = String(
-            localized: "\(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de 12 h")
+            localized: """
+                \(pages)/\(queries.count) páginas leídas, \(candidates.count) proyectos no vistos, \(recent) de menos de \(hours) h
+                """)
         let notified = String(
             localized: """
                 \(matching) de tu perfil, \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo
                 """)
         log.write("Freelance · Workana: \(found), \(notified)")
+        if !outcome.discarded.isEmpty {
+            log.write(String(localized: "Freelance · Workana descartados: \(FreelanceClassifier.summary(outcome.discarded))"))
+        }
         return outcome
     }
 

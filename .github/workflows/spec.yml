@@ -16,8 +16,8 @@ jobs:
         env:
           PULL_REQUEST_BODY: ${{ github.event.pull_request.body }}
         run: |
-          if [ "${{ github.head_ref }}" = "develop" ]; then
-            echo "Release PR (develop -> main): spec reference already enforced per-PR into develop."
+          if [ "${{ github.head_ref }}" = "develop" ] || [ "${{ github.base_ref }}" = "main" ]; then
+            echo "Release PR (-> main): spec reference already enforced per-PR into develop."
           else
             printf '%s\n' "$PULL_REQUEST_BODY" > "$RUNNER_TEMP/pull-request-body.md"
             scripts/check-spec-reference.sh "origin/${{ github.base_ref }}" "$RUNNER_TEMP/pull-request-body.md"

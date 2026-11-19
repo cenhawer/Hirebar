@@ -37,6 +37,7 @@ final class InMemoryExecutionStateStore: ExecutionStateStore, @unchecked Sendabl
     func saveSeenProposals(_ seen: [String: Date]) throws { self.seen = seen }
     func reviewedDraft(batch: String) -> ReviewedDraft? { reviewedDrafts[batch] }
     func saveReviewedDraft(_ draft: ReviewedDraft, batch: String) throws { reviewedDrafts[batch] = draft }
+    func activity() -> [ActivityEntry] { [] }
     func pauses() -> [AgentPause] { activePauses }
     func pause(_ pause: AgentPause) throws {
         if failsToPause { throw StoreFailure() }

@@ -29,6 +29,7 @@ public enum CommandKind: String, CaseIterable, Codable, Sendable {
     case practice
     case voiceNote
     case help
+    case interviewPrep
 }
 
 public enum ListTarget: Equatable, Sendable {

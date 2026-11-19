@@ -21,6 +21,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
     case portalScanJobs = "portales-empleo"
     case portalScanFreelance = "portales-freelance"
     case followUpSend = "seguimiento-envio"
+    case interviewPrep = "entrevista"
 
     public var batchPrefix: String {
         switch self {
@@ -35,6 +36,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .portalScanJobs: return "pe"
         case .portalScanFreelance: return "pf"
         case .followUpSend: return "gs"
+        case .interviewPrep: return "ent"
         }
     }
 
@@ -55,6 +57,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .portalScanJobs: return String(localized: "Revisar tus portales de empleo")
         case .portalScanFreelance: return String(localized: "Revisar tus portales freelance")
         case .followUpSend: return String(localized: "Enviar seguimientos aprobados")
+        case .interviewPrep: return String(localized: "Preparar una entrevista")
         }
     }
 }
@@ -117,6 +120,15 @@ public struct BatchItem: Codable, Sendable {
         title = hit.title
         url = hit.url
         detail = hit.detail
+    }
+
+    public init(id: String, platform: String, kind: String, title: String, url: String, detail: String) {
+        self.id = id
+        self.platform = platform
+        self.kind = kind
+        self.title = title
+        self.url = url
+        self.detail = detail
     }
 }
 

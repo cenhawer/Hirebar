@@ -15,6 +15,8 @@ enum TaskProfiles {
             return .draft(writablePaths: ["perfil.json", "perfil.md", "hv/"])
         case .weeklyReport:
             return .draft(writablePaths: ["informes/"])
+        case .interviewPrep:
+            return .draft(writablePaths: ["entrevistas/"])
         case .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInPublish:
             return .act
         }
@@ -27,7 +29,9 @@ enum TaskProfiles {
         case .social: return [.apply, .draftEmail]
         case .followUp: return [.sendFollowUp, .replyToClient]
         case .prospecting: return [.sendEmail, .sendFollowUp, .replyToClient]
-        case .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate, .weeklyReport: return []
+        case .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate, .weeklyReport,
+            .interviewPrep:
+            return []
         }
     }
 
@@ -37,7 +41,7 @@ enum TaskProfiles {
         case .portalScanFreelance: return .freelance
         case .followUp: return .followUpSend
         case .prospecting, .jobs, .freelance, .followUpSend, .prospectingSend, .linkedInDraft, .linkedInPublish, .profileUpdate,
-            .weeklyReport:
+            .weeklyReport, .interviewPrep:
             return nil
         }
     }
@@ -48,6 +52,8 @@ enum TaskProfiles {
             return performanceCheckDue
         case .profileUpdate, .weeklyReport:
             return false
+        case .interviewPrep:
+            return true
         case .social, .portalScanJobs, .portalScanFreelance, .followUp, .prospecting, .jobs, .freelance, .followUpSend,
             .prospectingSend, .linkedInPublish:
             return true

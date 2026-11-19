@@ -33,6 +33,7 @@ extension Controller {
             corre <nombre>: corre ya las tareas de un agente (ej: corre clientes)
             reanudar <nombre>: saca un agente de la pausa por una acción que no coincidió con lo aprobado
             auto si / auto no: envío automático de empleo y freelance (o String(localized: "auto <agente> si"), ej: String(localized: "auto clientes si"))
+            entrevista <palabras de la vacante>: arma un documento para prepararte (o "entrevista" a solas con una sola postulación)
             (Puedes responder citando un aviso para elegir cuál lista.)
             """)
 
@@ -70,7 +71,7 @@ extension Controller {
         switch command.kind {
         case .approve, .discard, .status, .agents, .resume, .keepPaused, .autoSend, .autoSendConfirm, .autoSendCancel:
             performControl(command)
-        case .followUps, .weeklyReport, .regenerateCV, .note, .agentSwitch, .runAgent, .search, .practice:
+        case .followUps, .weeklyReport, .regenerateCV, .note, .agentSwitch, .runAgent, .search, .practice, .interviewPrep:
             performRoutine(command)
         case .publish, .post, .video, .remake: performContent(command)
         case .achievement, .jobChange, .skill, .skills: performProfile(command)
@@ -103,6 +104,7 @@ extension Controller {
         case .runAgent: handleRunNow(command.rest)
         case .search: searchNow(command.words.first ?? "")
         case .practice: handlePractice(command.words)
+        case .interviewPrep: runInterviewPrep(command.rest)
         default: reply(Self.help)
         }
     }

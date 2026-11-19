@@ -27,7 +27,7 @@ public enum AgentKind: String, Codable, CaseIterable, Sendable {
         case .prospecting, .prospectingSend: return .clients
         case .linkedInDraft, .linkedInPublish: return .content
         case .profileUpdate: return .profile
-        case .weeklyReport: return .analyst
+        case .weeklyReport, .interviewPrep: return .analyst
         }
     }
 }

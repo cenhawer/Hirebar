@@ -38,6 +38,18 @@ Mientras falte algo (tu nombre, la IA probada, Telegram, un agente prendido o un
 | Perfil | Mantiene tu perfil y regenera tus hojas de vida. | Cuando se lo pides. | Ver la sección siguiente. |
 | Analista | Te manda los números de la semana de cada agente. No cambia nada. | Domingo, 6 p. m. | Leerlo y decidir qué ajustar. |
 
+### Puntaje de cada vacante
+
+Junto a cada vacante que te manda Empleo (`ENCAJA`/`RETO`), ves un desglose en cuatro líneas:
+habilidades, experiencia, ubicación y alineación de carrera. Cada una queda en `alto`, `medio`,
+`bajo` o `sin datos` (cuando la vacante no menciona esa dimensión). El desglose es informativo: no
+cambia qué vacantes llegan, solo te ayuda a priorizar cuando llegan varias el mismo día (las ves
+ordenadas de mayor a menor puntaje total).
+
+El peso de cada dimensión en el puntaje total vive en `Resources/perfil-busqueda.json`
+(`jobs.scoringWeights`). Por defecto las cuatro pesan igual (25 cada una); puedes subir o bajar
+cualquiera y Hirebar ajusta el resto para que sigan sumando 100.
+
 ## Motor de IA
 
 La búsqueda en los portales incluidos no usa IA. La IA hace el trabajo pesado: enviar propuestas, postular, seguimientos, correos, publicaciones y tu perfil. Se elige en **Ajustes → Motor de IA**:
@@ -229,6 +241,7 @@ Los guiones, tu perfil, tus hojas de vida y los borradores vigentes no se borran
 | Contenido | `post` · `post <cuenta>` · `post <cuenta> cambia <qué>` · `post <cuenta> salta` · `publica <cuenta>` (con una sola cuenta no hace falta nombrarla) |
 | Perfil | `logro …` · `trabajo …` · `habilidad <nombre> <nivel>` · `habilidades` · `hv` |
 | Nota para el análisis del domingo | `anota entrevista con Acme el jueves` |
+| Prepararte para una entrevista | `entrevista <palabras de la vacante>` (o `entrevista` a solas si tienes una sola postulación enviada) |
 
 Cualquier otra cosa: el bot responde con la lista completa.
 

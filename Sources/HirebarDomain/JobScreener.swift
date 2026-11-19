@@ -22,11 +22,11 @@ public enum JobScreener {
         let saysRemote = saysFullyRemote || profile.screening.remoteHints.contains(where: { t.contains($0) })
         if requireRemote && !saysRemote { return .reject("no dice que sea remota") }
         if !loc.trimmingCharacters(in: .whitespaces).isEmpty {
-            if !TextTools.containsWord(loc, country) {
-                let accepts = profile.screening.regionWide.contains(where: { t.contains($0) }) || TextTools.containsWord(t, country)
-                if !accepts { return .reject("remoto solo para \(location)") }
-            } else if location.contains(",") && !TextTools.containsWord(loc, profile.homeCity) && !saysFullyRemote {
-                return .reject("sede en \(location) y no dice 100% remoto")
+            switch locationAcceptance(t, loc: loc, rawLocation: location, saysFullyRemote: saysFullyRemote, profile: profile) {
+            case .sameCityOrNoCity: break
+            case .sameCountryWrongCity: return .reject("sede en \(location) y no dice 100% remoto")
+            case .regionWideOnly: break
+            case .noMatch: return .reject("remoto solo para \(location)")
             }
         }
         for place in profile.screening.otherPlaces where place != country {
@@ -44,6 +44,25 @@ public enum JobScreener {
         if mine == 0 && other >= 2 { return .reject("su stack principal no es el tuyo") }
         if other > mine * 2 { return .keep(.stretch) }
         return .keep(.strong)
+    }
+
+    enum LocationAcceptance {
+        case sameCityOrNoCity
+        case sameCountryWrongCity
+        case regionWideOnly
+        case noMatch
+    }
+
+    static func locationAcceptance(
+        _ normalizedText: String, loc: String, rawLocation: String, saysFullyRemote: Bool, profile: JobProfile
+    ) -> LocationAcceptance {
+        let country = profile.country.lowercased()
+        if TextTools.containsWord(loc, country) {
+            let wrongCity = rawLocation.contains(",") && !TextTools.containsWord(loc, profile.homeCity) && !saysFullyRemote
+            return wrongCity ? .sameCountryWrongCity : .sameCityOrNoCity
+        }
+        let regional = profile.screening.regionWide.contains(where: { normalizedText.contains($0) })
+        return (regional || TextTools.containsWord(normalizedText, country)) ? .regionWideOnly : .noMatch
     }
 
     static func maxYears(_ normalized: String) -> Int? {
@@ -70,6 +89,66 @@ public enum JobScreener {
         if generic >= 1 && weak == 0 { return .strong }
         if generic + weak >= 1 { return .stretch }
         return nil
+    }
+
+    public static func score(_ text: String, location: String = "", profile: JobProfile) -> JobScoreBreakdown {
+        let t = TextTools.normalize(text)
+        let loc = TextTools.normalize(location)
+        func hits(_ words: [String]) -> Int { words.filter { TextTools.containsWord(t, $0) }.count }
+
+        let mine = TextTools.countWords(t, profile.ownStack)
+        let other = TextTools.countWords(t, profile.otherStack)
+        let skills: ScoreLevel
+        if mine == 0 && other == 0 {
+            skills = .sinDatos
+        } else if other > mine * 2 {
+            skills = .bajo
+        } else if mine > 0 && other == 0 {
+            skills = .alto
+        } else {
+            skills = .medio
+        }
+
+        let experience: ScoreLevel
+        if let top = maxYears(t) {
+            experience = top <= profile.maxYearsRequired ? .alto : .bajo
+        } else {
+            experience = .sinDatos
+        }
+
+        let locationLevel: ScoreLevel
+        if loc.trimmingCharacters(in: .whitespaces).isEmpty {
+            locationLevel = .sinDatos
+        } else {
+            let saysFullyRemote = profile.screening.fullyRemote.contains(where: { t.contains($0) })
+            switch locationAcceptance(t, loc: loc, rawLocation: location, saysFullyRemote: saysFullyRemote, profile: profile) {
+            case .sameCityOrNoCity: locationLevel = .alto
+            case .regionWideOnly: locationLevel = .medio
+            case .sameCountryWrongCity, .noMatch: locationLevel = .bajo
+            }
+        }
+
+        let careerFitHits = hits(profile.strong) + hits(profile.generic)
+        let careerFit: ScoreLevel
+        if careerFitHits == 0 && hits(profile.weak) == 0 {
+            careerFit = .sinDatos
+        } else if hits(profile.strong) >= 1 {
+            careerFit = .alto
+        } else if careerFitHits >= 1 {
+            careerFit = .medio
+        } else {
+            careerFit = .bajo
+        }
+
+        return JobScoreBreakdown(
+            scores: [
+                DimensionScore(dimension: .skills, level: skills),
+                DimensionScore(dimension: .experience, level: experience),
+                DimensionScore(dimension: .location, level: locationLevel),
+                DimensionScore(dimension: .careerFit, level: careerFit),
+            ],
+            weights: profile.scoringWeights
+        )
     }
 
     public static func salaryCOP(_ text: String) -> Double? {

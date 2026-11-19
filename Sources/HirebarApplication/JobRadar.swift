@@ -50,7 +50,7 @@ public final class JobRadar: Radar {
         for hit in examined {
             guard let source = portals.jobs.first(where: { $0.owns(hit) }) else { continue }
             guard case .read(let address) = source.descriptionCheck(for: hit) else {
-                kept.append(hit)
+                kept.append(scored(hit, text: hit.title, location: "", profile: profile, titleOnly: true))
                 continue
             }
             guard let page = await portals.fetcher.text(address), let text = source.descriptionText(from: page) else {
@@ -62,19 +62,26 @@ public final class JobRadar: Radar {
                 await portals.fetcher.pause(1)
                 continue
             }
-            let verdict = JobScreener.screen(
-                text, location: source.location(from: page),
-                requireRemote: source.requiresRemoteInDescription, profile: profile)
+            let location = source.location(from: page)
+            let verdict = JobScreener.screen(text, location: location, requireRemote: source.requiresRemoteInDescription, profile: profile)
             switch verdict {
             case .reject(let reason):
                 log.write("Empleo: descartada \(hit.platform) · \(hit.title): \(reason)")
             case .keep(let fit):
                 let final: Fit = (hit.fit == .stretch || fit == .stretch) ? .stretch : .strong
-                kept.append(hit.with(fit: final, detail: hit.detail + String(localized: " · descripción revisada")))
+                let reviewed = hit.with(fit: final, detail: hit.detail + String(localized: " · descripción revisada"))
+                kept.append(scored(reviewed, text: text, location: location, profile: profile))
             }
             await portals.fetcher.pause(1.2)
         }
         return (kept, examined)
+    }
+
+    static func scored(_ hit: Hit, text: String, location: String, profile: JobProfile, titleOnly: Bool = false) -> Hit {
+        let breakdown = JobScreener.score(text, location: location, profile: profile)
+        var detail = hit.detail + "\n" + breakdown.lines.joined(separator: " · ")
+        if titleOnly { detail += String(localized: " (estimado solo con el título)") }
+        return hit.with(detail: detail, fitScore: breakdown.total)
     }
 
     private func finish(_ found: [Hit], examined: [Hit]) {

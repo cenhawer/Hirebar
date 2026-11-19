@@ -9,7 +9,7 @@ extension Controller {
     }
 
     func runNext() {
-        guard running == nil, !queue.isEmpty else { return }
+        guard running == nil, !reviewInFlight, !queue.isEmpty else { return }
         let (batch, items) = queue.removeFirst()
         if batch.mode == .linkedInDraft, let account = stores.contentAccounts.find(batch.account) {
             media.prepareSlides(for: account)
@@ -131,9 +131,14 @@ extension Controller {
                 batch.result = String(output.suffix(2000))
                 stores.batches.upsert(batch)
             }
-            report(batchId, mode: mode, code: code, output: output)
+            let startedReview = report(batchId, mode: mode, code: code, output: output)
             if acts { verify(batchId, mode: mode) }
+            guard !startedReview else { return }
         }
+        advanceQueue()
+    }
+
+    func advanceQueue() {
         setStatus(queue.isEmpty ? String(localized: "en espera") : String(localized: "siguiente lista…"))
         runNext()
     }

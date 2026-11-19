@@ -12,12 +12,14 @@ public struct EnginePolicy: Decodable, Sendable {
         let vigilanciaSegundos: Int
         let recuperacionSegundos: Int
         let propuestasVistasDias: Int
+        let revisionMinutos: Int
 
         public var maximum: TimeInterval { TimeInterval(maximoMinutos) * EnginePolicy.secondsPerMinute }
         public var expiredSessionAlert: TimeInterval { TimeInterval(avisoSesionVencidaMinutos) * EnginePolicy.secondsPerMinute }
         public var watchdog: TimeInterval { TimeInterval(vigilanciaSegundos) }
         public var recoveryDelay: TimeInterval { TimeInterval(recuperacionSegundos) }
         public var proposalSeenWindow: TimeInterval { TimeInterval(propuestasVistasDias) * EnginePolicy.secondsPerDay }
+        public var reviewTimeout: TimeInterval { TimeInterval(revisionMinutos) * EnginePolicy.secondsPerMinute }
     }
 
     public struct JobRadar: Decodable, Sendable {

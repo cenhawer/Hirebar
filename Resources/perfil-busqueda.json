@@ -666,6 +666,12 @@
         "que"
       ]
     },
+    "scoringWeights": {
+      "careerFit": 25,
+      "experience": 25,
+      "location": 25,
+      "skills": 25
+    },
     "strong": [
       "node",
       "nodejs",

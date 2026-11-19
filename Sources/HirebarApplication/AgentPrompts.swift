@@ -66,6 +66,7 @@ struct AgentPrompts {
         case .linkedInDraft, .linkedInPublish: return contentPrompt(context)
         case .followUpSend, .prospectingSend, .jobs, .freelance: return executionPrompt(context)
         case .weeklyReport, .profileUpdate: return profilePrompt(context)
+        case .interviewPrep: return interviewPrepPrompt(context)
         }
     }
 
@@ -274,6 +275,7 @@ struct AgentPrompts {
         case .profileUpdate: return "actualizando tu perfil y hojas de vida (desde \(hour))"
         case .portalScanJobs: return "revisando tus portales de empleo (desde \(hour))"
         case .portalScanFreelance: return "revisando tus portales freelance (desde \(hour))"
+        case .interviewPrep: return "preparando una entrevista (desde \(hour))"
         }
     }
 }

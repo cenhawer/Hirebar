@@ -38,6 +38,7 @@ final class PortalFixtureTests: XCTestCase {
         freelance.whatsappBotWords = []
         freelance.offProfile = []
         freelance.frontendOnly = []
+        freelance.aiWords = []
         freelance.minFixedUSD = 0
         freelance.minHourlyUSD = 0
         return SearchProfile(freelance: freelance, jobs: RepositoryDefaults.searchProfile.jobs)

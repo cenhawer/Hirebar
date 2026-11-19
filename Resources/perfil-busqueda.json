@@ -1,5 +1,16 @@
 {
   "freelance": {
+    "aiWords": [
+      "ia",
+      "inteligencia artificial",
+      "gpt",
+      "chatgpt",
+      "openai",
+      "llm",
+      "agente de ia",
+      "agentes de ia",
+      "agente ia"
+    ],
     "frontendOnly": [
       "react",
       "next.js",
@@ -36,14 +47,10 @@
     "offProfile": [
       "data entry",
       "entrada de datos",
-      "research",
-      "investigacion",
       "gohighlevel",
       "ghl",
       "zoho",
       "hubspot",
-      "catalog",
-      "catalogo",
       "virtual assistant",
       "asistente virtual",
       "copywriting",
@@ -57,7 +64,6 @@
       "legal",
       "contabilidad",
       "accounting",
-      "excel",
       "google sheets",
       "tiktok",
       "instagram",
@@ -83,7 +89,7 @@
         "menos de usd 15",
         "menos de usd 50"
       ],
-      "workanaMaxAgeMinutes": 720,
+      "workanaMaxAgeMinutes": 1440,
       "workanaOldAfterMinutes": 180,
       "workanaOldMaxBids": 12
     },
@@ -137,7 +143,14 @@
       "automation",
       "power bi",
       "sap",
-      "odoo"
+      "odoo",
+      "pagina web",
+      "sitio web",
+      "landing",
+      "landing page",
+      "html",
+      "css",
+      "excel"
     ],
     "strong": [
       "api",
@@ -231,22 +244,7 @@
       "respuestas automaticas",
       "respuesta automatica",
       "automatizacion de respuestas",
-      "inteligencia artificial",
-      "ia",
-      "gpt",
-      "chatgpt",
-      "openai",
-      "llm",
-      "agente de ia",
-      "agentes de ia",
-      "agente ia",
       "n8n",
-      "firebase",
-      "landing",
-      "landing page",
-      "pagina web",
-      "sitio web",
-      "diseno web",
       "odoo",
       "power bi",
       "tableau",

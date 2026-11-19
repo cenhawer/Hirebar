@@ -11,6 +11,18 @@ struct AgentPrompts {
         return base + "\n\n" + actionLogSection(for: batch)
     }
 
+    func reviewPrompt(for mode: Mode, proposals: [Proposal], owner: String) -> String {
+        """
+        Revisión del borrador de \(owner) para \(mode.title.lowercased()). Otro proceso de IA redactó esta lista; revísala \
+        contra el perfil de \(owner) y lo que cada vacante, proyecto o hilo original pide (título y fuente de cada \
+        elemento). Si una afirmación no está respaldada por el perfil, quítala; no inventes un dato nuevo para \
+        justificarla. Si el texto está bien, devuélvelo exactamente igual. No envíes, publiques ni postules nada: solo \
+        responde con la lista final en el mismo formato, entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker).
+
+        \(ProposalParser.encodeBlock(proposals))
+        """
+    }
+
     func actionLogSection(for batch: Batch) -> String {
         let approved = stores.executionState.approvedItems(batch: batch.id).map { item in
             "- itemId: \(item.proposal.id) · action: \(item.proposal.action.rawValue) · target: \(ExecutionApprovals.targetJSON(item.proposal.target))"

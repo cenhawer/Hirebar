@@ -34,6 +34,7 @@ public struct FileExecutionStateStore: ExecutionStateStore {
     }
 
     var proposalsFolder: URL { stateFolder.appendingPathComponent("propuestas", isDirectory: true) }
+    var reviewsFolder: URL { stateFolder.appendingPathComponent("revisiones", isDirectory: true) }
     var approvedFolder: URL { stateFolder.appendingPathComponent("aprobados", isDirectory: true) }
     var verificationsFolder: URL { stateFolder.appendingPathComponent("verificaciones", isDirectory: true) }
     var pausesFile: URL { stateFolder.appendingPathComponent("pausas.json") }
@@ -49,6 +50,14 @@ public struct FileExecutionStateStore: ExecutionStateStore {
 
     public func saveProposals(_ proposals: [Proposal], batch: String) throws {
         try write(proposals, to: proposalsFolder.appendingPathComponent("\(batch).json"))
+    }
+
+    public func reviewedDraft(batch: String) -> ReviewedDraft? {
+        read(ReviewedDraft.self, from: reviewsFolder.appendingPathComponent("\(batch).json"))
+    }
+
+    public func saveReviewedDraft(_ draft: ReviewedDraft, batch: String) throws {
+        try write(draft, to: reviewsFolder.appendingPathComponent("\(batch).json"))
     }
 
     public func approvedItems(batch: String) -> [ApprovedItem] {

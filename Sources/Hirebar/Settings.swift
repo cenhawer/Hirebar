@@ -117,6 +117,9 @@ struct AgentEditor: View {
                     Toggle("Envío automático (sin esperar tu \"si\" en Telegram)", isOn: $agent.autoApprove)
                 }
                 Toggle("Modo práctica (hace todo menos enviar y te cuenta lo que habría hecho)", isOn: $agent.practice)
+                if [.jobs, .freelance, .clients].contains(agent.id) {
+                    Toggle("Revisar antes de aprobar (un segundo paso de IA corrige el borrador)", isOn: $agent.reviewEnabled)
+                }
             } header: {
                 Label(agent.name, systemImage: AgentStyle.symbol(agent.id))
             } footer: {

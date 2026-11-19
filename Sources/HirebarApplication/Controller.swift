@@ -61,8 +61,9 @@ public final class Controller {
     var runStarted: Date?
     var watchdog: ScheduledWork?
     var lastAuthAlert: Date?
+    var reviewInFlight = false
 
-    public var isIdle: Bool { running == nil && queue.isEmpty }
+    public var isIdle: Bool { running == nil && queue.isEmpty && !reviewInFlight }
     public var runningAgent: AgentKind? { runningMode.map(AgentKind.owner) }
 
     public func start() {

@@ -4,10 +4,12 @@ import HirebarDomain
 private let log = Log(.ai)
 
 extension Controller {
-    func report(_ batchId: String, mode: Mode, code: Int32, output: String) {
+    @discardableResult
+    func report(_ batchId: String, mode: Mode, code: Int32, output: String) -> Bool {
         if code == 0 && TaskProfiles.executionMode(for: mode) != nil {
-            offerProposals(from: output, mode: mode)
-            if output.contains(Self.noNewsMarker) { return }
+            let startedReview = offerProposals(from: output, mode: mode)
+            if output.contains(Self.noNewsMarker) { return startedReview }
+            if startedReview { return true }
         }
         let readsNews = [Mode.followUp, .social, .portalScanJobs, .portalScanFreelance].contains(mode)
         if code == 0 && readsNews && output.contains(Self.noNewsMarker) {
@@ -18,22 +20,23 @@ extension Controller {
                     String(localized: "Seguimientos: hoy no tocaba escribirle a nadie.\n\n")
                         + (summary.isEmpty ? String(localized: "Sin más detalle.") : String(summary.suffix(3500))))
             }
-            return
+            return false
         }
         guard code == 0 && !output.isEmpty else {
             let detail = output.isEmpty ? String(localized: "sin salida") : String(output.suffix(1500))
             let failure = String(localized: "\(ai.capitalizedName) terminó con error (código \(code)). Detalle: \(detail)")
             reply(failure + String(localized: "\nRegistro: workspace/ejecuciones/\(batchId).log"))
-            return
+            return false
         }
         reply(String(ProposalParser.removingBlock(from: output).suffix(3800)))
         switch mode {
-        case .prospecting: offerProspectingEmails()
+        case .prospecting: return offerProspectingEmails()
         case .profileUpdate: finishProfileUpdate()
         case .linkedInDraft:
             sendSlides(stores.batches.find(id: batchId)?.account)
         default: break
         }
+        return false
     }
 
     func sendSlides(_ accountId: String?) {
@@ -101,14 +104,15 @@ extension Controller {
         }
     }
 
-    func offerProposals(from output: String, mode: Mode) {
-        guard let execution = TaskProfiles.executionMode(for: mode) else { return }
+    @discardableResult
+    func offerProposals(from output: String, mode: Mode) -> Bool {
+        guard let execution = TaskProfiles.executionMode(for: mode) else { return false }
         let proposals: [Proposal]
         switch ProposalParser.parse(output, rules: targetRules) {
         case .success(let parsed):
             proposals = parsed
         case .failure(.blockMissing):
-            return
+            return false
         case .failure(let failure):
             Log(agent: AgentKind.owner(of: mode)).write("\(mode.rawValue): la lista de propuestas no es válida (\(failure))")
             reply(
@@ -118,7 +122,7 @@ extension Controller {
                         \(ai.capitalizedName) no dejó la lista en el formato esperado; no la muestro. El detalle quedó \
                         en el registro.
                         """))
-            return
+            return false
         }
         let intake = ProposalIntake(window: policy.corridas.proposalSeenWindow, rules: targetRules).accept(
             proposals,
@@ -130,13 +134,16 @@ extension Controller {
             log.write("\(mode.rawValue): descartada una propuesta con acción no permitida para esta tarea (\(proposal.action.rawValue))")
         }
         let fresh = intake.fresh
-        guard !fresh.isEmpty else { return }
+        guard !fresh.isEmpty else { return false }
         let batch = Batch(mode: execution, items: fresh.map { BatchItem($0) }, status: .pending)
-        guard offer(batch, proposals: fresh, title: Self.proposalsTitle(for: mode, count: fresh.count)) else { return }
-        do {
-            try stores.executionState.saveSeenProposals(intake.seen)
-        } catch {
-            log.write("\(mode.rawValue): no pude guardar qué propuestas ya mostré: \(error.localizedDescription)")
+        let title = Self.proposalsTitle(for: mode, count: fresh.count)
+        return reviewThenOffer(batch, proposals: fresh, title: title, sourceMode: mode) { [weak self] offered in
+            guard offered else { return }
+            do {
+                try self?.stores.executionState.saveSeenProposals(intake.seen)
+            } catch {
+                log.write("\(mode.rawValue): no pude guardar qué propuestas ya mostré: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -190,10 +197,11 @@ extension Controller {
         }
     }
 
-    func offerProspectingEmails() {
+    @discardableResult
+    func offerProspectingEmails() -> Bool {
         switch ExecutionApprovals.emailDrafts(rules: targetRules, pending: stores.prospecting.pendingEmails()) {
         case .none:
-            return
+            return false
         case .invalid(let ids):
             let numbers = ids.joined(separator: ", ")
             Log(agent: .clients).write("Prospección: correos incompletos o repetidos en pendientes.json (\(numbers))")
@@ -205,9 +213,12 @@ extension Controller {
                         muestro la lista.
                         """)
             )
+            return false
         case .found(let drafts):
             let batch = Batch(mode: .prospectingSend, items: drafts.map { BatchItem($0.proposal, kind: $0.kind) }, status: .pending)
-            offer(batch, proposals: drafts.map(\.proposal), title: String(localized: "Correos de hoy: \(drafts.count) para aprobar"))
+            return reviewThenOffer(
+                batch, proposals: drafts.map(\.proposal), title: String(localized: "Correos de hoy: \(drafts.count) para aprobar"),
+                sourceMode: .prospecting)
         }
     }
 

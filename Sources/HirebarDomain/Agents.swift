@@ -111,6 +111,7 @@ public struct AgentSettings: Codable, Sendable {
     public var enabled: Bool
     public var autoApprove: Bool
     public var practice = false
+    public var reviewEnabled = false
     public var searchEveryMinutes: Int?
     public var dailyLimit: Int?
     public var tasks: [AgentTask]
@@ -130,7 +131,7 @@ public struct AgentSettings: Codable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, purpose, enabled, autoApprove, practice, searchEveryMinutes, dailyLimit, tasks
+        case id, name, purpose, enabled, autoApprove, practice, reviewEnabled, searchEveryMinutes, dailyLimit, tasks
     }
 
     public init(from decoder: Decoder) throws {
@@ -143,6 +144,7 @@ public struct AgentSettings: Codable, Sendable {
         enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? base.enabled
         autoApprove = try c.decodeIfPresent(Bool.self, forKey: .autoApprove) ?? base.autoApprove
         practice = try c.decodeIfPresent(Bool.self, forKey: .practice) ?? false
+        reviewEnabled = try c.decodeIfPresent(Bool.self, forKey: .reviewEnabled) ?? false
         searchEveryMinutes = try c.decodeIfPresent(Int.self, forKey: .searchEveryMinutes) ?? base.searchEveryMinutes
         dailyLimit = try c.decodeIfPresent(Int.self, forKey: .dailyLimit) ?? base.dailyLimit
         tasks = try c.decodeIfPresent([AgentTask].self, forKey: .tasks) ?? base.tasks

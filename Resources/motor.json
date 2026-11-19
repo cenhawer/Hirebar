@@ -5,7 +5,8 @@
     "avisoSesionVencidaMinutos": 60,
     "vigilanciaSegundos": 60,
     "recuperacionSegundos": 5,
-    "propuestasVistasDias": 30
+    "propuestasVistasDias": 30,
+    "revisionMinutos": 3
   },
   "radares": {
     "revisionSegundos": 30,

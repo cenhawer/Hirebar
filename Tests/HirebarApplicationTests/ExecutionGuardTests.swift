@@ -16,6 +16,7 @@ final class InMemoryExecutionStateStore: ExecutionStateStore, @unchecked Sendabl
     var consumedToday = 0
     var contacted: [Target] = []
     var seen: [String: Date] = [:]
+    var reviewedDrafts: [String: ReviewedDraft] = [:]
     var failsToPause = false
     var failsToSaveVerification = false
 
@@ -34,6 +35,8 @@ final class InMemoryExecutionStateStore: ExecutionStateStore, @unchecked Sendabl
     func contactedTargets(agent: AgentID) -> [Target] { contacted }
     func seenProposals() -> [String: Date] { seen }
     func saveSeenProposals(_ seen: [String: Date]) throws { self.seen = seen }
+    func reviewedDraft(batch: String) -> ReviewedDraft? { reviewedDrafts[batch] }
+    func saveReviewedDraft(_ draft: ReviewedDraft, batch: String) throws { reviewedDrafts[batch] = draft }
     func pauses() -> [AgentPause] { activePauses }
     func pause(_ pause: AgentPause) throws {
         if failsToPause { throw StoreFailure() }

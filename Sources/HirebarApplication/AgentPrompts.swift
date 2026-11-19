@@ -78,11 +78,16 @@ struct AgentPrompts {
         let browser = context.browser
         switch batch.mode {
         case .followUp:
+            let fiverrLine =
+                stores.config.load().isEnabled(Config.fiverr)
+                ? "Revisa también Fiverr solo para leer y avisar (punto 5 de tus instrucciones)."
+                : "Fiverr está apagado en Hirebar: salta el punto 5 de tus instrucciones."
             return """
                 Revisión de seguimientos \(batch.id) (\(now), semana \(week)). Revisa seguimiento.json según tus \
                 instrucciones. NO envíes nada: propone cada seguimiento y cada respuesta a clientes con su texto en la lista \
                 entre \(ProposalParser.beginMarker) y \(ProposalParser.endMarker) al final de tu respuesta; \(owner) los \
-                aprueba desde Telegram. Si no hay nada que proponer ni novedades, responde solo \(Controller.noNewsMarker). \(browser)
+                aprueba desde Telegram. Si no hay nada que proponer ni novedades, responde solo \(Controller.noNewsMarker). \(browser) \
+                \(fiverrLine)
                 """
         case .prospecting:
             return """

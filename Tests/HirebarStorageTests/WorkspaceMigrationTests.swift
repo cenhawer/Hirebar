@@ -40,7 +40,8 @@ final class WorkspaceMigrationTests: XCTestCase {
         try FileManager.default.createDirectory(at: Paths.content, withIntermediateDirectories: true)
         try Data(#"[{"id": "empresa"}]"#.utf8).write(to: ContentAccountStore.url)
         WorkspaceMigration.run(
-            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), at: moment)
+            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), upgrades: nil,
+            at: moment)
         let config = try XCTUnwrap(json(Paths.config) as? [String: Any])
         XCTAssertEqual(config[WorkspaceSchema.versionKey] as? Int, WorkspaceSchema.current)
         XCTAssertEqual(Config.load().ownerName, "Ana")
@@ -55,7 +56,8 @@ final class WorkspaceMigrationTests: XCTestCase {
         Config().save()
         let before = try Data(contentsOf: Paths.config)
         WorkspaceMigration.run(
-            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), at: moment)
+            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), upgrades: nil,
+            at: moment)
         XCTAssertEqual(try Data(contentsOf: Paths.config), before)
         XCTAssertTrue((try FileManager.default.contentsOfDirectory(atPath: Paths.backups.path)).isEmpty)
     }
@@ -65,7 +67,8 @@ final class WorkspaceMigrationTests: XCTestCase {
         try newer.write(to: Paths.config)
         Config().save()
         WorkspaceMigration.run(
-            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), at: moment)
+            defaults: defaults, runState: FileRunStateRepository(claimRetention: RepositoryDefaults.retention.claims), upgrades: nil,
+            at: moment)
         XCTAssertEqual(try Data(contentsOf: Paths.config), newer)
     }
 
@@ -75,7 +78,7 @@ final class WorkspaceMigrationTests: XCTestCase {
         defaults.set(42, forKey: "telegram.offset")
         defaults.set(true, forKey: weeklySlot)
         let state = FileRunStateRepository(now: { [moment] in moment }, claimRetention: RepositoryDefaults.retention.claims)
-        WorkspaceMigration.run(defaults: defaults, runState: state, at: moment)
+        WorkspaceMigration.run(defaults: defaults, runState: state, upgrades: nil, at: moment)
         XCTAssertEqual(state.seen("jobradar.seen"), ["li:1": moment])
         XCTAssertEqual(state.waitingVoiceAccount(), "empresa")
         XCTAssertEqual(state.chatOffset(), 42)

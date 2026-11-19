@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "freelanceMasAbierto": {
+    "quitarDeTitleNever": [
+      "inteligencia artificial",
+      "ia",
+      "gpt",
+      "chatgpt",
+      "openai",
+      "llm",
+      "agente de ia",
+      "agentes de ia",
+      "agente ia",
+      "firebase",
+      "landing",
+      "landing page",
+      "pagina web",
+      "sitio web",
+      "diseno web"
+    ],
+    "quitarDeOffProfile": [
+      "research",
+      "investigacion",
+      "catalog",
+      "catalogo",
+      "excel"
+    ],
+    "agregarAStretch": [
+      "pagina web",
+      "sitio web",
+      "landing",
+      "landing page",
+      "html",
+      "css",
+      "excel"
+    ],
+    "cupoDiarioMinimo": 12
+  }
+}

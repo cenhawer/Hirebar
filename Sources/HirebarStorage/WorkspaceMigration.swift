@@ -10,21 +10,40 @@ public enum WorkspaceMigration {
     static let chatOffsetKey = "telegram.offset"
     static let claimPrefix = "sched."
 
+    struct VersionedFile {
+        let url: URL
+        var listKey: String?
+        var adjust: ([String: Any], Int) -> [String: Any] = { root, _ in root }
+    }
+
     public static func run(
-        defaults: UserDefaults = .standard, runState: FileRunStateRepository, at date: Date = Date()
+        defaults: UserDefaults = .standard, runState: FileRunStateRepository, upgrades: WorkspaceUpgrades?, at date: Date = Date()
     ) {
         Paths.ensure()
-        for file in versionedFiles() { upgrade(file, at: date) }
+        for file in versionedFiles(upgrades: upgrades) { upgrade(file, at: date) }
         moveDefaults(defaults, into: runState)
     }
 
-    static func versionedFiles() -> [(url: URL, listKey: String?)] {
+    static func versionedFiles(upgrades: WorkspaceUpgrades?) -> [VersionedFile] {
         let agents = (try? FileManager.default.contentsOfDirectory(at: AgentStore.folder, includingPropertiesForKeys: nil)) ?? []
-        return [(Paths.config, nil), (Profile.url, nil), (ContentAccountStore.url, ContentAccountStore.listKey)]
-            + agents.filter { $0.pathExtension == "json" }.map { ($0, nil) }
+        let loosening = upgrades?.freelanceMasAbierto
+        return [
+            VersionedFile(url: Paths.config), VersionedFile(url: Profile.url),
+            VersionedFile(url: ContentAccountStore.url, listKey: ContentAccountStore.listKey),
+            VersionedFile(url: Paths.searchProfile) { root, version in
+                guard let loosening, version < WorkspaceSchema.freelanceLoosening else { return root }
+                return FreelanceLoosening.searchProfile(root, with: loosening)
+            },
+        ]
+            + agents.filter { $0.pathExtension == "json" }.map { url in
+                VersionedFile(url: url) { root, version in
+                    guard let loosening, version < WorkspaceSchema.freelanceLoosening else { return root }
+                    return FreelanceLoosening.agent(root, with: loosening)
+                }
+            }
     }
 
-    static func upgrade(_ file: (url: URL, listKey: String?), at date: Date) {
+    static func upgrade(_ file: VersionedFile, at date: Date) {
         guard let data = try? Data(contentsOf: file.url) else { return }
         let version = VersionedJSON.version(of: data)
         guard version < WorkspaceSchema.current else {
@@ -33,7 +52,7 @@ public enum WorkspaceMigration {
         }
         do {
             try backUp(data, of: file.url, version: version, at: date)
-            guard let upgraded = VersionedJSON.stamped(data, listKey: file.listKey) else {
+            guard let upgraded = VersionedJSON.stamped(data, listKey: file.listKey, adjusting: { file.adjust($0, version) }) else {
                 log.write("\(file.url.lastPathComponent) no es JSON válido; quedó el respaldo y no se migró")
                 return
             }

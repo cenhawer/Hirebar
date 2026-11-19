@@ -27,7 +27,10 @@ extension Paths {
             "d15f30cfdb755fd5eb9cc1b9f7329b07c7b0ea057423776c14e66871e5ecb73b",
         ],
         "instrucciones-empleo.md": ["9a5f8307fbae0f8eaf39efdd29a9b0baa6d8cfa91e3f21e0b6baed7bd131df76"],
-        "instrucciones-freelance.md": ["87e9d3076ff683fc6a318e4029973eb8facf9193e9b3f98453b227d613fd7ed4"],
+        "instrucciones-freelance.md": [
+            "87e9d3076ff683fc6a318e4029973eb8facf9193e9b3f98453b227d613fd7ed4",
+            "43116443f637c116476d90d6418bf920e58d0b7e0f1dffb60da8e5c47c32a573",
+        ],
         "instrucciones-portales-empleo.md": ["5a6848c1e8abe89bbba134e88702b3408f8ac617c0dda5adcf28335c9ee795ee"],
         "instrucciones-portales-freelance.md": ["ec168296d7802c7ddc4b69a56af3694e3169b11409c5537e193c53b641a67e9e"],
         "instrucciones-prospeccion-envio.md": ["2ca940762ff9cca8f53b38c0790c77344d0dfdf1ba17ff1828810d809bbd72b2"],
@@ -36,7 +39,10 @@ extension Paths {
             "fccf9290a49de2dbc110609493713e01b8caae38e1b7b48a0863c5917b800a26",
         ],
         "instrucciones-redes.md": ["11ca75e85c7dd4ef18905b1cf168ff7687e470d4e3eb72c479cabbbd223a6990"],
-        "instrucciones-seguimiento.md": ["7da33ef4ef15fed7ee3013544cf47503c4844f95f98be857cfded350931e4b4a"],
+        "instrucciones-seguimiento.md": [
+            "7da33ef4ef15fed7ee3013544cf47503c4844f95f98be857cfded350931e4b4a",
+            "9a5dc251512b4b013106efa329352c2e53e40b6e11b0896c087a352c7112d231",
+        ],
         "instrucciones-seguimiento-envio.md": ["ce5c95c927cb0572f3f3681bcb7b67f2f03821de76c23763487775a73650e11d"],
     ]
 

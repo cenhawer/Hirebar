@@ -2,7 +2,8 @@ import Foundation
 import HirebarDomain
 
 public struct Config: Codable, Sendable {
-    public static let freelanceSources = ["workana", "freelancer"]
+    public static let freelanceSources = ["workana", "freelancer", Config.fiverr]
+    public static let fiverr = "fiverr"
     public static let jobSources = ["linkedin", "getonboard", "computrabajo", "elempleo", "magneto"]
 
     public static var placeholderOwnerName: String { String(localized: "el usuario") }

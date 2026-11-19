@@ -52,17 +52,24 @@ public struct FreelancerSource: ListingSource {
             guard age >= 0, age <= rules.freelancerMaxAgeMinutes else { continue }
             recent += 1
             let upgrades = project["upgrades"] as? [String: Any] ?? [:]
-            if (upgrades["pf_only"] as? Bool) == true || (project["nonpublic"] as? Bool) == true { continue }
-            if let state = project["status"] as? String, state != "active" { continue }
-            guard (project["language"] as? String ?? "en") == "es" else { continue }
             let title = project["title"] as? String ?? ""
+            if (upgrades["pf_only"] as? Bool) == true || (project["nonpublic"] as? Bool) == true {
+                outcome.discarded.append(FreelanceDiscardNote(reason: .preferredOrPrivate, title: title))
+                continue
+            }
+            if let state = project["status"] as? String, state != "active" { continue }
+            guard (project["language"] as? String ?? "en") == "es" else {
+                outcome.discarded.append(FreelanceDiscardNote(reason: .english, title: title))
+                continue
+            }
             let description = project["description"] as? String ?? (project["preview_description"] as? String ?? "")
             let jobs = ((project["jobs"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }
-            guard
-                let fit = FreelanceClassifier.classify(
-                    head: "\(title) \(jobs.joined(separator: " "))", body: description,
-                    title: title, profile: profile.freelance)
-            else { continue }
+            let verdict = FreelanceClassifier.verdict(
+                head: "\(title) \(jobs.joined(separator: " "))", body: description, title: title, profile: profile.freelance)
+            guard let fit = verdict.fit else {
+                if let reason = verdict.reason { outcome.discarded.append(FreelanceDiscardNote(reason: reason, title: title)) }
+                continue
+            }
             matching += 1
             let stats = project["bid_stats"] as? [String: Any] ?? [:]
             let bids = (stats["bid_count"] as? NSNumber)?.intValue ?? 0
@@ -72,8 +79,14 @@ public struct FreelancerSource: ListingSource {
             let maxUSD = ((budget["maximum"] as? NSNumber)?.doubleValue ?? 0) * rate
             let hourly = (project["type"] as? String) == "hourly"
             let top = max(minUSD, maxUSD)
-            if hourly && top < profile.freelance.minHourlyUSD { continue }
-            if !hourly && top < profile.freelance.minFixedUSD { continue }
+            if hourly && top < profile.freelance.minHourlyUSD {
+                outcome.discarded.append(FreelanceDiscardNote(reason: .hourlyTooLow, title: title))
+                continue
+            }
+            if !hourly && top < profile.freelance.minFixedUSD {
+                outcome.discarded.append(FreelanceDiscardNote(reason: .budgetTooLow, title: title))
+                continue
+            }
             var verified = false
             let owner = (project["owner_id"] as? NSNumber)?.intValue
             if let state = owner.flatMap({ (users["\($0)"] as? [String: Any])?["status"] as? [String: Any] }) {
@@ -97,9 +110,13 @@ public struct FreelancerSource: ListingSource {
                 outcome.backup.append(hit.with(fit: .stretch, score: bids + (verified ? 0 : 10)))
             }
         }
+        let hours = rules.freelancerMaxAgeMinutes / 60
         let found = String(
-            localized: "\(projects.count) proyectos leídos, \(recent) de menos de 24 h y no vistos, \(matching) de tu perfil")
+            localized: "\(projects.count) proyectos leídos, \(recent) de menos de \(hours) h y no vistos, \(matching) de tu perfil")
         log.write("Freelance · Freelancer: \(found), \(outcome.hits.count) avisables + \(outcome.backup.count) de respaldo")
+        if !outcome.discarded.isEmpty {
+            log.write(String(localized: "Freelance · Freelancer descartados: \(FreelanceClassifier.summary(outcome.discarded))"))
+        }
         return outcome
     }
 }

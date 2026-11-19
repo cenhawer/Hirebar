@@ -125,6 +125,7 @@ final class PanelModel {
         var stats = WeeklyStats.lines(for: kind)
         if kind == .freelance {
             stats += ["Workana \(Quotas.describe("workana"))", "Freelancer \(Quotas.describe("freelancer"))"]
+            if config.isEnabled(Config.fiverr) { stats.append(config.fiverrStatus) }
         }
         if !stats.isEmpty && [.jobs, .freelance, .clients].contains(kind) { stats[0] = "Esta semana: " + stats[0] }
         let ids = kind == .jobs ? Config.jobSources : kind == .freelance ? Config.freelanceSources : []

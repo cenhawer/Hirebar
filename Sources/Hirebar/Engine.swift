@@ -16,6 +16,7 @@ public final class Engine {
     public let scheduler: Scheduler
     public let activity: ActivityRepository
     let runState: FileRunStateRepository
+    let upgrades: WorkspaceUpgrades?
     let clock: Clock
     let updateFetcher = NetPageFetcher()
     let currentVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0"
@@ -23,6 +24,7 @@ public final class Engine {
     public init(resources: EngineResources) {
         let stores = Repositories.files(searchDefaults: resources.searchDefaults, retention: resources.retention)
         activity = FileExecutionStateStore.standard
+        upgrades = resources.upgrades
         let clock = SystemClock()
         self.clock = clock
         runState = FileRunStateRepository(claimRetention: resources.retention.claims)
@@ -46,7 +48,7 @@ public final class Engine {
     }
 
     public func start(resources: URL?) {
-        WorkspaceMigration.run(runState: runState)
+        WorkspaceMigration.run(runState: runState, upgrades: upgrades)
         Paths.installTemplates(from: resources)
         AudioTools.removeLegacyCopy()
         controller.stores.agents.writeMissingDefaults()

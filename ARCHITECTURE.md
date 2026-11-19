@@ -201,7 +201,7 @@ temporizadores entran por `Clock`. La IA corre a través de `AIRunner`: `Process
 perfil, guarda la salida en `ejecuciones/` y restaura los archivos protegidos antes de entregar el
 resultado. Las imágenes, el video y las hojas de vida salen de `MediaRenderer`; los
 radares reciben el catálogo de portales y el lector de páginas en `PortalAccess`. Los recursos del
-bundle (`destinos.json`, `comandos.json`, `canal.json`, `motor.json`, `perfil-busqueda.json`, `retencion.json`) se validan en la aplicación y llegan al
+bundle (`destinos.json`, `comandos.json`, `canal.json`, `motor.json`, `perfil-busqueda.json`, `retencion.json`, `migraciones.json`) se validan en la aplicación y llegan al
 motor en `EngineResources`. Los mensajes con la persona pasan por `ChatChannel` (Telegram) y el respaldo por
 `DesktopNotifications` (macOS); el `Controller` recibe todos sus adaptadores en `EngineAdapters`. Los
 coordinadores del motor y los puertos `Clock`, `AIRunner`, `MediaRenderer` y `ExecutionAlerts` están
@@ -309,7 +309,7 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `config.json` | Portales activos, motor de IA, nombre y dueño del canal de Telegram (ID de usuario, chat, nombre) |
 | `workspace/perfil.json` · `perfil.md` | Perfil: única fuente de experiencia, habilidades y variantes de hoja de vida |
 | `workspace/agentes/<agente>.json` | Horario, envío automático, frecuencia y cupo de cada agente |
-| `workspace/search-profile.json` | Cambios de la persona a las palabras de búsqueda y descartes; se leen sobre `Resources/perfil-busqueda.json` |
+| `workspace/search-profile.json` | Cambios de la persona a las palabras de búsqueda y descartes (incluidas las palabras de IA, `aiWords`); se leen sobre `Resources/perfil-busqueda.json` |
 | `workspace/portales.json` · `portales-hallazgos.json` | Portales propios y lo que se encontró en ellos |
 | `workspace/lotes.json` | Listas pendientes, en curso, hechas o descartadas |
 | `workspace/cupos.json` | Cupos diarios por plataforma |
@@ -326,13 +326,20 @@ Archivos JSON y Markdown en `~/Library/Application Support/Hirebar/`, propiedad 
 | `respaldos/` | Copia de cada archivo antes de migrarlo a una versión nueva |
 
 **Versión de los datos:** `config.json`, `perfil.json`, `agentes/<agente>.json`,
-`contenido/cuentas.json` y `estado/corrida.json` llevan `schemaVersion`; las cuentas se guardan como
-objeto con la lista en `cuentas`. `UserDefaults` no guarda estado de la app.
+`search-profile.json`, `contenido/cuentas.json` y `estado/corrida.json` llevan `schemaVersion` (versión
+actual: 2); las cuentas se guardan como objeto con la lista en `cuentas`. `UserDefaults` no guarda
+estado de la app.
 
 **Estrategia de migraciones:** al arrancar, `WorkspaceMigration` revisa cada archivo versionado; si
 no tiene versión o tiene una anterior, lo copia a `respaldos/` y lo reescribe con la versión actual
-sin tocar sus campos. Un archivo de una versión más nueva no se migra ni se sobrescribe. El estado que
-versiones anteriores dejaban en `UserDefaults` pasa a `estado/corrida.json` y sus claves se borran. Al primer arranque se copian las plantillas de `Resources/inicial/` sin pisar las existentes.
+sin tocar sus campos, salvo los pasos de contenido de cada versión. Paso a la versión 2 (spec
+`038-fiverr-freelance`): en `search-profile.json` se quitan de `titleNever` y `offProfile` y se agregan
+a `stretch` las palabras de `Resources/migraciones.json`, y en `agentes/freelance.json` un cupo diario
+menor al mínimo de ese archivo sube al mínimo; las listas o el cupo que el archivo no trae no se
+tocan. Cada paso corre una sola vez porque el archivo queda en la versión nueva. Un archivo de una
+versión más nueva no se migra ni se sobrescribe. El estado que versiones anteriores dejaban en
+`UserDefaults` pasa a `estado/corrida.json` y sus claves se borran. Al primer arranque se copian las
+plantillas de `Resources/inicial/` sin pisar las existentes.
 
 ## 5. Modelo de error
 

@@ -4,10 +4,12 @@ import HirebarDomain
 public struct SourceResult: Sendable {
     public var hits: [Hit]
     public var backup: [Hit]
+    public var discarded: [FreelanceDiscardNote]
 
-    public init(hits: [Hit] = [], backup: [Hit] = []) {
+    public init(hits: [Hit] = [], backup: [Hit] = [], discarded: [FreelanceDiscardNote] = []) {
         self.hits = hits
         self.backup = backup
+        self.discarded = discarded
     }
 }
 

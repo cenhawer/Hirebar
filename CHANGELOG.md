@@ -5,6 +5,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ## [Sin publicar]
 
 ### Agregado
+- Fiverr en el agente Freelance: se prende y apaga como un portal y se revisa en los seguimientos (mensajes, pedidos y reseñas) solo para leer y avisar con un borrador; Hirebar no escribe ni acepta pedidos ahí.
+- El registro de Workana y Freelancer resume por qué se descartó cada proyecto (en inglés, solo Preferred, presupuesto bajo, IA sin backend…).
 - Empleo: cada vacante trae un desglose de encaje en 4 dimensiones (habilidades, experiencia, ubicación, alineación de carrera); la lista del día llega ordenada por puntaje total. Pesos configurables en `Resources/perfil-busqueda.json`.
 - Empleo, Freelance y Clientes: revisión opcional por un segundo paso de IA antes de ofrecer cada propuesta a aprobar (`reviewEnabled` por agente en Ajustes), con fallback al borrador original si falla o se agota el tiempo.
 - Comando `entrevista <palabras>`: el Analista prepara un documento (resumen, preguntas por tipo, puntos del perfil) a partir de una postulación ya enviada, sin postular ni enviar nada.
@@ -32,6 +34,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 - Plantillas de PR e issues, y Dependabot para GitHub Actions.
 
 ### Cambiado
+- Filtro freelance más abierto: webs y landings en Angular/HTML/CSS, "de Excel a un sistema" e IA con núcleo backend ya pasan; la IA sin backend se descarta. Cupo diario de Freelance 12, hasta 8 proyectos por aviso y Workana de las últimas 24 h. Al actualizar, tu `search-profile.json` y tu cupo se ajustan una sola vez, con respaldo en `respaldos/`.
+- Los criterios para enviar propuestas viven en `instrucciones-freelance.md`.
 - Las palabras de búsqueda, los descartes y las palabras del filtro de vacantes por defecto viven en `Resources/perfil-busqueda.json`.
 - Los plazos, intervalos y límites del motor, los radares y el programador viven en `Resources/motor.json`.
 - Los archivos de configuración, perfil, agentes y cuentas llevan versión; al actualizar, Hirebar los respalda en `respaldos/` antes de migrarlos. El estado de corrida ya no se guarda en las preferencias del sistema.

@@ -226,6 +226,7 @@ y la app está aislada al actor principal por defecto. El paso 3 de la spec
 | `HirebarPortals/Net.swift` | Portals | `WebPageFetcher` |
 | `HirebarAI/Shell.swift` | AI | Lanzamiento de procesos |
 | `HirebarDomain/JobScreener.swift`, `FreelanceClassifier.swift` | Domain | Reglas de encaje |
+| `HirebarDomain/JobScoreBreakdown.swift` | Domain | Puntaje por dimensión (`JobScreener.score`) sobre vacantes ya aceptadas por `JobScreener.screen`; pesos en `Resources/perfil-busqueda.json` (`JobProfile.scoringWeights`) |
 | `HirebarApplication/PortalSources.swift` · `HirebarPortals/PortalCatalog.swift` | Application · Portals | `ListingSource`, `JobSource` y `WebPageFetcher` en la aplicación; `PortalAccess.bundled`, `NetPageFetcher` y `PageSlice` en el adaptador |
 | `HirebarPortals/*Source.swift` (7) | Portals | Un adaptador por portal |
 | `HirebarApplication/Controller.swift`, `ControllerRuns.swift`, `ControllerApprovals.swift`, `ControllerResults.swift`, `ControllerQuota.swift` | Application | Casos de uso de lotes: cola, corridas de la IA, práctica y pausas, resultados y cupos |

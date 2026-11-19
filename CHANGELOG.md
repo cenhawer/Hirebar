@@ -5,6 +5,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versiones:
 ## [Sin publicar]
 
 ### Agregado
+- Empleo: cada vacante trae un desglose de encaje en 4 dimensiones (habilidades, experiencia, ubicación, alineación de carrera); la lista del día llega ordenada por puntaje total. Pesos configurables en `Resources/perfil-busqueda.json`.
+- Empleo, Freelance y Clientes: revisión opcional por un segundo paso de IA antes de ofrecer cada propuesta a aprobar (`reviewEnabled` por agente en Ajustes), con fallback al borrador original si falla o se agota el tiempo.
+- Comando `entrevista <palabras>`: el Analista prepara un documento (resumen, preguntas por tipo, puntos del perfil) a partir de una postulación ya enviada, sin postular ni enviar nada.
 - **Actividad** (panel y menú): cada envío con qué se hizo, a quién, cuándo, qué agente y con qué texto; también lo que no coincidió con lo aprobado y lo que se habría enviado en práctica. Filtros por agente y período.
 - Ajustes → Datos y experiencia: datos personales, preferencias, empleos con logros y hojas de vida se editan sin tocar JSON; se conservan los demás campos de `perfil.json`.
 - La limpieza del domingo borra también las grabaciones de voz (14 días), los videos armados (30 días) y los borradores y listas descartadas (90 días); todos los plazos viven en `Resources/retencion.json` y la guía los lista.

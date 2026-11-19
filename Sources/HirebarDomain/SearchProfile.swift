@@ -42,6 +42,7 @@ public struct JobProfile: Codable, Sendable {
     public var hasProfessionalCard: Bool
     public var screening: JobScreeningWords
     public var portals: JobPortalRules
+    public var scoringWeights: ScoringWeights
 
 }
 
@@ -104,7 +105,7 @@ extension JobProfile {
         case country, homeCity, linkedInQueries, linkedInRegionalQueries, linkedInContractQueries
         case getOnBoardQueries, computrabajoSlugs, elempleoQueries, magnetoRoles
         case strong, generic, weak, blocked, blockedCompanies, blockedTitleWords, frontendOnly, ownStack, otherStack
-        case minSalaryCOP, minSalaryUSD, maxYearsRequired, hasProfessionalCard, screening, portals
+        case minSalaryCOP, minSalaryUSD, maxYearsRequired, hasProfessionalCard, screening, portals, scoringWeights
     }
 
     public init(from decoder: Decoder) throws {
@@ -134,6 +135,7 @@ extension JobProfile {
         hasProfessionalCard = try c.decode(.hasProfessionalCard, fallback: base?.hasProfessionalCard)
         screening = try c.decode(.screening, fallback: base?.screening)
         portals = try c.decode(.portals, fallback: base?.portals)
+        scoringWeights = try c.decode(.scoringWeights, fallback: base?.scoringWeights ?? .equal).normalized()
     }
 }
 

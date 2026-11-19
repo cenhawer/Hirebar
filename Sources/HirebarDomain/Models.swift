@@ -21,6 +21,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
     case portalScanJobs = "portales-empleo"
     case portalScanFreelance = "portales-freelance"
     case followUpSend = "seguimiento-envio"
+    case interviewPrep = "entrevista"
 
     public var batchPrefix: String {
         switch self {
@@ -35,6 +36,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .portalScanJobs: return "pe"
         case .portalScanFreelance: return "pf"
         case .followUpSend: return "gs"
+        case .interviewPrep: return "ent"
         }
     }
 
@@ -55,6 +57,7 @@ public enum Mode: String, Codable, CaseIterable, Sendable {
         case .portalScanJobs: return String(localized: "Revisar tus portales de empleo")
         case .portalScanFreelance: return String(localized: "Revisar tus portales freelance")
         case .followUpSend: return String(localized: "Enviar seguimientos aprobados")
+        case .interviewPrep: return String(localized: "Preparar una entrevista")
         }
     }
 }
@@ -76,8 +79,9 @@ public struct Hit: Sendable {
     public let url: String
     public let detail: String
     public let score: Int
+    public let fitScore: Double?
 
-    public init(id: String, platform: String, fit: Fit, title: String, url: String, detail: String, score: Int) {
+    public init(id: String, platform: String, fit: Fit, title: String, url: String, detail: String, score: Int, fitScore: Double? = nil) {
         self.id = id
         self.platform = platform
         self.fit = fit
@@ -85,16 +89,19 @@ public struct Hit: Sendable {
         self.url = url
         self.detail = detail
         self.score = score
+        self.fitScore = fitScore
     }
 
-    public func with(fit: Fit? = nil, detail: String? = nil, score: Int? = nil) -> Hit {
+    public func with(fit: Fit? = nil, detail: String? = nil, score: Int? = nil, fitScore: Double? = nil) -> Hit {
         Hit(
             id: id, platform: platform, fit: fit ?? self.fit, title: title, url: url,
-            detail: detail ?? self.detail, score: score ?? self.score)
+            detail: detail ?? self.detail, score: score ?? self.score, fitScore: fitScore ?? self.fitScore)
     }
 
     public static func ranked(_ a: Hit, _ b: Hit) -> Bool {
-        (a.fit.rank, a.score) < (b.fit.rank, b.score)
+        if a.fit.rank != b.fit.rank { return a.fit.rank < b.fit.rank }
+        if let fa = a.fitScore, let fb = b.fitScore, fa != fb { return fa > fb }
+        return a.score < b.score
     }
 }
 
@@ -113,6 +120,15 @@ public struct BatchItem: Codable, Sendable {
         title = hit.title
         url = hit.url
         detail = hit.detail
+    }
+
+    public init(id: String, platform: String, kind: String, title: String, url: String, detail: String) {
+        self.id = id
+        self.platform = platform
+        self.kind = kind
+        self.title = title
+        self.url = url
+        self.detail = detail
     }
 }
 
